@@ -11,6 +11,14 @@ import { validateCurriculum } from './validate';
 import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
 import type { LessonVisualAssetRegistry } from '../lesson-visuals/types';
 
+it('describes repeat overlap scoring before lesson 8 adds teleportation', () => {
+  const step = campaign02.lessons[3]?.steps[2];
+  expect(step).toBeDefined();
+  if (!step) throw new Error('Expected lesson 8 scoring step');
+  expect(step.expected).toMatch(/спрацювання.*1 очко/);
+  expect(step.expected).toMatch(/подія може повторюватися/);
+});
+
 function makeSteps(count = 5, lessonId = 'lesson-01'): LessonStep[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `${lessonId}-step-${index + 1}`,

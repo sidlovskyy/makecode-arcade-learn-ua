@@ -402,7 +402,7 @@ export const campaign02: Campaign = {
           },
           title: 'Нагороди за дотик',
           instruction: 'В overlap Player з Food додай change score by 1.',
-          expected: 'Дотик до зірки збільшує рахунок на одне очко.',
+          expected: 'Кожне спрацювання overlap додає 1 очко. Поки герой торкається зірки, подія може повторюватися й рахунок зростатиме далі.',
         },
         {
           id: 'lesson-08-step-04',

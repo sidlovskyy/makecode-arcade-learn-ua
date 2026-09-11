@@ -72,7 +72,10 @@ let mySprite = sprites.create(${hero}, SpriteKind.Player)
 controller.moveSprite(mySprite, 90, 90)
 tiles.placeOnTile(mySprite, tiles.getTileLocation(1, 5))
 scene.cameraFollowSprite(mySprite)`;
+// Keep the taught empty-array block visible: Arcade elides the typed default
+// declaration once the list is used, but preserves an explicit assignment.
 const populate = `let enemies: Sprite[] = []
+enemies = []
 for (let index = 0; index < 4; index++) {
     let enemy = sprites.create(${foe}, SpriteKind.Enemy)
     tiles.placeOnRandomTile(enemy, ${floor})

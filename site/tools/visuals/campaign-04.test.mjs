@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import { JSDOM } from 'jsdom';
 import catalog from './catalog/campaign-04.mjs';
 
 test('world-builder programs cover seventeen steps using native blocks without gray fallback', async () => {
@@ -10,3 +11,14 @@ test('world-builder programs cover seventeen steps using native blocks without g
     assert.ok(!/class="[^"]*\btypescript_(?:statement|expression)\b/.test(svg), `${id}: gray TypeScript fallback is not a teachable native block`);
   }
 });
+
+for (const step of ['02', '03', '04', '05', '06']) {
+  test(`lesson-15-step-${step} retains the empty-list initialization from step 2`, async () => {
+    const svg = await readFile(new URL(`../../src/assets/lesson-visuals/blocks/lesson-15-step-${step}.svg`, import.meta.url), 'utf8');
+    const dom = new JSDOM(svg, { contentType: 'image/svg+xml' });
+    try {
+      const labels = [...dom.window.document.querySelectorAll('text')].map(node => node.textContent.replace(/\s+/g, ' '));
+      assert.ok(labels.includes('empty array'), 'Full accumulated program must show set enemies to empty array before adding sprites');
+    } finally { dom.window.close(); }
+  });
+}
