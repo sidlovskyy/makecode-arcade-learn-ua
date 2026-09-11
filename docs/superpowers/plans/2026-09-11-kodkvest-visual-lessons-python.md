@@ -27,12 +27,12 @@ The approved final visual inventory is:
 
 | Kind | Count | Local bitmap/SVG requirement |
 |---|---:|---|
-| `blocks` | 87 | One exact MakeCode SVG per step |
+| `blocks` | 88 | One exact MakeCode SVG per step |
 | `comparison` | 5 | One exact MakeCode SVG plus Python text per step |
 | `python` | 13 | Python text only |
-| `editor` | 19 | Reuses a small set of MakeCode WebP screenshots |
+| `editor` | 18 | Reuses a small set of MakeCode WebP screenshots |
 | `guide` | 21 | Semantic HTML only |
-| **Total** | **145** | **92 block SVGs** |
+| **Total** | **145** | **93 block SVGs** |
 
 The reusable editor scene IDs are fixed to:
 
@@ -587,11 +587,9 @@ git commit -m "content: add campaign two lesson visuals"
 
 - [ ] **Step 1: Add a failing coverage test**
 
-Assert campaign 3 has `{ blocks: 19, editor: 1, guide: 4, python: 0, comparison: 0 }`.
+Assert campaign 3 has `{ blocks: 20, editor: 0, guide: 4, python: 0, comparison: 0 }`.
 
 - [ ] **Step 2: Assign non-block visuals exactly**
-
-Use `editor:sprite-image-editor` for `lesson-11-step-02`. Its focus and explanation point to the small star image being drawn; the surrounding instruction continues to name the `repeat` and sprite blocks.
 
 Use `guide` for:
 
@@ -600,12 +598,12 @@ Use `guide` for:
 - `lesson-11-step-05` — escalating-loop observation log;
 - `lesson-12-step-06` — three-run shooter checklist.
 
-- [ ] **Step 3: Assign block visuals to the remaining 19 steps**
+- [ ] **Step 3: Assign block visuals to the remaining 20 steps**
 
 ```text
 lesson-09-step-01 lesson-09-step-02 lesson-09-step-03 lesson-09-step-04 lesson-09-step-05
 lesson-10-step-01 lesson-10-step-02 lesson-10-step-03 lesson-10-step-04 lesson-10-step-05
-lesson-11-step-01 lesson-11-step-03 lesson-11-step-04 lesson-11-step-06
+lesson-11-step-01 lesson-11-step-02 lesson-11-step-03 lesson-11-step-04 lesson-11-step-06
 lesson-12-step-01 lesson-12-step-02 lesson-12-step-03 lesson-12-step-04 lesson-12-step-05
 ```
 
@@ -621,7 +619,7 @@ npm run visuals:check
 npm test -- src/curriculum/validate.test.ts
 ```
 
-Expected: 49 total block SVGs and full coverage for campaigns 1–3.
+Expected: 50 total block SVGs and full coverage for campaigns 1–3.
 
 - [ ] **Step 5: Commit**
 
@@ -681,7 +679,7 @@ npm run visuals:check
 npm test -- src/curriculum/validate.test.ts
 ```
 
-Expected: 66 total block SVGs and full coverage for campaigns 1–4.
+Expected: 67 total block SVGs and full coverage for campaigns 1–4.
 
 - [ ] **Step 5: Commit**
 
@@ -735,7 +733,7 @@ npm run visuals:check
 npm test -- src/curriculum/validate.test.ts
 ```
 
-Expected: 86 total block SVGs and full coverage for campaigns 1–5.
+Expected: 87 total block SVGs and full coverage for campaigns 1–5.
 
 - [ ] **Step 5: Commit**
 
@@ -882,7 +880,7 @@ npm run visuals:check
 npm test -- src/curriculum/validate.test.ts src/components/App.integration.test.tsx
 ```
 
-Expected: 92 total block SVGs, 25 campaign-6 visuals, both old aliases working, and no learner-facing JavaScript/TypeScript in campaign 6.
+Expected: 93 total block SVGs, 25 campaign-6 visuals, both old aliases working, and no learner-facing JavaScript/TypeScript in campaign 6.
 
 - [ ] **Step 8: Commit**
 
@@ -911,10 +909,10 @@ expect(steps).toHaveLength(145);
 expect(steps.every((step) => step.visual)).toBe(true);
 expect(new Set(steps.map((step) => step.id)).size).toBe(145);
 expect(countAllVisualKinds(steps)).toEqual({
-  blocks: 87,
+  blocks: 88,
   comparison: 5,
   python: 13,
-  editor: 19,
+  editor: 18,
   guide: 21,
 });
 ```
@@ -931,13 +929,13 @@ Change `LessonStep.visual?: LessonStepVisual` to `visual: LessonStepVisual`. Upd
 
 Make `visuals:check` compare the generated registry with a machine-readable block manifest produced by the campaign catalogs. Verify:
 
-- all 92 block/comparison descriptor IDs have catalog source and committed SVG;
+- all 93 block/comparison descriptor IDs have catalog source and committed SVG;
 - all six expected editor WebPs are committed and registered;
 - no SVG contains script or remote references;
 - registry output is sorted and current;
-- all 98 registered assets are local imports: 92 SVGs and 6 WebPs.
+- all 99 registered assets are local imports: 93 SVGs and 6 WebPs.
 
-Keep curriculum-specific checks in Vitest, where TypeScript curriculum modules can be loaded directly: the strict test verifies 145 descriptors, the five exact kind counts, registry resolution for all 111 asset references (92 unique block IDs plus 19 editor references), and that every registered asset is referenced at least once.
+Keep curriculum-specific checks in Vitest, where TypeScript curriculum modules can be loaded directly: the strict test verifies 145 descriptors, the five exact kind counts, registry resolution for all 111 asset references (93 unique block IDs plus 18 editor references), and that every registered asset is referenced at least once.
 
 Add `npm run visuals:test && npm run visuals:check` between unit tests and build in `npm run check`:
 
