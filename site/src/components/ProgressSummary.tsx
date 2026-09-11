@@ -1,5 +1,6 @@
 import heroArcade from '../assets/hero-arcade.webp';
 import { lessonHref } from '../app/routes';
+import { resolveLessonSlug } from '../curriculum';
 import type { Campaign, Lesson } from '../curriculum/types';
 import type { ProgressState } from '../progress/schema';
 
@@ -12,8 +13,9 @@ function getResumeLesson(
   lessons: Lesson[],
   progress: ProgressState,
 ): Lesson | undefined {
+  const rememberedSlug = resolveLessonSlug(progress.lastLessonSlug);
   const rememberedLesson = lessons.find(
-    (lesson) => lesson.slug === progress.lastLessonSlug,
+    (lesson) => lesson.slug === rememberedSlug,
   );
 
   if (

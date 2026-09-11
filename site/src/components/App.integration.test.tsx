@@ -57,6 +57,36 @@ describe('App progress feedback', () => {
   it.each([
     ['vid-blokiv-do-kodu', 'vid-blokiv-do-python', 'lesson-21', 'Від блоків до Python'],
     ['typescript-u-hri', 'python-u-hri', 'lesson-22', 'Python у грі'],
+  ])('resumes saved legacy %s from home before any lesson route canonicalizes it', async (legacy, canonical, id, title) => {
+    const stored = {
+      version: 1,
+      lessons: {
+        'lesson-01': { completedStepIds: ['lesson-01-step-01'], quizPassed: false, completed: false },
+        [id]: { completedStepIds: [`${id}-step-01`, `${id}-step-02`], quizPassed: false, completed: false },
+      },
+      totalXp: 0,
+      lastLessonSlug: legacy,
+    };
+    const serialized = JSON.stringify(stored);
+    window.localStorage.setItem('kodkvest.progress.v1', serialized);
+    window.history.replaceState(null, '', '#/');
+    const user = userEvent.setup();
+    render(<App />);
+
+    const resume = screen.getByRole('link', { name: /^Продовжити/ });
+    expect(resume).toHaveAttribute('href', `#/lesson/${canonical}`);
+    expect(resume).toHaveAccessibleName(new RegExp(title));
+    expect(window.localStorage.getItem('kodkvest.progress.v1')).toBe(serialized);
+
+    await user.click(resume);
+    expect(await screen.findByRole('heading', { name: title, level: 1 })).toBeVisible();
+    expect(screen.getByText('Крок 3 із 6')).toBeVisible();
+    expect(JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!)).toEqual({ ...stored, lastLessonSlug: canonical });
+  });
+
+  it.each([
+    ['vid-blokiv-do-kodu', 'vid-blokiv-do-python', 'lesson-21', 'Від блоків до Python'],
+    ['typescript-u-hri', 'python-u-hri', 'lesson-22', 'Python у грі'],
   ])('remembers the canonical slug from %s while keeping ID-keyed progress', async (legacy, canonical, id, title) => {
     const storedLessons = {
       [id]: { completedStepIds: [`${id}-step-01`, `${id}-step-02`], quizPassed: false, completed: false },

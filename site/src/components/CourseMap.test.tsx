@@ -67,6 +67,21 @@ describe('home chrome', () => {
 });
 
 describe('CourseMap', () => {
+  it.each([
+    ['vid-blokiv-do-kodu', 'vid-blokiv-do-python', 'Від блоків до Python'],
+    ['typescript-u-hri', 'python-u-hri', 'Python у грі'],
+  ])('marks remembered legacy %s in progress before the first completed step', (legacy, canonical, title) => {
+    const progress = { ...createDefaultProgress(), lastLessonSlug: legacy };
+    render(<CourseMap campaigns={curriculum} progress={progress} />);
+
+    const lesson = screen.getByRole('link', { name: new RegExp(`Місія \\d+: ${title}`) });
+    expect(lesson).toHaveAttribute('href', `#/lesson/${canonical}`);
+    expect(lesson).toHaveAttribute('data-status', 'in-progress');
+    expect(lesson).toHaveAccessibleName(new RegExp(`${title}\\. У процесі`));
+    expect(progress.lastLessonSlug).toBe(legacy);
+    expect(progress.lessons).toEqual({});
+  });
+
   it('shows all six campaigns and all 24 accessible lesson links', () => {
     render(
       <CourseMap campaigns={curriculum} progress={createDefaultProgress()} />,

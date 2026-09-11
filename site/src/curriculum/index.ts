@@ -18,3 +18,7 @@ for (const [legacySlug, canonicalSlug] of legacyLessonSlugs) {
   const lesson = lessonBySlug.get(canonicalSlug);
   if (lesson) lessonBySlug.set(legacySlug, lesson);
 }
+
+export function resolveLessonSlug(slug: string | undefined): string | undefined {
+  return slug === undefined ? undefined : lessonBySlug.get(slug)?.slug ?? slug;
+}

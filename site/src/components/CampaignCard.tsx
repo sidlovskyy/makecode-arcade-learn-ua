@@ -1,3 +1,4 @@
+import { resolveLessonSlug } from '../curriculum';
 import type { Campaign, Lesson } from '../curriculum/types';
 import type { ProgressState } from '../progress/schema';
 import { LessonCard } from './LessonCard';
@@ -13,6 +14,7 @@ export function CampaignCard({
   visibleLessons = campaign.lessons,
   progress,
 }: CampaignCardProps) {
+  const rememberedSlug = resolveLessonSlug(progress.lastLessonSlug);
   const completedCount = campaign.lessons.filter(
     (lesson) => progress.lessons[lesson.id]?.completed,
   ).length;
@@ -68,7 +70,7 @@ export function CampaignCard({
             key={lesson.id}
             lesson={lesson}
             lessonProgress={progress.lessons[lesson.id]}
-            isRemembered={progress.lastLessonSlug === lesson.slug}
+            isRemembered={rememberedSlug === lesson.slug}
           />
         ))}
       </ol>
