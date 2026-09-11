@@ -73,6 +73,69 @@ test('SVG accepts a positive viewBox without explicit dimensions', () => {
   assert.equal(validateSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40"/>', id).width, 120);
 });
 
+for (const [label, resource] of [
+  ['XML entity', '&#104;ttps://example.com/paint.svg#paint'],
+  ['CSS escaped https', String.raw`\68 ttps://example.com/paint.svg#paint`],
+  ['CSS escaped http', String.raw`\000068ttp://example.com/paint.svg#paint`],
+  ['CSS escaped slash', String.raw`\2f\2f example.com/paint.svg#paint`],
+  ['relative URL', 'paint.svg#paint'],
+  ['unsupported data type', 'data:text/html;base64,AAAA'],
+]) {
+  for (const location of ['attribute', 'element']) {
+    test(`rejects ${label} CSS URL in a style ${location}`, () => {
+      const markup = location === 'attribute'
+        ? svg.replace('<text>', `<text style="fill: url('${resource}')">`)
+        : svg.replace('</svg>', `<style>text { fill: url('${resource}'); }</style></svg>`);
+      assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*(?:remote|unsupported)/);
+    });
+  }
+}
+
+test('rejects escaped CSS URL functions and encoded presentation attribute URLs', () => {
+  assert.throws(() => validateSvg(svg.replace('<text>', String.raw`<text style="fill: u\72l('\68 ttps://example.com/a')">`), id), /lesson-01-step-04.*remote/);
+  assert.throws(() => validateSvg(svg.replace('<text>', '<text fill="url(&#104;ttps://example.com/a)">'), id), /lesson-01-step-04.*remote/);
+  assert.throws(() => validateSvg(svg.replace('</svg>', String.raw`<style>@\69mport 'https://example.com/a.css';</style></svg>`), id), /lesson-01-step-04.*remote/);
+});
+
+for (const resource of [
+  '#paint',
+  String.raw`\23 paint`,
+  'data:image/png;base64,AAAA',
+  'data:image/webp;base64,AAAA',
+  'data:font/woff;base64,AAAA',
+  'data:font/woff2;base64,AAAA',
+  'data:application/x-font-ttf;base64,AAAA',
+  'data:application/font-woff;charset=utf-8;base64,AAAA',
+]) {
+  test(`preserves supported CSS resource ${resource}`, () => {
+    const markup = svg.replace('<text>', `<text style="fill: url('${resource}')">`)
+      .replace('</svg>', `<style>@font-face { font-family: Icon; src: url('${resource}'); }</style></svg>`);
+    assert.deepEqual(validateSvg(markup, id), { width: 120, height: 40 });
+  });
+}
+
+test('permits self-contained embedded SVG images after recursively validating decoded content', () => {
+  const embedded = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path fill="green" d="M0 0h16v16H0z"/></svg>';
+  for (const resource of [
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(embedded)}`,
+    `data:image/svg+xml;base64,${Buffer.from(embedded).toString('base64')}`,
+  ]) {
+    assert.deepEqual(validateSvg(svg.replace('<text>', `<text style="fill: url('${resource}')">`), id), { width: 120, height: 40 });
+  }
+});
+
+test('rejects remote resources hidden inside embedded SVG images', () => {
+  const embedded = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><image href="https://example.com/image.png"/></svg>';
+  const resource = `data:image/svg+xml;base64,${Buffer.from(embedded).toString('base64')}`;
+  assert.throws(() => validateSvg(svg.replace('<text>', `<text style="fill: url('${resource}')">`), id), /lesson-01-step-04.*(?:remote|unsupported)/);
+});
+
+test('permits safe embedded editor SVG icons without explicit intrinsic dimensions', () => {
+  const embedded = '<svg xmlns="http://www.w3.org/2000/svg"><path fill="green" d="M0 0h16v16H0z"/></svg>';
+  const resource = `data:image/svg+xml;base64,${Buffer.from(embedded).toString('base64')}`;
+  assert.deepEqual(validateSvg(svg.replace('<text>', `<text style="fill: url('${resource}')">`), id), { width: 120, height: 40 });
+});
+
 test('removes official editor cursor and toolbox sprite CSS without changing block geometry or visible styles', () => {
   const style = '<style>.blocklyTreeIcon { background: url(https://cdn.makecode.com/commit/abc/blockly/media/sprites.svg) no-repeat -48px -16px; color: red; } .blocklyDraggable { cursor: url("https://cdn.makecode.com/commit/abc/blockly/media/handclosed.cur"), auto; }</style>';
   const normalized = normalizeRendererSvg(svg.replace('<text>', `${style}<text>`), id);
@@ -85,6 +148,19 @@ test('removes official editor cursor and toolbox sprite CSS without changing blo
 test('normalization still rejects other remote styles and remote hrefs', () => {
   assert.throws(() => normalizeRendererSvg(svg.replace('</svg>', '<style>.x { background: url(https://example.com/picture.png); }</style></svg>'), id), /lesson-01-step-04.*remote/);
   assert.throws(() => normalizeRendererSvg(svg.replace('</svg>', '<image href="https://example.com/picture.png"/></svg>'), id), /lesson-01-step-04.*href/);
+});
+
+test('normalizes known unused cursor placeholders and legacy editor font fallbacks while retaining embedded WOFF', () => {
+  const style = '<style><![CDATA[.editor { cursor:url(<<<PATH>>>/handdelete.cur) auto} @font-face { font-family: Icons; src:url(fonts/icons.eot); src:url(data:font/woff;base64,AAAA); }]]></style>';
+  const normalized = normalizeRendererSvg(svg.replace('</svg>', `${style}</svg>`), id);
+  assert.doesNotMatch(normalized, /<<<PATH>>>|fonts\/icons\.eot/);
+  assert.match(normalized, /data:font\/woff;base64,AAAA/);
+});
+
+test('permits octet-stream embedded fonts only when bytes have a supported font signature', () => {
+  const font = 'data:application/octet-stream;base64,AAEAAAA=';
+  assert.deepEqual(validateSvg(svg.replace('</svg>', `<style>@font-face { src:url(${font}); }</style></svg>`), id), { width: 120, height: 40 });
+  assert.throws(() => validateSvg(svg.replace('</svg>', '<style>@font-face { src:url(data:application/octet-stream;base64,AAAA); }</style></svg>'), id), /lesson-01-step-04.*unsupported/);
 });
 
 async function directories(t) {

@@ -2,6 +2,58 @@ import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { JSDOM } from 'jsdom';
+import { tokenize, TokenType } from '@csstools/css-tokenizer';
+
+const resourceAttributes = new Set([
+  'style', 'fill', 'stroke', 'filter', 'clip-path', 'mask', 'cursor',
+  'marker', 'marker-start', 'marker-mid', 'marker-end', 'color-profile',
+]);
+
+function validateCssResources(css, fail, id, depth) {
+  // XML entities have already been decoded by JSDOM. The tokenizer also
+  // decodes CSS escapes in URL tokens, quoted strings and function/at-rule names.
+  const tokens = tokenize({ css }, {
+    onParseError: () => fail('malformed SVG stylesheet resource'),
+  }).filter(([type]) => type !== TokenType.Whitespace && type !== TokenType.Comment);
+  const validateUrl = (url) => {
+    const value = url.trim();
+    const embedded = /^data:(?:image\/(?:png|jpeg|gif|webp)|font\/(?:woff2?|ttf|otf|sfnt)|application\/(?:font-woff2?|x-font-woff2?|x-font-ttf|x-font-opentype|font-sfnt|vnd\.ms-fontobject))(?:;charset=[a-z0-9._-]+)?;base64,[a-z0-9+/]*={0,2}$/i;
+    if (value.startsWith('#') || embedded.test(value)) return;
+    const binaryFont = /^data:application\/octet-stream;base64,([a-z0-9+/]*={0,2})$/i.exec(value);
+    if (binaryFont) {
+      const signature = Buffer.from(binaryFont[1], 'base64').subarray(0, 4).toString('hex');
+      if (['00010000', '4f54544f', '774f4646', '774f4632', '74746366'].includes(signature)) return;
+    }
+    // MakeCode uses percent-encoded SVG icons in its CSS. Decode and validate
+    // them too; allowing the MIME type alone would hide nested remote resources.
+    const svgData = /^data:image\/svg\+xml(?:;charset=[a-z0-9._-]+)?(;base64)?,(.*)$/is.exec(value);
+    if (svgData) {
+      try {
+        if (svgData[1] && !/^[a-z0-9+/]*={0,2}$/i.test(svgData[2])) throw new Error('invalid base64');
+        const nestedSvg = svgData[1]
+          ? new TextDecoder('utf-8', { fatal: true }).decode(Buffer.from(svgData[2], 'base64'))
+          : decodeURIComponent(svgData[2]);
+        validateSvg(nestedSvg, id, depth + 1);
+        return;
+      } catch (error) {
+        fail(`unsupported embedded SVG stylesheet resource: ${error.message}`);
+      }
+    }
+    fail(`remote or unsupported SVG stylesheet resource: ${value.slice(0, 120)}`);
+  };
+  for (let index = 0; index < tokens.length; index++) {
+    const [type, , , , data] = tokens[index];
+    if (type === TokenType.AtKeyword && data.value.toLowerCase() === 'import') fail('remote SVG stylesheet import');
+    if (type === TokenType.URL) validateUrl(data.value);
+    if (type === TokenType.Function && data.value.toLowerCase() === 'url') {
+      const argument = tokens[index + 1];
+      if (argument?.[0] !== TokenType.String || tokens[index + 2]?.[0] !== TokenType.CloseParen) {
+        fail('unsupported SVG stylesheet URL syntax');
+      }
+      validateUrl(argument[4].value);
+    }
+  }
+}
 
 export function validateCatalog(catalog) {
   const seen = new Set();
@@ -51,13 +103,22 @@ export function normalizeRendererSvg(svg, id) {
   // files and HTML toolbox sprites that are unused by the static SVG blocks.
   // Remove only those known editor declarations; any other remote resource is
   // still rejected below. Block geometry, labels and visible styles are intact.
-  const normalized = svg.replace(/\b(?:cursor|background(?:-image)?)\s*:\s*url\(\s*(['"]?)https:\/\/cdn\.makecode\.com\/[^'"\s)]+\/blockly\/media\/(?:hand(?:delete|closed)\.cur|sprites\.svg)\1\s*\)[^;{}]*;/g, '');
+  const normalized = svg
+    .replace(/\b(?:cursor|background(?:-image)?)\s*:\s*url\(\s*(['"]?)https:\/\/cdn\.makecode\.com\/[^'"\s)]+\/blockly\/media\/(?:hand(?:delete|closed)\.cur|sprites\.svg)\1\s*\)[^;{}]*;/g, '')
+    .replace(/\bcursor\s*:\s*url\(\s*(['"]?)<<<PATH>>>\/handdelete\.cur\1\s*\)[^;{}]*(?:;|(?=}))/g, '')
+    .replace(/@font-face\s*\{[^}]*\}/g, (rule) => {
+      // These old editor EOT fallbacks are shadowed by embedded WOFF sources.
+      // Remove them only when that self-contained replacement is present.
+      if (!/src\s*:\s*url\(\s*['"]?data:(?:font\/|application\/(?:x-)?font-)/.test(rule)) return rule;
+      return rule.replace(/\bsrc\s*:\s*url\(\s*(['"]?)(?:\.\.\/webfonts\/fa-(?:solid-900|regular-400)|fonts\/(?:icons|outline-icons|brand-icons))\.eot\1\s*\)\s*;/g, '');
+    });
   validateSvg(normalized, id);
   return normalized;
 }
 
-export function validateSvg(svg, id) {
+export function validateSvg(svg, id, depth = 0) {
   const fail = (reason) => { throw new Error(`${id}: ${reason}`); };
+  if (depth > 8) fail('unsupported embedded SVG nesting depth');
   if (typeof svg !== 'string' || !svg.trim().startsWith('<svg')) fail('missing or malformed SVG');
   if (/<script\b|javascript\s*:|<!DOCTYPE|<!ENTITY/i.test(svg)) fail('unsafe SVG content');
   let dom;
@@ -71,16 +132,19 @@ export function validateSvg(svg, id) {
     if (root.localName !== 'svg' || root.namespaceURI !== 'http://www.w3.org/2000/svg') fail('invalid SVG root');
     for (const element of [root, ...root.querySelectorAll('*')]) {
       if (['script', 'foreignobject'].includes(element.localName.toLowerCase())) fail('unsafe SVG element');
+      if (element.localName === 'style') validateCssResources(element.textContent, fail, id, depth);
       for (const attribute of element.attributes) {
         const value = attribute.value.trim();
         if (/^on/i.test(attribute.name) || /javascript\s*:/i.test(value)) fail('unsafe SVG attribute');
         if (attribute.localName === 'href' && !value.startsWith('#') && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value)) {
           fail('remote or unsupported SVG href');
         }
+        if (resourceAttributes.has(attribute.localName)) validateCssResources(value, fail, id, depth);
       }
     }
-    // Keep checked-in images self-contained, including their stylesheets.
-    if (/@import\b|url\(\s*['"]?\s*(?:https?:|\/\/)/i.test(svg)) fail('remote SVG stylesheet resource');
+    // Embedded icons may rely on CSS/default sizing. The positive intrinsic-size
+    // contract applies to the catalog asset, while nested SVGs need safety checks.
+    if (depth > 0) return;
     const viewBox = root.getAttribute('viewBox');
     let box;
     if (viewBox !== null) {

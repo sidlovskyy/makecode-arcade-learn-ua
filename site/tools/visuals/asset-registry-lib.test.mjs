@@ -73,3 +73,14 @@ test('check rejects SVG assets with zero dimensions', async (t) => {
   await writeFile(path.join(fixture.blocks, `${entry.id}.svg`), svg.replace('120 40', '0 40'));
   await assert.rejects(generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry], check: true }), /lesson-01-step-04.*positive/);
 });
+
+for (const resource of ['&#104;ttps://example.com/paint.svg#paint', String.raw`\68 ttps://example.com/paint.svg#paint`]) {
+  test(`registry rejects encoded remote CSS resource ${resource}`, async (t) => {
+    const fixture = await project(t);
+    await generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry] });
+    const previous = await readFile(fixture.registry, 'utf8');
+    await writeFile(path.join(fixture.blocks, `${entry.id}.svg`), svg.replace('/>', ` style="fill: url(${resource})"/>`));
+    await assert.rejects(generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry], check: true }), /lesson-01-step-04.*remote/);
+    assert.equal(await readFile(fixture.registry, 'utf8'), previous);
+  });
+}
