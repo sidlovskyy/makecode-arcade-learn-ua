@@ -9,7 +9,12 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "check": "npm run typecheck && npm run test && npm run build",
+    "visuals:setup": "playwright install chromium",
+    "visuals:test": "node --test tools/visuals/*.test.mjs",
+    "visuals:render": "node tools/render-block-visuals.mjs",
+    "visuals:registry": "node tools/generate-visual-registry.mjs",
+    "visuals:check": "node tools/check-visual-assets.mjs"
   },
   "dependencies": {
     "react": "19.3.0",
@@ -24,6 +29,8 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "jsdom": "30.0.1",
+    "playwright": "1.63.0",
+    "sharp": "0.35.4",
     "typescript": "5.9.3",
     "vite": "8.3.0",
     "vitest": "5.0.0"
