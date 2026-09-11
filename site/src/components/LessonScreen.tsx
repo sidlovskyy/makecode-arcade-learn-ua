@@ -10,6 +10,7 @@ interface LessonScreenProps {
   lesson: Lesson;
   lessonProgress?: LessonProgress;
   actions: ProgressActions;
+  storageAvailable: boolean;
   onHome(): void;
   onCompleted?(lesson: Lesson): void;
 }
@@ -130,6 +131,7 @@ export function LessonScreen({
   actions,
   onHome,
   onCompleted,
+  storageAvailable,
 }: LessonScreenProps) {
   const initialCompletedStepIds = lessonProgress?.completedStepIds ?? [];
   const allStepsInitiallyComplete = lesson.steps.every((step) =>
@@ -352,7 +354,11 @@ export function LessonScreen({
                         <div>
                           <p className="eyebrow">Усе готово</p>
                           <h2>Забери нагороду за місію</h2>
-                          <p>Прогрес збережеться у цьому браузері.</p>
+                          <p>
+                            {storageAvailable
+                              ? 'Прогрес збережеться у цьому браузері.'
+                              : 'XP зараховано для цієї сесії, але після закриття сторінки прогрес зникне.'}
+                          </p>
                         </div>
                         <button
                           className="button button--primary"

@@ -104,6 +104,7 @@ export function App() {
           lesson={activeLesson}
           lessonProgress={progress.lessons[activeLesson.id]}
           actions={progressStore}
+          storageAvailable={storageAvailable}
           onHome={() => navigateTo('#/')}
           onCompleted={handleLessonCompleted}
         />

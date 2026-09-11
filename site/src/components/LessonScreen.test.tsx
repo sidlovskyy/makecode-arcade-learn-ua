@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app/App';
@@ -34,10 +34,14 @@ function renderLesson({
   activeLesson = lesson,
   progress = createProgress(),
   actions = createActions(),
+  storageAvailable = true,
+  onCompleted = vi.fn(),
 }: {
   activeLesson?: Lesson;
   progress?: LessonProgress;
   actions?: ProgressActions;
+  storageAvailable?: boolean;
+  onCompleted?: (completedLesson: Lesson) => void;
 } = {}) {
   const onHome = vi.fn();
   const view = render(
@@ -45,11 +49,13 @@ function renderLesson({
       lesson={activeLesson}
       lessonProgress={progress}
       actions={actions}
+      storageAvailable={storageAvailable}
       onHome={onHome}
+      onCompleted={onCompleted}
     />,
   );
 
-  return { ...view, actions, onHome };
+  return { ...view, actions, onHome, onCompleted };
 }
 
 async function openQuiz(user: ReturnType<typeof userEvent.setup>) {
@@ -103,6 +109,7 @@ describe('LessonScreen', () => {
         lesson={lesson}
         lessonProgress={createProgress()}
         actions={actions}
+        storageAvailable={true}
         onHome={view.onHome}
       />,
     );
@@ -272,6 +279,57 @@ describe('LessonScreen', () => {
       screen.queryByRole('button', { name: 'Завершити місію' }),
     ).not.toBeInTheDocument();
     expect(screen.getByText(`+${lesson.xp} XP`)).toBeVisible();
+  });
+
+  it('emits completion once, only after explicit finish and after the progress action', async () => {
+    const callOrder: string[] = [];
+    const actions = createActions();
+    vi.mocked(actions.finishLesson).mockImplementation(() => {
+      callOrder.push('finishLesson');
+    });
+    const onCompleted = vi.fn((_completedLesson: Lesson) => {
+      callOrder.push('onCompleted');
+    });
+    const user = userEvent.setup();
+    renderLesson({
+      progress: createProgress({
+        completedStepIds: lesson.steps.map((step) => step.id),
+      }),
+      actions,
+      onCompleted,
+    });
+    await openQuiz(user);
+
+    await user.click(
+      screen.getByRole('radio', {
+        name: lesson.quiz.options[lesson.quiz.correctIndex],
+      }),
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Перевірити відповідь' }),
+    );
+
+    expect(actions.markQuizPassed).toHaveBeenCalledTimes(1);
+    expect(actions.finishLesson).not.toHaveBeenCalled();
+    expect(onCompleted).not.toHaveBeenCalled();
+
+    const finishButton = screen.getByRole('button', {
+      name: 'Завершити місію',
+    });
+    act(() => {
+      finishButton.click();
+      finishButton.click();
+    });
+
+    expect(actions.finishLesson).toHaveBeenCalledTimes(1);
+    expect(actions.finishLesson).toHaveBeenCalledWith(
+      lesson.id,
+      lesson.slug,
+      lesson.xp,
+    );
+    expect(onCompleted).toHaveBeenCalledTimes(1);
+    expect(onCompleted).toHaveBeenCalledWith(lesson);
+    expect(callOrder).toEqual(['finishLesson', 'onCompleted']);
   });
 
   it('resumes a passed quiz at one completion action without passing it again', async () => {

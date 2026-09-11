@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app/App';
 
-async function finishFirstLesson(user: ReturnType<typeof userEvent.setup>) {
+async function reachFirstLessonFinish(user: ReturnType<typeof userEvent.setup>) {
   for (let step = 0; step < 5; step += 1) {
     await user.click(
       screen.getByRole('button', { name: 'Крок готовий — далі' }),
@@ -28,6 +28,10 @@ async function finishFirstLesson(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
     screen.getByRole('button', { name: 'Перевірити відповідь' }),
   );
+}
+
+async function finishFirstLesson(user: ReturnType<typeof userEvent.setup>) {
+  await reachFirstLessonFinish(user);
   await user.click(
     screen.getByRole('button', { name: 'Завершити місію' }),
   );
@@ -76,16 +80,12 @@ describe('App progress feedback', () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText('100 очок досвіду')).toHaveTextContent('100 XP');
 
-    await user.click(
-      within(reward).getByRole('button', {
-        name: 'Закрити повідомлення про нагороду',
-      }),
-    );
-    expect(reward).not.toBeInTheDocument();
-
     firstView.unmount();
     render(<App />);
 
+    expect(
+      screen.queryByRole('status', { name: 'Нагорода за місію' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText('100 очок досвіду')).toHaveTextContent('100 XP');
     expect(
       screen.getByRole('link', {
@@ -131,9 +131,16 @@ describe('App progress feedback', () => {
     expect(within(reward).getByText('+150 XP')).toBeVisible();
     expect(within(reward).getByText('Нагорода рівня')).toBeVisible();
     expect(within(reward).getByText('Перший піксель')).toBeVisible();
+
+    await user.click(
+      within(reward).getByRole('button', {
+        name: 'Закрити повідомлення про нагороду',
+      }),
+    );
+    expect(reward).not.toBeInTheDocument();
   });
 
-  it('warns when storage is blocked while keeping the lesson usable', async () => {
+  it('keeps blocked-storage copy truthful through explicit completion', async () => {
     vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
       throw new DOMException('Blocked', 'SecurityError');
     });
@@ -153,12 +160,45 @@ describe('App progress feedback', () => {
       }),
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole('button', { name: 'Крок готовий — далі' }),
-    );
+    await reachFirstLessonFinish(user);
 
     expect(
-      screen.getByRole('heading', { name: 'Дай проєкту ім’я' }),
+      screen.queryByText('Прогрес збережеться у цьому браузері.'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'XP зараховано для цієї сесії, але після закриття сторінки прогрес зникне.',
+      ),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Завершити місію' }),
+    );
+
+    const reward = screen.getByRole('status', {
+      name: 'Нагорода за місію',
+    });
+    expect(within(reward).getByText('+100 XP')).toBeVisible();
+    expect(screen.getByText('Прогрес не зберігається')).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Супер! Нова навичка твоя.' }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ['home', '#/', /Від першого пікселя/],
+    ['not-found', '#/nevidoma-storinka', 'Місії не знайдено'],
+  ])('keeps the blocked-storage notice on the %s route', (_route, hash, headingName) => {
+    vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new DOMException('Blocked', 'SecurityError');
+    });
+    window.history.replaceState(null, '', hash);
+
+    render(<App />);
+
+    expect(screen.getByText('Прогрес не зберігається')).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: headingName }),
     ).toBeInTheDocument();
   });
 });
