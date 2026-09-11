@@ -60,8 +60,9 @@ svg {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 4px;
+  outline: 3px solid var(--purple-deep);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus) !important;
 }
 
 ::selection {
@@ -560,7 +561,7 @@ svg {
 }
 
 .field input::placeholder {
-  color: #898296;
+  color: var(--text-muted);
 }
 
 .course-filters__clear {
