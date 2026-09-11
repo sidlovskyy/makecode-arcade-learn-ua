@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { curriculum, lessons } from './index';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -66,6 +67,15 @@ function brokenCampaign(lessonOverrides: Partial<Lesson> = {}): Campaign {
 }
 
 describe('validateCurriculum', () => {
+  it('contains six valid campaigns and twenty-four ordered lessons', () => {
+    expect(curriculum).toHaveLength(6);
+    expect(lessons).toHaveLength(24);
+    expect(lessons.map((lesson) => lesson.order)).toEqual(
+      Array.from({ length: 24 }, (_, index) => index + 1),
+    );
+    expect(validateCurriculum(curriculum)).toEqual([]);
+  });
+
   it('returns a deterministic error for a non-array outer input', () => {
     const malformed = 'not-a-curriculum' as unknown as Campaign[];
 
