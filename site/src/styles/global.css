@@ -42,7 +42,7 @@
 .visual-lightbox__scroll { overflow: auto; min-height: 0; padding: 0.4rem; overscroll-behavior: contain; }
 .visual-image--enlarged { max-width: none; margin-inline: 0; }
 .visual-image--enlarged img { max-width: none; }
-.visual-image--enlarged.visual-image--blocks { width: 855px; }
+.visual-image--enlarged.visual-image--blocks { width: max-content; min-width: max(100%, 855px); }
 .visual-image--enlarged.visual-image--blocks img { width: 100%; }
 .visual-lightbox .visual-callout, .visual-lightbox__scroll > p { overflow-wrap: anywhere; }
 @media (max-width: 760px) {

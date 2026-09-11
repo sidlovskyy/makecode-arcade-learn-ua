@@ -91,6 +91,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
     info.changeLifeBy(-1)
     scene.cameraShake(4, 500)
     tiles.placeOnTile(sprite, tiles.getTileLocation(1, 5))
+    tiles.placeOnTile(patrol, tiles.getTileLocation(5, 1))
+    tiles.placeOnTile(chaser, tiles.getTileLocation(7, 5))
 })`;
 
 const prototype = step => `${step >= 2 ? 'namespace SpriteKind {\n    export const Bonus = SpriteKind.create()\n}\nlet shield = false\nshield = false\n' : ''}${step >= 4 ? 'game.splash("Збери 8")\n' : ''}let mySprite = sprites.create(${hero}, SpriteKind.Player)

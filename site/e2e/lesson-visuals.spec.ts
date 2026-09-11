@@ -136,6 +136,61 @@ test('keyboard opens and closes the block lightbox and restores focus', async ({
   await expect(opener).toBeFocused();
 });
 
+for (const [lessonId, stepIndex, complex] of [
+  ['lesson-20', 4, true],
+  ['lesson-01', 3, false],
+] as const) {
+  test(`${lessonId}: enlarged blocks ${complex ? 'retain intrinsic size and can be panned' : 'fill the available width'}`, async ({ page }, testInfo) => {
+    const lesson = lessons.find(({ id }) => id === lessonId)!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let index = 0; index < stepIndex; index++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog');
+    const region = dialog.getByRole('region', { name: /Збільшене зображення/ });
+    const image = region.getByRole('img');
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
+    const dimensions = await image.evaluate((element: HTMLImageElement) => {
+      const scroll = element.closest('.visual-lightbox__scroll')!;
+      const style = getComputedStyle(scroll);
+      return {
+        naturalWidth: element.naturalWidth,
+        width: element.getBoundingClientRect().width,
+        viewportWidth: scroll.clientWidth,
+        viewportHeight: scroll.clientHeight,
+        contentWidth: scroll.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+        scrollWidth: scroll.scrollWidth,
+        scrollHeight: scroll.scrollHeight,
+      };
+    });
+    expect(dimensions.width).toBeGreaterThanOrEqual(dimensions.naturalWidth);
+    expect(dimensions.viewportWidth).toBeGreaterThan(250);
+    expect(dimensions.viewportHeight).toBeGreaterThan(300);
+    if (complex) {
+      expect(dimensions.naturalWidth).toBeGreaterThan(2000);
+      expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.viewportWidth);
+      expect(dimensions.scrollHeight).toBeGreaterThan(dimensions.viewportHeight);
+      await page.keyboard.press('Tab');
+      await expect(region).toBeFocused();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => region.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+      await page.keyboard.press('ArrowDown');
+      await expect.poll(() => region.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    } else {
+      expect(dimensions.naturalWidth).toBeLessThan(855);
+      expect(dimensions.width).toBeGreaterThanOrEqual(Math.max(855, dimensions.contentWidth) - 1);
+    }
+    await expectNoOverflow(page);
+    await testInfo.attach('lightbox-dimensions', { body: JSON.stringify(dimensions, null, 2), contentType: 'application/json' });
+    await dialog.screenshot({ path: testInfo.outputPath(`${lessonId}-lightbox.png`) });
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+    await expectNoOverflow(page);
+  });
+}
+
 test('lesson 22 copies exact Python with indentation to the real clipboard', async ({ page }) => {
   await page.goto('/#/lesson/python-u-hri');
   await page.getByRole('button', { name: 'Копіювати код' }).click();
