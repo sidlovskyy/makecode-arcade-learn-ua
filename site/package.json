@@ -13,6 +13,7 @@
     "visuals:setup": "playwright install chromium",
     "visuals:test": "node --test tools/visuals/*.test.mjs",
     "visuals:render": "node tools/render-block-visuals.mjs",
+    "visuals:capture": "node tools/capture-editor-scenes.mjs",
     "visuals:registry": "node tools/generate-visual-registry.mjs",
     "visuals:check": "node tools/check-visual-assets.mjs"
   },
