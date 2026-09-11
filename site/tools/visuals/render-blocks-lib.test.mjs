@@ -73,6 +73,72 @@ test('SVG accepts a positive viewBox without explicit dimensions', () => {
   assert.equal(validateSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40"/>', id).width, 120);
 });
 
+for (const [label, content] of [
+  ['XHTML image', '<img xmlns="http://www.w3.org/1999/xhtml" src="https://blocked.example/remote.png"/>'],
+  ['prefixed XHTML image', '<h:img xmlns:h="http://www.w3.org/1999/xhtml" src="https://blocked.example/remote.png"/>'],
+  ['mixed-case XHTML image and encoded source', '<h:IMG xmlns:h="http://www.w3.org/1999/xhtml" SrC="&#104;ttps://blocked.example/remote.png"/>'],
+  ['XHTML frame', '<iframe xmlns="http://www.w3.org/1999/xhtml" src="https://blocked.example/frame"/>'],
+  ['XHTML frame with inline content', '<iframe xmlns="http://www.w3.org/1999/xhtml" srcdoc="&lt;img src=&quot;https://blocked.example/remote.png&quot;/&gt;"/>'],
+  ['XHTML object', '<object xmlns="http://www.w3.org/1999/xhtml" data="https://blocked.example/object"/>'],
+  ['MathML integration content', '<annotation-xml xmlns="http://www.w3.org/1998/Math/MathML" encoding="text/html"><img xmlns="http://www.w3.org/1999/xhtml" src="https://blocked.example/remote.png"/></annotation-xml>'],
+  ['namespace-reset element', '<img xmlns="" src="https://blocked.example/remote.png"/>'],
+  ['active descendant in a screen-reader label', '<span xmlns="http://www.w3.org/1999/xhtml" class="sr-only"><img src="https://blocked.example/remote.png"/></span>'],
+  ['resource attribute on a screen-reader label', '<span xmlns="http://www.w3.org/1999/xhtml" class="sr-only" style="background: url(https://blocked.example/remote.png)">toggle: ON</span>'],
+]) {
+  for (const location of ['top-level', 'base64 SVG href', 'percent-encoded SVG CSS']) {
+    test(`rejects ${label} in ${location}`, () => {
+      const active = svg.replace('</svg>', `${content}</svg>`);
+      const markup = location === 'top-level' ? active : location === 'base64 SVG href'
+        ? svg.replace('</svg>', `<image href="data:image/svg+xml;base64,${Buffer.from(active).toString('base64')}"/></svg>`)
+        : svg.replace('<text>', `<text style="fill: url('data:image/svg+xml,${encodeURIComponent(active)}')">`);
+      assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*(?:unsafe|unsupported|remote)/);
+    });
+  }
+}
+
+for (const attribute of [
+  'src="https://blocked.example/remote.png"',
+  'SrC="&#x68;ttps://blocked.example/remote.png"',
+  'srcset="https://blocked.example/remote.png 1x"',
+  'srcdoc="&lt;img src=&quot;https://blocked.example/remote.png&quot;/&gt;"',
+  'poster="https://blocked.example/remote.png"',
+  'data="https://blocked.example/object"',
+  'xml:base="https://blocked.example/"',
+  'xmlns:x="urn:foreign" x:src="https://blocked.example/remote.png"',
+  'xmlns:x="urn:foreign" x:onload="alert(1)"',
+  'HREF="&#104;ttps://blocked.example/remote.png"',
+  'StYlE="fill: url(&#104;ttps://blocked.example/remote.png)"',
+]) {
+  test(`rejects resource or active attribute ${attribute} by normalized local name`, () => {
+    const markup = svg.replace('<text>', `<text ${attribute}>`);
+    assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*(?:unsafe|unsupported|remote)/);
+  });
+}
+
+test('preserves official plain-text XHTML screen-reader labels and safe prefixed SVG image references recursively', () => {
+  const safe = svg.replace('</svg>', '<span xmlns="http://www.w3.org/1999/xhtml" class="sr-only">toggle: ON</span></svg>');
+  assert.deepEqual(validateSvg(safe, id), { width: 120, height: 40 });
+  const resource = `data:image/svg+xml;base64,${Buffer.from(safe).toString('base64')}`;
+  const markup = svg.replace('</svg>', `<s:image xmlns:s="http://www.w3.org/2000/svg" xmlns:l="http://www.w3.org/1999/xlink" l:href="${resource}"/></svg>`);
+  assert.deepEqual(validateSvg(markup, id), { width: 120, height: 40 });
+});
+
+test('preserves the real official controller icon with inert XML editor metadata', async () => {
+  const asset = await readFile(new URL('../../src/assets/lesson-visuals/blocks/lesson-03-step-02.svg', import.meta.url), 'utf8');
+  assert.doesNotThrow(() => validateSvg(asset, 'lesson-03-step-02'));
+});
+
+for (const content of [
+  '<img xmlns="http://www.w3.org/1999/xhtml" src="https://blocked.example/remote.png"/>',
+  '<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/" src="https://blocked.example/remote.png"/>',
+]) {
+  test(`inert metadata never exempts nested active elements or resource attributes: ${content}`, () => {
+    const nested = svg.replace('</svg>', `<metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">${content}</rdf:RDF></metadata></svg>`);
+    const markup = svg.replace('</svg>', `<image href="data:image/svg+xml;base64,${Buffer.from(nested).toString('base64')}"/></svg>`);
+    assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*(?:unsafe|unsupported|remote)/);
+  });
+}
+
 for (const [label, resource] of [
   ['XML entity', '&#104;ttps://example.com/paint.svg#paint'],
   ['CSS escaped https', String.raw`\68 ttps://example.com/paint.svg#paint`],

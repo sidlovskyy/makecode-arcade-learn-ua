@@ -4,6 +4,37 @@ import { randomUUID } from 'node:crypto';
 import { JSDOM } from 'jsdom';
 import { tokenize, TokenType } from '@csstools/css-tokenizer';
 
+const svgNamespace = 'http://www.w3.org/2000/svg';
+const htmlNamespace = 'http://www.w3.org/1999/xhtml';
+const xmlNamespace = 'http://www.w3.org/XML/1998/namespace';
+const xmlnsNamespace = 'http://www.w3.org/2000/xmlns/';
+const xlinkNamespace = 'http://www.w3.org/1999/xlink';
+
+// These exact inert editor/credit metadata fields occur in official embedded
+// controller icons. Their namespace URIs and RDF identifiers are not resources.
+// Descendant elements and attributes still undergo the normal safety checks.
+const metadataElements = new Map([
+  ['http://www.w3.org/1999/02/22-rdf-syntax-ns#', new Set(['RDF'])],
+  ['http://creativecommons.org/ns#', new Set(['Work'])],
+  ['http://purl.org/dc/elements/1.1/', new Set(['format', 'type', 'title'])],
+  ['http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd', new Set(['namedview'])],
+]);
+const metadataAttributes = new Map([
+  ['http://www.w3.org/1999/02/22-rdf-syntax-ns#', new Set(['about', 'resource'])],
+  ['http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd', new Set(['docname'])],
+  ['http://www.inkscape.org/namespaces/inkscape', new Set([
+    'version', 'pageopacity', 'pageshadow', 'window-width', 'window-height',
+    'zoom', 'cx', 'cy', 'window-x', 'window-y', 'window-maximized', 'current-layer',
+  ])],
+]);
+
+// Static SVGs use checked href/CSS resources, never HTML resource attributes
+// or a base URL that could turn an accepted fragment into a remote request.
+const unsupportedResourceAttributes = new Set([
+  'src', 'srcset', 'srcdoc', 'poster', 'data', 'action', 'formaction',
+  'background', 'codebase', 'archive', 'manifest', 'ping', 'base',
+]);
+
 const resourceAttributes = new Set([
   'style', 'fill', 'stroke', 'filter', 'clip-path', 'mask', 'cursor',
   'marker', 'marker-start', 'marker-mid', 'marker-end', 'color-profile',
@@ -175,18 +206,37 @@ export function validateSvg(svg, id, depth = 0) {
     const instructions = dom.window.document.createTreeWalker(dom.window.document, dom.window.NodeFilter.SHOW_PROCESSING_INSTRUCTION);
     if (instructions.nextNode()) fail('unsafe SVG processing instruction');
     const root = dom.window.document.documentElement;
-    if (root.localName !== 'svg' || root.namespaceURI !== 'http://www.w3.org/2000/svg') fail('invalid SVG root');
+    if (root.localName !== 'svg' || root.namespaceURI !== svgNamespace) fail('invalid SVG root');
     for (const element of [root, ...root.querySelectorAll('*')]) {
-      if (smilElements.has(element.localName.toLowerCase())) fail('unsupported SMIL element in static SVG');
-      if (['script', 'foreignobject'].includes(element.localName.toLowerCase())) fail('unsafe SVG element');
-      if (element.localName === 'style') validateCssResources(element.textContent, fail, id, depth);
+      const elementName = element.localName.toLowerCase();
+      if (smilElements.has(elementName)) fail('unsupported SMIL element in static SVG');
+      if (['script', 'foreignobject'].includes(elementName)) fail('unsafe SVG element');
+      // MakeCode exports harmless XHTML screen-reader labels. Permit only these
+      // leaf text spans; foreign images/frames and nested active content are unsafe.
+      const isTextLabel = element.namespaceURI === htmlNamespace && element.localName === 'span'
+        && element.childElementCount === 0 && element.getAttribute('class') === 'sr-only'
+        && [...element.attributes].every((attribute) => attribute.namespaceURI === xmlnsNamespace
+          || (attribute.namespaceURI === null && attribute.localName === 'class'));
+      const isMetadata = metadataElements.get(element.namespaceURI)?.has(element.localName);
+      if (element.namespaceURI !== svgNamespace && !isTextLabel && !isMetadata) fail('unsupported foreign content in SVG');
+      if (elementName === 'style') validateCssResources(element.textContent, fail, id, depth);
       for (const attribute of element.attributes) {
+        // Declarations do not fetch their namespace URIs; actual elements and
+        // attributes using those namespaces must pass the checks independently.
+        if (attribute.namespaceURI === xmlnsNamespace) continue;
+        const attributeName = attribute.localName.toLowerCase();
         const value = attribute.value.trim();
-        if (/^on/i.test(attribute.name) || /javascript\s*:/i.test(value)) fail('unsafe SVG attribute');
-        if (attribute.localName === 'href' && !value.startsWith('#') && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value)) {
+        if (/^on/.test(attributeName) || /javascript\s*:/i.test(value)) fail('unsafe SVG attribute');
+        const supportedNamespace = attribute.namespaceURI === null
+          || (attribute.namespaceURI === xmlNamespace && ['lang', 'space'].includes(attributeName))
+          || (attribute.namespaceURI === xlinkNamespace && attributeName === 'href')
+          || metadataAttributes.get(attribute.namespaceURI)?.has(attribute.localName);
+        if (!supportedNamespace) fail('unsupported SVG attribute namespace');
+        if (unsupportedResourceAttributes.has(attributeName)) fail('unsupported SVG resource attribute');
+        if (attributeName === 'href' && !value.startsWith('#') && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value)) {
           if (!validateEmbeddedSvg(value, id, depth)) fail('remote or unsupported SVG href');
         }
-        if (resourceAttributes.has(attribute.localName)) validateCssResources(value, fail, id, depth);
+        if (resourceAttributes.has(attributeName)) validateCssResources(value, fail, id, depth);
       }
     }
     // Embedded icons may rely on CSS/default sizing. The positive intrinsic-size

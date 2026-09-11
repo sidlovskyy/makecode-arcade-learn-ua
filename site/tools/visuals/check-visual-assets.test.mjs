@@ -130,3 +130,24 @@ for (const [name, markup, diagnostic] of [
     await assert.rejects(checkVisualAssets({ siteRoot: fixture.root }), diagnostic);
   });
 }
+
+for (const [label, content] of [
+  ['XHTML image src', '<img xmlns="http://www.w3.org/1999/xhtml" src="https://blocked.example/remote.png"/>'],
+  ['prefixed XHTML iframe with encoded src', '<h:iframe xmlns:h="http://www.w3.org/1999/xhtml" src="&#104;ttps://blocked.example/frame"/>'],
+  ['SVG resource attribute', '<image SrC="&#104;ttps://blocked.example/remote.png"/>'],
+]) {
+  for (const location of ['top-level', 'nested base64 SVG']) {
+    test(`strict audit rejects ${label} in ${location} without changing assets or registry`, async (t) => {
+      const fixture = await project(t);
+      const active = svg.replace('/>', `>${content}</svg>`);
+      const markup = location === 'top-level' ? active
+        : svg.replace('/>', `><image href="data:image/svg+xml;base64,${Buffer.from(active).toString('base64')}"/></svg>`);
+      const assetFile = path.join(fixture.blocks, `${blockCatalog[0].id}.svg`);
+      const beforeRegistry = await readFile(fixture.registry, 'utf8');
+      await writeFile(assetFile, markup);
+      await assert.rejects(checkVisualAssets({ siteRoot: fixture.root }), /lesson-01-step-04.*(?:unsafe|unsupported|remote)/);
+      assert.equal(await readFile(fixture.registry, 'utf8'), beforeRegistry);
+      assert.equal(await readFile(assetFile, 'utf8'), markup);
+    });
+  }
+}
