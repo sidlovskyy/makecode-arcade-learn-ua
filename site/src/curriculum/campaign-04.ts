@@ -206,8 +206,10 @@ export const campaign04: Campaign = {
           id: 'lesson-15-step-05',
           title: 'Прибирай переможених',
           instruction:
-            'Додай постріл кнопкою A. В overlap Projectile з Enemy видали otherSprite з масиву enemies, а потім знищ обидва спрайти.',
+            'Додай постріл кнопкою A. В overlap Projectile з Enemy задай enemyIndex як index of otherSprite in enemies. Якщо enemyIndex ≥ 0, застосуй до enemies блок get and remove value at enemyIndex. Потім знищ sprite і otherSprite.',
           expected: 'Після влучання ворог зникає, а довжина масиву зменшується на один.',
+          hint:
+            'Спочатку знайди позицію потрібного ворога блоком index of. Блок get and remove value at приймає цю позицію, а не сам спрайт.',
         },
         {
           id: 'lesson-15-step-06',

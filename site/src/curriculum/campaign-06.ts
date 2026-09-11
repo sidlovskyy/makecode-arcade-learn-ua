@@ -98,8 +98,8 @@ export const campaign06: Campaign = {
           id: 'lesson-22-step-01',
           title: 'Назви типи',
           instruction:
-            'Створи спрайт у Blocks, перейди в JavaScript і перейменуй змінну на player. У її оголошенні явно додай тип Sprite: let player: Sprite.',
-          expected: 'Код компілюється, а наведення на player показує тип Sprite.',
+            'Створи спрайт у Blocks, перейди в JavaScript і перейменуй змінну на player. Не видаляй створення спрайта: повний рядок має виглядати як let player: Sprite = sprites.create(...), де замість трьох крапок лишається згенерований вираз зображення та SpriteKind.Player.',
+          expected: 'Код містить і тип Sprite, і sprites.create(...), компілюється, а наведення на player показує тип Sprite.',
         },
         {
           id: 'lesson-22-step-02',
@@ -204,15 +204,17 @@ export const campaign06: Campaign = {
           id: 'lesson-23-step-05',
           title: 'Додай офіційну мінікарту',
           instruction:
-            'В Extensions знайди microsoft/arcade-minimap. Створи мінікарту tilemap, додай до неї Player і закріпи отриманий спрайт у куті прапорцем RelativeToCamera.',
+            'В Extensions знайди microsoft/arcade-minimap. Створи myMinimap у масштабі Quarter, виконай draw Player on myMinimap, а потім створи minimapSprite із зображення myMinimap image. Задай minimapSprite новий kind MiniMap, z 50, RelativeToCamera ON і постав його у верхній правий кут.',
           expected: 'У куті видно зменшену карту рівня з позначкою поточного місця героя.',
+          hint:
+            'Блок minimap створює об’єкт Minimap, а не спрайт. Передай блок myMinimap image у звичайний блок створення sprite, щоб карту було видно на екрані.',
         },
         {
           id: 'lesson-23-step-06',
           title: 'Оновлюй без гальм',
           instruction:
-            'Оновлюй зображення мінікарти кожні 500 ms, а не в кожному кадрі. Пройди всю карту й стеж за плавністю.',
-          expected: 'Позначка на мінікарті рухається приблизно двічі на секунду, а керування й паралакс лишаються плавними.',
+            'У game on update every 500 ms щоразу заново створи myMinimap у масштабі Quarter, виконай draw Player on myMinimap і задай minimapSprite image to myMinimap image. Пройди всю карту й стеж за плавністю.',
+          expected: 'Приблизно двічі на секунду позначка переходить у нове місце без старого сліду, а керування й паралакс лишаються плавними.',
         },
       ],
       challenge: {

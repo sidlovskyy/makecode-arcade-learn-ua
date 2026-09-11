@@ -66,6 +66,51 @@ function brokenCampaign(lessonOverrides: Partial<Lesson> = {}): Campaign {
   return broken;
 }
 
+const expectedCampaignIdentities = [
+  ['campaign-01', 1, 'Новачок'],
+  ['campaign-02', 2, 'Дослідник'],
+  ['campaign-03', 3, 'Розробник ігор'],
+  ['campaign-04', 4, 'Архітектор світів'],
+  ['campaign-05', 5, 'Геймдизайнер'],
+  ['campaign-06', 6, 'Майстер коду'],
+];
+
+const expectedLessonIdentities = [
+  ['lesson-01', 'znaiomstvo-z-arcade', 'Знайомство з Arcade'],
+  ['lesson-02', 'mii-pershyi-sprait', 'Мій перший спрайт'],
+  ['lesson-03', 'heroi-pid-kontrolem', 'Герой під контролем'],
+  ['lesson-04', 'pikselni-perehony', 'Піксельні перегони'],
+  ['lesson-05', 'knopky-i-podii', 'Кнопки й події'],
+  ['lesson-06', 'koly-spraity-zustrichaiutsia', 'Коли спрайти зустрічаються'],
+  ['lesson-07', 'rakhunok-zhyttia-chas', 'Рахунок, життя, час'],
+  ['lesson-08', 'lovy-zirky', 'Лови зірки'],
+  ['lesson-09', 'snariady-i-nebezpeky', 'Снаряди й небезпеки'],
+  ['lesson-10', 'rishennia-hry', 'Рішення гри'],
+  ['lesson-11', 'hra-ne-zupyniaietsia', 'Гра не зупиняється'],
+  ['lesson-12', 'kosmichnyi-zakhysnyk', 'Космічний захисник'],
+  ['lesson-13', 'zhyvi-personazhi', 'Живі персонажі'],
+  ['lesson-14', 'buduiemo-kartu', 'Будуємо карту'],
+  ['lesson-15', 'meshkantsi-svitu', 'Мешканці світу'],
+  ['lesson-16', 'zahublenyi-krystal', 'Загублений кристал'],
+  ['lesson-17', 'rivni-ta-skladnist', 'Рівні та складність'],
+  ['lesson-18', 'rozumni-suprotyvnyky', 'Розумні супротивники'],
+  ['lesson-19', 'vid-prototypu-do-hry', 'Від прототипу до гри'],
+  ['lesson-20', 'arena-bosiv', 'Арена босів'],
+  ['lesson-21', 'vid-blokiv-do-kodu', 'Від блоків до коду'],
+  ['lesson-22', 'typescript-u-hri', 'TypeScript у грі'],
+  ['lesson-23', 'hrafika-maistra', 'Графіка майстра'],
+  ['lesson-24', 'moia-vlasna-hra', 'Моя власна гра'],
+];
+
+const expectedCampaignLessonIds = [
+  ['lesson-01', 'lesson-02', 'lesson-03', 'lesson-04'],
+  ['lesson-05', 'lesson-06', 'lesson-07', 'lesson-08'],
+  ['lesson-09', 'lesson-10', 'lesson-11', 'lesson-12'],
+  ['lesson-13', 'lesson-14', 'lesson-15', 'lesson-16'],
+  ['lesson-17', 'lesson-18', 'lesson-19', 'lesson-20'],
+  ['lesson-21', 'lesson-22', 'lesson-23', 'lesson-24'],
+];
+
 describe('validateCurriculum', () => {
   it('contains six valid campaigns and twenty-four ordered lessons', () => {
     expect(curriculum).toHaveLength(6);
@@ -73,6 +118,22 @@ describe('validateCurriculum', () => {
     expect(lessons.map((lesson) => lesson.order)).toEqual(
       Array.from({ length: 24 }, (_, index) => index + 1),
     );
+    expect(curriculum.map(({ id, order, title }) => [id, order, title])).toEqual(
+      expectedCampaignIdentities,
+    );
+    expect(lessons.map(({ id, slug, title }) => [id, slug, title])).toEqual(
+      expectedLessonIdentities,
+    );
+    expect(curriculum.map((campaign) => campaign.lessons.map((lesson) => lesson.id))).toEqual(
+      expectedCampaignLessonIds,
+    );
+    expect(lessons.map((lesson) => lesson.prerequisites)).toEqual([
+      [],
+      ...expectedLessonIdentities.slice(0, -1).map(([id]) => [id]),
+    ]);
+    expect(
+      lessons.every((lesson) => lesson.steps.some((step) => Boolean(step.hint?.trim()))),
+    ).toBe(true);
     expect(validateCurriculum(curriculum)).toEqual([]);
   });
 
