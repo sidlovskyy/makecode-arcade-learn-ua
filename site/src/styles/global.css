@@ -217,8 +217,8 @@ svg {
   display: grid;
   min-height: 570px;
   align-items: center;
-  gap: clamp(38px, 7vw, 94px);
-  grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.72fr);
+  gap: clamp(30px, 4vw, 54px);
+  grid-template-columns: minmax(260px, 0.72fr) minmax(540px, 1.28fr);
   padding-block: clamp(66px, 9vw, 116px) clamp(74px, 10vw, 126px);
 }
 
@@ -243,7 +243,7 @@ svg {
 .hero h1 {
   max-width: 700px;
   margin: 0;
-  font-size: clamp(3.35rem, 7vw, 6.7rem);
+  font-size: clamp(3.35rem, 5.7vw, 5.45rem);
   font-weight: 900;
   letter-spacing: -0.075em;
   line-height: 0.92;
@@ -317,9 +317,14 @@ svg {
 
 .progress-summary {
   position: relative;
-  padding: clamp(26px, 4vw, 38px);
+  display: grid;
+  overflow: hidden;
+  min-height: 480px;
+  padding: 0;
   border: 2px solid rgb(130 243 206 / 45%);
   border-radius: var(--radius-lg);
+  grid-template-columns: minmax(250px, 0.88fr) minmax(280px, 1.12fr);
+  isolation: isolate;
   background:
     linear-gradient(145deg, rgb(255 255 255 / 9%), transparent 55%),
     var(--ink-raised);
@@ -330,6 +335,7 @@ svg {
 
 .progress-summary::before {
   position: absolute;
+  z-index: 2;
   top: 18px;
   right: 18px;
   width: 8px;
@@ -337,6 +343,33 @@ svg {
   background: var(--yellow);
   box-shadow: 14px 0 0 var(--pink), 28px 0 0 var(--mint);
   content: '';
+}
+
+.progress-summary__content {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  padding: clamp(26px, 3vw, 38px);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 9%), transparent 55%),
+    var(--ink-raised);
+}
+
+.progress-summary__art {
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--border-on-dark);
+  background: var(--ink-deep);
+}
+
+.progress-summary__art img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: 72% center;
 }
 
 .progress-summary__topline {
@@ -1931,12 +1964,13 @@ svg {
   font-weight: 900;
 }
 
-.storage-notice h2,
+.storage-notice__title,
 .storage-notice p {
   margin: 0;
 }
 
-.storage-notice h2 {
+.storage-notice__title {
+  display: block;
   font-size: 0.95rem;
   letter-spacing: -0.01em;
 }
@@ -2095,5 +2129,141 @@ svg {
 
   .achievement-toast__campaign strong {
     text-align: left;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    padding-block: 62px 88px;
+  }
+
+  .hero__copy {
+    max-width: 780px;
+  }
+
+  .hero__panel {
+    width: 100%;
+    max-width: none;
+  }
+
+  .progress-summary {
+    grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .lesson-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-block: 52px 72px;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 14vw, 4.6rem);
+  }
+
+  .progress-summary {
+    min-height: 0;
+    padding: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .progress-summary__content {
+    padding: 27px 22px;
+  }
+
+  .progress-summary__art {
+    min-height: 0;
+    border-top: 1px solid var(--border-on-dark);
+    border-left: 0;
+  }
+
+  .progress-summary__art img {
+    height: auto;
+    object-position: center;
+  }
+
+  .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-card-item,
+  .lesson-card-item:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .lesson-card-item:nth-child(n + 2) {
+    border-top: 1px solid #dedbe9;
+  }
+
+  .lesson-layout {
+    margin-top: 42px;
+  }
+
+  .lesson-sidebar {
+    min-width: 0;
+  }
+
+  .step-navigator__heading {
+    padding: 15px 16px 12px;
+  }
+
+  .step-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px 12px 12px;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline proximity;
+  }
+
+  .step-list__item,
+  .step-list__item + .step-list__item {
+    flex: 0 0 auto;
+    border-top: 0;
+    scroll-snap-align: start;
+  }
+
+  .step-list__item button {
+    width: 44px;
+    min-height: 44px;
+    gap: 8px;
+    grid-template-columns: 28px;
+    padding: 7px;
+  }
+
+  .step-list__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .step-list__item[data-status='current'] button {
+    width: auto;
+    max-width: min(72vw, 300px);
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .step-list__item[data-status='current'] .step-list__label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: hidden;
+    clip: auto;
+    white-space: nowrap;
+  }
+
+  .makecode-action {
+    width: 100%;
+    max-width: none;
   }
 }

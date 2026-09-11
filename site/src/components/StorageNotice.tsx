@@ -17,7 +17,9 @@ export function StorageNotice({ storageAvailable }: StorageNoticeProps) {
       <div className="page-shell storage-notice__inner">
         <span className="storage-notice__icon" aria-hidden="true">!</span>
         <div>
-          <h2 id="storage-notice-title">Прогрес не зберігається</h2>
+          <strong className="storage-notice__title" id="storage-notice-title">
+            Прогрес не зберігається
+          </strong>
           <p>
             Уроки працюють як завжди, але після закриття сторінки прогрес зникне.
           </p>

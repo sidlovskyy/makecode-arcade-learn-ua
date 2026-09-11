@@ -270,7 +270,7 @@ export function LessonScreen({
         </section>
 
         <div className="lesson-layout">
-          <aside className="lesson-sidebar">
+          <aside className="lesson-sidebar" aria-label="Інструменти місії">
             <StepNavigator
               steps={lesson.steps}
               currentIndex={phase === 'steps' && (!hasCompletedLesson || isReviewingCompletedLesson)

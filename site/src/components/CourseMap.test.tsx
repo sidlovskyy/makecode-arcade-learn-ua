@@ -81,6 +81,29 @@ describe('CourseMap', () => {
     ).toHaveLength(24);
   });
 
+  it('lets a keyboard user open the first lesson with Enter', async () => {
+    const user = userEvent.setup();
+    render(
+      <CourseMap campaigns={curriculum} progress={createDefaultProgress()} />,
+    );
+
+    await user.tab();
+    expect(screen.getByRole('searchbox', { name: 'Пошук місій' })).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole('combobox', { name: 'Складність' })).toHaveFocus();
+
+    await user.tab();
+    const firstLesson = screen.getByRole('link', {
+      name: 'Місія 1: Знайомство з Arcade. Не розпочато',
+    });
+    expect(firstLesson).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+
+    expect(window.location.hash).toBe('#/lesson/znaiomstvo-z-arcade');
+  });
+
   it('narrows the real curriculum to lessons relevant to a search', async () => {
     const user = userEvent.setup();
     render(
@@ -171,6 +194,12 @@ describe('ProgressSummary', () => {
     expect(screen.getByRole('link', {
       name: /Почати квест.*Знайомство з Arcade/,
     })).toHaveAttribute('href', '#/lesson/znaiomstvo-z-arcade');
+
+    const artwork = screen.getByRole('img', {
+      name: 'Дитина з портативною консоллю серед піксельних героїв і фантастичних світів',
+    });
+    expect(artwork).toHaveAttribute('width', '1536');
+    expect(artwork).toHaveAttribute('height', '1024');
   });
 
   it('resumes the remembered unfinished lesson and reports course progress', () => {

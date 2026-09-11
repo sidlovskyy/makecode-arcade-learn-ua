@@ -119,7 +119,7 @@ export function CourseMap({ campaigns, progress }: CourseMapProps) {
         </button>
       </div>
 
-      <p className="course-results" aria-live="polite">
+      <p className="course-results">
         {resultCount === 1 ? 'Знайдено 1 місію' : `Знайдено місій: ${resultCount}`}
       </p>
 
