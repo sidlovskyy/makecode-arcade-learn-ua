@@ -1,5 +1,6 @@
+import { StrictMode, type ReactNode } from 'react';
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PROGRESS_KEY, type ProgressState } from './schema';
 import { useProgress } from './useProgress';
 
@@ -31,6 +32,19 @@ class MemoryStorage implements Storage {
   }
 }
 
+class CountingStorage extends MemoryStorage {
+  writes = 0;
+
+  override setItem(key: string, value: string): void {
+    this.writes += 1;
+    super.setItem(key, value);
+  }
+}
+
+function StrictModeWrapper({ children }: { children: ReactNode }) {
+  return <StrictMode>{children}</StrictMode>;
+}
+
 function readStoredProgress(storage: Storage): ProgressState {
   const serialized = storage.getItem(PROGRESS_KEY);
 
@@ -42,6 +56,10 @@ function readStoredProgress(storage: Storage): ProgressState {
 }
 
 describe('useProgress', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('loads injected storage once and exposes its availability', () => {
     const storage = new MemoryStorage();
     storage.setItem(
@@ -89,6 +107,21 @@ describe('useProgress', () => {
     expect(result.current.storageAvailable).toBe(false);
   });
 
+  it('starts clean and unavailable when reading window.localStorage itself throws', () => {
+    vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new Error('blocked getter');
+    });
+
+    const { result } = renderHook(() => useProgress());
+
+    expect(result.current.progress).toEqual({
+      version: 1,
+      lessons: {},
+      totalXp: 0,
+    });
+    expect(result.current.storageAvailable).toBe(false);
+  });
+
   it('marks a step done in state and injected storage', () => {
     const storage = new MemoryStorage();
     const { result } = renderHook(() => useProgress(storage));
@@ -115,6 +148,30 @@ describe('useProgress', () => {
 
     expect(result.current.progress.lessons['lesson-02']?.quizPassed).toBe(true);
     expect(readStoredProgress(storage).lessons['lesson-02']?.quizPassed).toBe(true);
+  });
+
+  it('applies and persists different actions issued in one batch exactly once each', () => {
+    const storage = new CountingStorage();
+    const { result } = renderHook(() => useProgress(storage), {
+      wrapper: StrictModeWrapper,
+    });
+
+    act(() => {
+      result.current.markStepDone('lesson-02', 'draw-hero');
+      result.current.markQuizPassed('lesson-02');
+    });
+
+    expect(result.current.progress.lessons['lesson-02']).toEqual({
+      completedStepIds: ['draw-hero'],
+      quizPassed: true,
+      completed: false,
+    });
+    expect(readStoredProgress(storage).lessons['lesson-02']).toEqual({
+      completedStepIds: ['draw-hero'],
+      quizPassed: true,
+      completed: false,
+    });
+    expect(storage.writes).toBe(2);
   });
 
   it('finishes a lesson, remembers it, and awards XP only once', () => {
@@ -160,6 +217,29 @@ describe('useProgress', () => {
     expect(result.current.progress.lessons['lesson-02']?.completedStepIds).toEqual([
       'draw-hero',
     ]);
+    expect(result.current.storageAvailable).toBe(false);
+  });
+
+  it('keeps storage unavailable after a failed read even when writing succeeds', () => {
+    let serialized: string | null = null;
+    const unreadableStorage = {
+      getItem: () => {
+        throw new Error('blocked read');
+      },
+      setItem: (_key: string, value: string) => {
+        serialized = value;
+      },
+    } as unknown as Storage;
+    const { result } = renderHook(() => useProgress(unreadableStorage));
+
+    expect(result.current.storageAvailable).toBe(false);
+
+    act(() => result.current.markStepDone('lesson-02', 'draw-hero'));
+
+    expect(result.current.progress.lessons['lesson-02']?.completedStepIds).toEqual([
+      'draw-hero',
+    ]);
+    expect(serialized).not.toBeNull();
     expect(result.current.storageAvailable).toBe(false);
   });
 });

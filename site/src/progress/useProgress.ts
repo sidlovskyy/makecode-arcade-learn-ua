@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   completeLesson,
   completeStep,
+  createDefaultProgress,
   passQuiz,
   setLastLesson,
   type ProgressState,
@@ -25,33 +26,65 @@ interface ProgressSnapshot {
   storageAvailable: boolean;
 }
 
+interface InitialProgress extends ProgressSnapshot {
+  storage: Storage | null;
+}
+
 type ProgressUpdate = (progress: ProgressState) => ProgressState;
 
-export function useProgress(
-  storage: Storage = window.localStorage,
-): ProgressStore {
-  const [snapshot, setSnapshot] = useState<ProgressSnapshot>(() => {
-    const loaded = loadProgress(storage);
+function getDefaultStorage(): Storage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function initializeProgress(storage: Storage | undefined): InitialProgress {
+  const resolvedStorage = storage ?? getDefaultStorage();
+
+  if (resolvedStorage === null) {
     return {
-      progress: loaded.progress,
-      storageAvailable: loaded.available,
+      progress: createDefaultProgress(),
+      storageAvailable: false,
+      storage: null,
     };
-  });
+  }
 
-  const updateProgress = useCallback(
-    (update: ProgressUpdate) => {
-      setSnapshot((current) => {
-        const progress = update(current.progress);
+  const loaded = loadProgress(resolvedStorage);
 
-        return {
-          progress,
-          storageAvailable: saveProgress(storage, progress),
-        };
-      });
-    },
-    [storage],
-  );
+  return {
+    progress: loaded.progress,
+    storageAvailable: loaded.available,
+    storage: resolvedStorage,
+  };
+}
+
+export function useProgress(storage?: Storage): ProgressStore {
+  const [initial] = useState<InitialProgress>(() => initializeProgress(storage));
+  const progressRef = useRef(initial.progress);
+  const storageRef = useRef(initial.storage);
+  const storageAvailableRef = useRef(initial.storageAvailable);
+  const [snapshot, setSnapshot] = useState<ProgressSnapshot>(() => ({
+    progress: initial.progress,
+    storageAvailable: initial.storageAvailable,
+  }));
+
+  const updateProgress = useCallback((update: ProgressUpdate) => {
+    const progress = update(progressRef.current);
+    progressRef.current = progress;
+
+    const storage = storageRef.current;
+    const saved = storage === null ? false : saveProgress(storage, progress);
+    const storageAvailable = storageAvailableRef.current && saved;
+    storageAvailableRef.current = storageAvailable;
+
+    setSnapshot({ progress, storageAvailable });
+  }, []);
 
   const markStepDone = useCallback(
     (lessonId: string, stepId: string) => {
