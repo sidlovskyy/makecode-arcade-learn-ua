@@ -1,17 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AchievementToast } from '../components/AchievementToast';
 import { AppHeader } from '../components/AppHeader';
 import { CourseMap } from '../components/CourseMap';
 import { LessonScreen } from '../components/LessonScreen';
 import { NotFound } from '../components/NotFound';
 import { ProgressSummary } from '../components/ProgressSummary';
 import { SiteFooter } from '../components/SiteFooter';
+import { StorageNotice } from '../components/StorageNotice';
 import { curriculum, lessonBySlug } from '../curriculum';
+import type { Lesson } from '../curriculum/types';
 import type { ProgressState } from '../progress/schema';
 import { useProgress } from '../progress/useProgress';
 import { navigateTo, parseHash, type AppRoute } from './routes';
 
+interface CompletionResult {
+  lessonTitle: string;
+  xp: number;
+  campaignReward?: string;
+}
+
 function readRoute(): AppRoute {
   return parseHash(window.location.hash);
+}
+
+function getCampaignReward(lessonId: string): string | undefined {
+  const completedCampaign = curriculum.find((campaign) => {
+    const finalLesson = campaign.lessons[campaign.lessons.length - 1];
+    return finalLesson?.id === lessonId;
+  });
+
+  return completedCampaign?.reward;
 }
 
 function HomeRoute({ progress }: { progress: ProgressState }) {
@@ -48,14 +66,27 @@ function HomeRoute({ progress }: { progress: ProgressState }) {
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>(readRoute);
+  const [completionResult, setCompletionResult] = useState<CompletionResult>();
   const progressStore = useProgress();
-  const { progress } = progressStore;
+  const { progress, storageAvailable } = progressStore;
 
   useEffect(() => {
     const handleHashChange = () => setRoute(readRoute());
     window.addEventListener('hashchange', handleHashChange);
 
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleLessonCompleted = useCallback((lesson: Lesson) => {
+    setCompletionResult({
+      lessonTitle: lesson.title,
+      xp: lesson.xp,
+      campaignReward: getCampaignReward(lesson.id),
+    });
+  }, []);
+
+  const dismissAchievement = useCallback(() => {
+    setCompletionResult(undefined);
   }, []);
 
   const activeLesson = route.name === 'lesson'
@@ -65,6 +96,7 @@ export function App() {
   return (
     <div className="app-shell">
       <AppHeader totalXp={progress.totalXp} />
+      <StorageNotice storageAvailable={storageAvailable} />
       {route.name === 'home' && <HomeRoute progress={progress} />}
       {route.name === 'lesson' && activeLesson && (
         <LessonScreen
@@ -73,10 +105,19 @@ export function App() {
           lessonProgress={progress.lessons[activeLesson.id]}
           actions={progressStore}
           onHome={() => navigateTo('#/')}
+          onCompleted={handleLessonCompleted}
         />
       )}
       {(route.name === 'not-found' || (route.name === 'lesson' && !activeLesson)) && (
         <NotFound />
+      )}
+      {completionResult && (
+        <AchievementToast
+          lessonTitle={completionResult.lessonTitle}
+          xp={completionResult.xp}
+          campaignReward={completionResult.campaignReward}
+          onDismiss={dismissAchievement}
+        />
       )}
       <SiteFooter />
     </div>

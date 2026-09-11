@@ -11,6 +11,7 @@ interface LessonScreenProps {
   lessonProgress?: LessonProgress;
   actions: ProgressActions;
   onHome(): void;
+  onCompleted?(lesson: Lesson): void;
 }
 
 type LessonPhase = 'steps' | 'challenge' | 'quiz';
@@ -128,6 +129,7 @@ export function LessonScreen({
   lessonProgress,
   actions,
   onHome,
+  onCompleted,
 }: LessonScreenProps) {
   const initialCompletedStepIds = lessonProgress?.completedStepIds ?? [];
   const allStepsInitiallyComplete = lesson.steps.every((step) =>
@@ -233,6 +235,7 @@ export function LessonScreen({
     completionRequestedRef.current = true;
     setCompletionRequested(true);
     finishLesson(lesson.id, lesson.slug, lesson.xp);
+    onCompleted?.(lesson);
   }
 
   return (
