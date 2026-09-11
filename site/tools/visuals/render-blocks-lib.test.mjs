@@ -175,6 +175,44 @@ test('permits safe embedded editor SVG icons without explicit intrinsic dimensio
   assert.deepEqual(validateSvg(svg.replace('<text>', `<text style="fill: url('${resource}')">`), id), { width: 120, height: 40 });
 });
 
+test('permits official dropdown icons in image href after recursively validating the embedded SVG', () => {
+  const icon = '<svg xmlns="http://www.w3.org/2000/svg" width="12.71" height="8.79"><title>dropdown-arrow</title><path d="M0 0L6 8L12 0z"/></svg>';
+  for (const resource of [
+    `data:image/svg+xml;base64,${Buffer.from(icon).toString('base64')}`,
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon)}`,
+  ]) {
+    const markup = svg.replace('</svg>', `<image href="${resource}"/></svg>`);
+    assert.deepEqual(validateSvg(markup, id), { width: 120, height: 40 });
+  }
+});
+
+test('embedded SVG href rejects nested remote resources, active content, malformed data and excessive nesting', () => {
+  const wrap = (content) => svg.replace('</svg>', `<image href="data:image/svg+xml;base64,${Buffer.from(content).toString('base64')}"/></svg>`);
+  const unsafe = [
+    svg.replace('</svg>', '<image href="https://example.com/remote.png"/></svg>'),
+    svg.replace('</svg>', '<image href="relative.png"/></svg>'),
+    svg.replace('</svg>', '<script>alert(1)</script></svg>'),
+    '<svg><g></svg>',
+  ];
+  for (const content of unsafe) assert.throws(() => validateSvg(wrap(content), id), /lesson-01-step-04/);
+  assert.throws(() => validateSvg(svg.replace('</svg>', '<image href="data:image/svg+xml;base64,%%%"/></svg>'), id), /lesson-01-step-04/);
+  let nested = svg;
+  for (let depth = 0; depth < 10; depth++) nested = wrap(nested);
+  assert.throws(() => validateSvg(nested, id), /lesson-01-step-04.*nesting depth/);
+});
+
+test('permits XML declarations and editor comments in embedded controller SVG icons', () => {
+  const icon = '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!-- Exported icon -->' + svg;
+  const resource = `data:image/svg+xml;base64,${Buffer.from(icon).toString('base64')}`;
+  assert.deepEqual(validateSvg(svg.replace('</svg>', `<image href="${resource}"/></svg>`), id), { width: 120, height: 40 });
+});
+
+test('rejects XML stylesheet instructions hidden before an embedded SVG root', () => {
+  const icon = '<?xml version="1.0"?><?xml-stylesheet type="text/css" href="https://example.com/remote.css"?>' + svg;
+  const resource = `data:image/svg+xml;base64,${Buffer.from(icon).toString('base64')}`;
+  assert.throws(() => validateSvg(svg.replace('</svg>', `<image href="${resource}"/></svg>`), id), /lesson-01-step-04.*processing instruction/);
+});
+
 test('removes official editor cursor and toolbox sprite CSS without changing block geometry or visible styles', () => {
   const style = '<style>.blocklyTreeIcon { background: url(https://cdn.makecode.com/commit/abc/blockly/media/sprites.svg) no-repeat -48px -16px; color: red; } .blocklyDraggable { cursor: url("https://cdn.makecode.com/commit/abc/blockly/media/handclosed.cur"), auto; }</style>';
   const normalized = normalizeRendererSvg(svg.replace('<text>', `${style}<text>`), id);

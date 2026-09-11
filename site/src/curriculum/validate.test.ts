@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { curriculum, lessons } from './index';
+import { campaign01 } from './campaign-01';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -112,6 +113,17 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('gives every beginner step a visual with the approved campaign kind coverage', () => {
+    const steps = campaign01.lessons.flatMap((lesson) => lesson.steps);
+    expect(steps).toHaveLength(24);
+    expect(steps.filter((step) => !step.visual).map((step) => step.id)).toEqual([]);
+    const counts = { blocks: 0, editor: 0, guide: 0, python: 0, comparison: 0 };
+    for (const step of steps) {
+      if (step.visual) counts[step.visual.kind] += 1;
+    }
+    expect(counts).toEqual({ blocks: 10, editor: 11, guide: 3, python: 0, comparison: 0 });
+  });
+
   it('contains six valid campaigns and twenty-four ordered lessons', () => {
     expect(curriculum).toHaveLength(6);
     expect(lessons).toHaveLength(24);

@@ -18,6 +18,21 @@ const imageHelpers = new Set([
   'color', 'color-mix', 'light-dark', 'calc', 'min', 'max', 'clamp', 'element', '-moz-element',
 ]);
 
+function validateEmbeddedSvg(value, id, depth) {
+  const data = /^data:image\/svg\+xml(?:;charset=[a-z0-9._-]+)?(;base64)?,(.*)$/is.exec(value);
+  if (!data) return false;
+  try {
+    if (data[1] && !/^[a-z0-9+/]*={0,2}$/i.test(data[2])) throw new Error('invalid base64');
+    const nested = data[1]
+      ? new TextDecoder('utf-8', { fatal: true }).decode(Buffer.from(data[2], 'base64'))
+      : decodeURIComponent(data[2]);
+    validateSvg(nested, id, depth + 1);
+    return true;
+  } catch (error) {
+    throw new Error(`${id}: unsupported embedded SVG resource: ${error.message}`, { cause: error });
+  }
+}
+
 function validateCssResources(css, fail, id, depth) {
   // XML entities have already been decoded by JSDOM. The tokenizer also
   // decodes CSS escapes in URL tokens, quoted strings and function/at-rule names.
@@ -35,19 +50,7 @@ function validateCssResources(css, fail, id, depth) {
     }
     // MakeCode uses percent-encoded SVG icons in its CSS. Decode and validate
     // them too; allowing the MIME type alone would hide nested remote resources.
-    const svgData = /^data:image\/svg\+xml(?:;charset=[a-z0-9._-]+)?(;base64)?,(.*)$/is.exec(value);
-    if (svgData) {
-      try {
-        if (svgData[1] && !/^[a-z0-9+/]*={0,2}$/i.test(svgData[2])) throw new Error('invalid base64');
-        const nestedSvg = svgData[1]
-          ? new TextDecoder('utf-8', { fatal: true }).decode(Buffer.from(svgData[2], 'base64'))
-          : decodeURIComponent(svgData[2]);
-        validateSvg(nestedSvg, id, depth + 1);
-        return;
-      } catch (error) {
-        fail(`unsupported embedded SVG stylesheet resource: ${error.message}`);
-      }
-    }
+    if (validateEmbeddedSvg(value, id, depth)) return;
     fail(`remote or unsupported SVG stylesheet resource: ${value.slice(0, 120)}`);
   };
   const functions = [];
@@ -152,7 +155,9 @@ export function normalizeRendererSvg(svg, id) {
 export function validateSvg(svg, id, depth = 0) {
   const fail = (reason) => { throw new Error(`${id}: ${reason}`); };
   if (depth > 8) fail('unsupported embedded SVG nesting depth');
-  if (typeof svg !== 'string' || !svg.trim().startsWith('<svg')) fail('missing or malformed SVG');
+  // Exported embedded icons can include an XML declaration and comments. The
+  // XML parser below still requires their actual root to be a safe SVG.
+  if (typeof svg !== 'string' || (depth === 0 && !svg.trim().startsWith('<svg'))) fail('missing or malformed SVG');
   if (/<script\b|javascript\s*:|<!DOCTYPE|<!ENTITY/i.test(svg)) fail('unsafe SVG content');
   let dom;
   try {
@@ -161,6 +166,8 @@ export function validateSvg(svg, id, depth = 0) {
     fail(`malformed SVG: ${error.message}`);
   }
   try {
+    const instructions = dom.window.document.createTreeWalker(dom.window.document, dom.window.NodeFilter.SHOW_PROCESSING_INSTRUCTION);
+    if (instructions.nextNode()) fail('unsafe SVG processing instruction');
     const root = dom.window.document.documentElement;
     if (root.localName !== 'svg' || root.namespaceURI !== 'http://www.w3.org/2000/svg') fail('invalid SVG root');
     for (const element of [root, ...root.querySelectorAll('*')]) {
@@ -170,7 +177,7 @@ export function validateSvg(svg, id, depth = 0) {
         const value = attribute.value.trim();
         if (/^on/i.test(attribute.name) || /javascript\s*:/i.test(value)) fail('unsafe SVG attribute');
         if (attribute.localName === 'href' && !value.startsWith('#') && !/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value)) {
-          fail('remote or unsupported SVG href');
+          if (!validateEmbeddedSvg(value, id, depth)) fail('remote or unsupported SVG href');
         }
         if (resourceAttributes.has(attribute.localName)) validateCssResources(value, fail, id, depth);
       }
