@@ -4,6 +4,7 @@ import { campaign01 } from './campaign-01';
 import { campaign02 } from './campaign-02';
 import { campaign03 } from './campaign-03';
 import { campaign04 } from './campaign-04';
+import { campaign05 } from './campaign-05';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -116,6 +117,23 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('gives every game-designer step the approved twenty blocks and four play-test guides', () => {
+    const steps = campaign05.lessons.flatMap((lesson) => lesson.steps);
+    expect(steps).toHaveLength(24);
+    const counts = { blocks: 0, editor: 0, guide: 0, python: 0, comparison: 0 };
+    for (const step of steps) if (step.visual) counts[step.visual.kind] += 1;
+    expect(counts).toEqual({ blocks: 20, editor: 0, guide: 4, python: 0, comparison: 0 });
+    expect(steps.filter((step) => step.visual?.kind === 'guide').map((step) => step.id)).toEqual([
+      'lesson-18-step-04', 'lesson-19-step-05', 'lesson-19-step-06', 'lesson-20-step-06',
+    ]);
+    expect(steps.filter((step) => step.visual?.kind === 'blocks').map((step) => step.id)).toEqual([
+      'lesson-17-step-01', 'lesson-17-step-02', 'lesson-17-step-03', 'lesson-17-step-04', 'lesson-17-step-05', 'lesson-17-step-06',
+      'lesson-18-step-01', 'lesson-18-step-02', 'lesson-18-step-03', 'lesson-18-step-05', 'lesson-18-step-06',
+      'lesson-19-step-01', 'lesson-19-step-02', 'lesson-19-step-03', 'lesson-19-step-04',
+      'lesson-20-step-01', 'lesson-20-step-02', 'lesson-20-step-03', 'lesson-20-step-04', 'lesson-20-step-05',
+    ]);
+  });
+
   it('gives every world-builder step the approved block, editor and guide coverage', () => {
     const steps = campaign04.lessons.flatMap((lesson) => lesson.steps);
     expect(steps).toHaveLength(24);

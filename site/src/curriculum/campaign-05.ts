@@ -22,6 +22,12 @@ export const campaign05: Campaign = {
       steps: [
         {
           id: 'lesson-17-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-01',
+            alt: 'On start задає state 0 і level 1.',
+            focus: { x: 0.069, y: 0.266, width: 0.931, height: 0.601, label: 'Задай початкові state 0 та level 1.' },
+            explanation: 'State 0 — меню, 1 — активна гра, 2 — перехід. На цьому кроці спрайтів ще немає.',
+          },
           title: 'Назви стани',
           instruction:
             'Створи проєкт «Три рівні». Заведи state: 0 означає меню, 1 — гра, 2 — перехід. На початку задай state 0 і level 1.',
@@ -29,6 +35,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-17-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-02',
+            alt: 'A за state = 0 задає state 1, створює Player, додає керування й score 0.',
+            focus: { x: 0.323, y: 0, width: 0.677, height: 1, label: 'Запускай героя тільки з меню.' },
+            explanation: 'MySprite спочатку порожній. A створює його один раз; 90 на 90 і stay in screen — приклад керування.',
+          },
           title: 'Запусти гру кнопкою',
           instruction:
             'У A pressed перевір state = 0. Якщо так, задай state 1, створи Player з керуванням і обнули score.',
@@ -36,6 +48,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-17-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-03',
+            alt: 'Функція loadLevel повторює level + 1 разів створення Enemy, випадкову позицію, vx 15 + level × 10 та відскок.',
+            focus: { x: 0.505, y: 0, width: 0.495, height: 0.96, label: 'Збери кількість і швидкість із level.' },
+            explanation: 'За level 1 повтор виконається двічі, vx буде 25. Функцію ще не викликано: вороги з’являться після наступного кроку. Позиції та горизонтальний рух — приклад.',
+          },
           title: 'Створи рівень функцією',
           instruction:
             'Створи функцію loadLevel. У ній repeat level + 1 times створюй Enemy у випадкових позиціях зі швидкістю 15 + level × 10.',
@@ -45,12 +63,24 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-17-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-04',
+            alt: 'A викликає loadLevel; B за state 1 стріляє вгору; overlap Projectile з Enemy знищує обидва й додає очко.',
+            focus: { x: 0.176, y: 0, width: 0.824, height: 0.452, label: 'Виклич рівень і додай постріли кнопкою B.' },
+            explanation: 'A запускає гру, B стріляє з vy -100 лише під час state 1. Усі попередні блоки й формули loadLevel залишаються.',
+          },
           title: 'Виклич перший рівень',
           instruction: 'Наприкінці гілки запуску state = 0 виклич loadLevel. Додай гравцеві постріл і рахуй влучання.',
           expected: 'Після A з’являються два вороги; кожне влучання знищує ворога й додає очко.',
         },
         {
           id: 'lesson-17-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-05',
+            alt: 'On game update за state 1 і score = level + 1 задає state 2, збільшує level, показує номер, обнуляє score й завантажує рівень.',
+            focus: { x: 0.104, y: 0, width: 0.323, height: 0.511, label: 'Перевір завершення рівня в on game update.' },
+            explanation: 'Після loadLevel поверни state 1, щоб гра тривала. Splash призупиняє перехід, а перевірка state у B відсікає постріли під час нього. Обмеження трьома рівнями додамо далі.',
+          },
           title: 'Зроби перехід',
           instruction:
             'Коли score дорівнює level + 1, задай state 2, збільш level на 1, покажи номер нового рівня, обнули score та знову виклич loadLevel.',
@@ -58,6 +88,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-17-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-17-step-06',
+            alt: 'У переході level > 3 дає WIN; else повертає state 1 і викликає loadLevel.',
+            focus: { x: 0.116, y: 0.282, width: 0.132, height: 0.26, label: 'Перед loadLevel перевір, чи пройдено три рівні.' },
+            explanation: 'На рівнях 1, 2, 3 буде 2, 3, 4 вороги зі швидкостями 25, 35, 45. Після третього рівня level стає 4 і гра завершується без четвертої хвилі.',
+          },
           title: 'Заверши третій рівень',
           instruction:
             'Перед новим loadLevel перевір level > 3. Якщо так — game over WIN; інакше поверни state 1 і продовж.',
@@ -92,12 +128,18 @@ export const campaign05: Campaign = {
       summary: 'Навчи одного ворога патрулювати, а іншого — переслідувати героя.',
       durationMinutes: 45,
       difficulty: 'master',
-      concepts: ['патруль', 'follow', 'vx/vy', 'прискорення'],
+      concepts: ['патруль', 'follow', 'vx/vy', 'баланс швидкості'],
       prerequisites: ['lesson-17'],
-      objective: 'Реалізувати патрулювання та переслідування за допомогою швидкості, відскоку й follow.',
+      objective: 'Реалізувати патрулювання й переслідування та підібрати чесну швидкість follow.',
       steps: [
         {
           id: 'lesson-18-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-18-step-01',
+            alt: 'On start встановлює tilemap arena, створює Player з керуванням 90 на 90 на тайлі (1, 5).',
+            focus: { x: 0.028, y: 0.155, width: 0.972, height: 0.768, label: 'Створи арену та постав керованого героя.' },
+            explanation: 'Приклад карти 10×8: стінова рамка й перегородка між двома коридорами з проходами по краях. Відкрий мініатюру tilemap, щоб побудувати власну карту; темні тайли мають wall ON.',
+          },
           title: 'Побудуй арену',
           instruction:
             'Створи tilemap-арену зі стіновою рамкою та двома довгими коридорами. Додай Player із керуванням 90 на 90.',
@@ -105,6 +147,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-18-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-18-step-02',
+            alt: 'Patrol типу Enemy на тайлі (5, 1) має vx 40 та bounce on wall ON.',
+            focus: { x: 0.028, y: 0.532, width: 0.939, height: 0.422, label: 'Додай патруль із vx 40 і відскоком.' },
+            explanation: 'Тайл (5, 1) — приклад старту у верхньому коридорі. Горизонтальна швидкість і відскок тримають патруль на його маршруті.',
+          },
           title: 'Створи патрульного',
           instruction:
             'Додай Enemy на верхній коридор, задай vx 40 і bounce on wall ON.',
@@ -112,15 +160,30 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-18-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-18-step-03',
+            alt: 'Chaser типу Enemy стоїть на тайлі (7, 5) і має set chaser follow mySprite with speed 30.',
+            focus: { x: 0.028, y: 0.714, width: 0.954, height: 0.251, label: 'Націль другого ворога на Player зі швидкістю 30.' },
+            explanation: 'Другий Enemy починає в нижньому коридорі. Follow спрямовує його до mySprite, але не шукає шлях навколо стін; патруль і карта збережені.',
+          },
           title: 'Створи переслідувача',
           instruction:
-            'Додай другого Enemy в нижній коридор і застосуй follow Player зі швидкістю 30 та turn rate 600.',
+            'Додай другого Enemy в нижній коридор і застосуй follow Player зі швидкістю 30.',
           expected: 'Переслідувач плавно повертає до героя й намагається скоротити відстань.',
           hint:
             'Блок follow знайдеш у властивостях Sprites. Ціллю має бути Player, а не сам Enemy.',
         },
         {
           id: 'lesson-18-step-04',
+          visual: {
+            kind: 'guide', title: 'Патруль чи переслідування',
+            items: [
+              'Restart → Player у нижньому коридорі, patrol угорі рухається з vx 40, chaser унизу має follow зі швидкістю 30.',
+              'Стій на місці 5 секунд: запиши, хто продовжує горизонтальний маршрут, а хто наближається до Player.',
+              'Обійди арену по колу через проходи зліва й справа. Познач, хто змінює напрямок через стіну, а хто — через твою позицію.',
+              'Повтори маршрут у зворотний бік. Follow не прокладає шлях навколо стін: якщо ворог застряг біля перегородки, це спостереження теж запиши.',
+            ],
+          },
           title: 'Порівняй поведінку',
           instruction:
             'Стій на місці, потім обійди арену по колу. Спостерігай за обома ворогами й опиши різницю.',
@@ -128,13 +191,26 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-18-step-05',
-          title: 'Налаштуй фізику',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-18-step-05',
+            alt: 'Повна арена з патрулем vx 40; chaser follow mySprite має with speed 15.',
+            focus: { x: 0.028, y: 0.882, width: 0.954, height: 0.083, label: 'Змінюй with speed і порівняй 15 та 60.' },
+            explanation: 'Зроби однаковий маршрут зі швидкостями 15 і 60 та запиши, коли легше втекти. На зразку залишено 15; у своїй грі обери чесне значення. Керування Player лишається 90 на 90.',
+          },
+          title: 'Збалансуй швидкість',
           instruction:
-            'Порівняй turn rate 100 і 1000 у переслідувача, а потім залиш значення, за якого від нього можливо втекти.',
-          expected: 'За меншого turn rate ворог різкіше повертає, за більшого — довше набирає новий напрямок.',
+            'Порівняй швидкості follow 15 і 60 у переслідувача на тому самому маршруті, а потім залиш значення, за якого від нього можливо втекти.',
+          expected: 'За швидкості 15 ворог переслідує повільніше, за 60 — швидше; обраний варіант залишає герою шанс утекти.',
+          hint: 'Розгорни необов’язкове поле with speed у follow. Змінюй тільки швидкість переслідувача, а керування Player 90 на 90 залиш незмінним.',
         },
         {
           id: 'lesson-18-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-18-step-06',
+            alt: 'Life 3 і overlap Player з Enemy: change life by -1, camera shake 4 на 500 ms, повернення на тайл (1, 5).',
+            focus: { x: 0.463, y: 0, width: 0.537, height: 0.319, label: 'Оброби дотик до обох ворогів.' },
+            explanation: 'Обидва вороги мають Enemy, тому працює одна подія. Після контакту герой повертається на старт; перевір, що переслідувач не стоїть на цьому тайлі. Швидкість follow 15 збережено.',
+          },
           title: 'Додай наслідок',
           instruction:
             'Задай life 3. В overlap Player з Enemy відніми життя, струси камеру й поверни героя на старт.',
@@ -176,6 +252,12 @@ export const campaign05: Campaign = {
       steps: [
         {
           id: 'lesson-19-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-19-step-01',
+            alt: 'Player збирає Food, Enemy follow зі швидкістю 25; score починається з 0, life з 3, score ≥ 8 дає WIN.',
+            focus: { x: 0, y: 0, width: 1, height: 1, label: 'Збери цикл збору, шкоди й перемоги.' },
+            explanation: 'Food переноситься у випадкову позицію після збору. Enemy віднімає життя й розводить спрайти; нуль життів автоматично дає поразку. Малюнки, позиції та швидкості — приклади.',
+          },
           title: 'Збери прототип',
           instruction:
             'Створи коротку гру: Player збирає Food, уникає Enemy, має 3 життя й перемагає за 8 очок. Перевір основний цикл один раз.',
@@ -183,6 +265,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-19-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-19-step-02',
+            alt: 'Bonus знищується, shield стає true, Player змінює зображення; pause 5000 повертає false і звичайний вигляд.',
+            focus: { x: 0, y: 0.685, width: 0.315, height: 0.315, label: 'Додай п’ятисекундний щит і перевірку shield.' },
+            explanation: 'Створи kind Bonus. У небезпеці виконуй шкоду лише за not shield. Щит один на запуск: Bonus знищується до pause. Синій костюм — приклад захищеного вигляду.',
+          },
           title: 'Додай підсилення',
           instruction:
             'Створи Bonus у вигляді щита. Після збору знищ Bonus, задай shield ON, зміни колір героя, зачекай 5 секунд і поверни shield OFF та звичайне зображення.',
@@ -192,6 +280,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-19-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-19-step-03',
+            alt: 'Food звучить 988 Hz на 100 ms, шкода 131 Hz на 200 ms; перед WIN звучить ba ding до завершення.',
+            focus: { x: 0.276, y: 0.119, width: 0.63, height: 0.135, label: 'Додай окремі звуки нагороди, шкоди й перемоги.' },
+            explanation: 'Частоти й ba ding — приклади. Короткі тони грають in background; мелодія until done встигає прозвучати перед game over. Щит, score і life збережено.',
+          },
           title: 'Озвуч події',
           instruction:
             'Додай короткий високий звук до збору Food, нижчий — до шкоди, а окрему мелодію — до перемоги.',
@@ -199,6 +293,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-19-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-19-step-04',
+            alt: 'Перед стартом splash «Збери 8»; Food запускає confetti 500 ms, а шкода camera shake 4 на 500 ms.',
+            focus: { x: 0.007, y: 0.074, width: 0.879, height: 0.127, label: 'Покажи мету й додай два різні ефекти.' },
+            explanation: 'Splash стоїть до створення спрайтів. Ефект збору діє на Player; камера трясеться тільки за незахищеного контакту з Enemy. Звуки та п’ятисекундний Bonus залишаються.',
+          },
           title: 'Покажи наслідок',
           instruction:
             'До збору додай ефект confetti, до шкоди — camera shake, а перед стартом коротко покажи мету «Збери 8».',
@@ -206,6 +306,15 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-19-step-05',
+          visual: {
+            kind: 'guide', title: 'Три спроби з одним зміненим параметром',
+            items: [
+              'Запиши початкові параметри: Enemy speed 25, life 3, ціль 8 очок. Зіграй першу спробу та занотуй час, рахунок, залишок життів і причину завершення.',
+              'Обери лише один параметр для зміни: швидкість Enemy, стартові життя або ціль очок. Запиши старе й нове значення.',
+              'Зіграй другу й третю спроби, кожного разу змінюючи тільки обраний параметр. Для цілі очок узгодь також текст splash «Збери …».',
+              'Порівняй три записи: чи був шанс помітити ворога, використати щит і перемогти? Залиш найчесніший варіант та запиши його точні параметри.',
+            ],
+          },
           title: 'Збалансуй правила',
           instruction:
             'Зіграй тричі. За раз змінюй лише один параметр: швидкість Enemy, кількість життів або ціль очок. Залиш найчесніший варіант.',
@@ -213,6 +322,15 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-19-step-06',
+          visual: {
+            kind: 'guide', title: 'Перевірки й одна виправлена зміна',
+            items: [
+              '1. Старт: мета, очки, життя й керування відповідають обраному балансу. 2. Food: кожен збір додає одне очко, переносить Food, дає високий звук і confetti.',
+              '3. Enemy: без щита контакт віднімає життя, розводить спрайти, дає низький звук і струс. 4. Bonus: зникає після збору; захист і новий вигляд діють 5 секунд, потім вимикаються.',
+              '5. Нуль життів: доможися поразки. 6. Перемога: збери цільову кількість очок і перевір мелодію та WIN. 7. Restart: повтори старт і впевнись, що щит вимкнений.',
+              'Запиши неточність і внеси одну зміну. Повтори всі сім перевірок після неї; якщо помилок немає, так і запиши разом із результатами перевірок.',
+            ],
+          },
           title: 'Проведи налагодження',
           instruction:
             'Перевір старт, кожен overlap, щит, нуль життів, перемогу й Restart. Виправ щонайменше одну знайдену неточність або запиши, що помилок не виявлено.',
@@ -253,6 +371,12 @@ export const campaign05: Campaign = {
       steps: [
         {
           id: 'lesson-20-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-20-step-01',
+            alt: 'Player у (80, 108) має керування 100 на 0 і life 3; boss типу Boss стоїть у (80, 20).',
+            focus: { x: 0.028, y: 0.106, width: 0.972, height: 0.841, label: 'Створи kind Boss і горизонтальне керування.' },
+            explanation: 'Boss — новий kind. Його зображення 16×16 більше за героя 8×8. Позиції й швидкість 100 — приклад; stay in screen утримує Player у межах арени.',
+          },
           title: 'Підготуй арену',
           instruction:
             'Створи проєкт «Арена босів». Постав Player унизу з горизонтальним керуванням, life 3, а великого boss нового kind Boss — угорі.',
@@ -260,6 +384,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-20-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-20-step-02',
+            alt: 'Змінна bossHealth починається з 12, phase з 1; A створює Projectile від mySprite з vx 0 і vy -100.',
+            focus: { x: 0.011, y: 0, width: 0.989, height: 0.957, label: 'Задай здоров’я, фазу й постріл угору.' },
+            explanation: 'Від’ємне vy направляє лазер до боса. Після Restart початкові значення присвоюються знову; життя, позиції та керування збережені.',
+          },
           title: 'Задай здоров’я і фазу',
           instruction:
             'Створи bossHealth = 12 і phase = 1. Кнопкою A випускай Projectile від Player угору.',
@@ -267,6 +397,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-20-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-20-step-03',
+            alt: 'Overlap Projectile з Boss знищує лазер, змінює bossHealth на -1, показує число; окремі if 8 та if 4 задають фази 2 та 3.',
+            focus: { x: 0, y: 0.539, width: 0.514, height: 0.461, label: 'Перевір межі після зменшення здоров’я.' },
+            explanation: 'Після четвертого влучання лишається 8 — фаза 2; після восьмого лишається 4 — фаза 3. Перемогу при нулі додамо на п’ятому кроці.',
+          },
           title: 'Рахуй шкоду босу',
           instruction:
             'В overlap Projectile з Boss знищ лазер, зменш bossHealth на 1 і покажи босом нове число. За 8 здоров’я задай phase 2, за 4 — phase 3.',
@@ -276,6 +412,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-20-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-20-step-04',
+            alt: 'Кожні 900 ms boss створює снаряд vy 40, kind EnemyProjectile; phase 2 задає vy 70, phase 3 додає снаряд vx 30, vy 40.',
+            focus: { x: 0.267, y: 0, width: 0.347, height: 0.481, label: 'Розділи три шаблони атаки через phase.' },
+            explanation: '40, 70 та 30 — приклади швидкостей. Зміни kind кожного ворожого снаряда на EnemyProjectile одразу після створення. У фазі 3 летять два повільні снаряди в різних напрямках.',
+          },
           title: 'Створи атаки фаз',
           instruction:
             'Кожні 900 ms випускай із boss снаряд нового kind EnemyProjectile вниз. Якщо phase = 2, збільш його vy; якщо phase = 3, створи ще один снаряд з іншим vx.',
@@ -283,6 +425,12 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-20-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-20-step-05',
+            alt: 'Умова bossHealth = 0 знищує Boss з disintegrate й дає WIN; overlap Player з EnemyProjectile знищує снаряд і змінює life на -1.',
+            focus: { x: 0, y: 0.462, width: 0.701, height: 0.538, label: 'Заверши бій та оброби шкоду герою.' },
+            explanation: 'Перевірка перемоги стоїть після оновлення bossHealth. Ворожий снаряд завдає шкоди один раз; Arcade автоматично дає поразку при life 0. Усі три фази та 900 ms збережено.',
+          },
           title: 'Додай перемогу й поразку',
           instruction:
             'Коли bossHealth = 0, знищ boss з ефектом і заверши гру перемогою. В overlap Player з EnemyProjectile забирай життя й знищуй снаряд.',
@@ -290,6 +438,15 @@ export const campaign05: Campaign = {
         },
         {
           id: 'lesson-20-step-06',
+          visual: {
+            kind: 'guide', title: 'Два повні бої й два перезапуски',
+            items: [
+              'Запуск: Player унизу, Boss угорі, life 3. Перевір у стартових блоках bossHealth 12 і phase 1; A стріляє вгору.',
+              'Виграй бій: після 4 влучань здоров’я 8 і швидша атака; після 8 влучань здоров’я 4 і два снаряди; після 12 влучань бос зникає й з’являється WIN.',
+              'Обери Play Again: життя знову 3, фаза 1 і один повільний снаряд кожні 900 ms. Перше влучання має показати 11 — це перевіряє відновлення bossHealth 12.',
+              'Навмисно пропусти три ворожі снаряди й перевір поразку. Знову обери Play Again та повтори перевірку початкових життів, фази й першого влучання на 11.',
+            ],
+          },
           title: 'Перевір повний цикл',
           instruction:
             'Один раз переможи, обери Play Again і перевір стартові 12 здоров’я. Потім програй і знову перезапусти гру.',
