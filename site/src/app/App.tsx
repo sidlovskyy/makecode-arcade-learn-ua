@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { AppHeader } from '../components/AppHeader';
 import { CourseMap } from '../components/CourseMap';
+import { LessonScreen } from '../components/LessonScreen';
+import { NotFound } from '../components/NotFound';
 import { ProgressSummary } from '../components/ProgressSummary';
 import { SiteFooter } from '../components/SiteFooter';
-import { curriculum } from '../curriculum';
+import { curriculum, lessonBySlug } from '../curriculum';
 import type { ProgressState } from '../progress/schema';
 import { useProgress } from '../progress/useProgress';
-import { parseHash, type AppRoute } from './routes';
+import { navigateTo, parseHash, type AppRoute } from './routes';
 
 function readRoute(): AppRoute {
   return parseHash(window.location.hash);
@@ -46,7 +48,8 @@ function HomeRoute({ progress }: { progress: ProgressState }) {
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>(readRoute);
-  const { progress } = useProgress();
+  const progressStore = useProgress();
+  const { progress } = progressStore;
 
   useEffect(() => {
     const handleHashChange = () => setRoute(readRoute());
@@ -55,10 +58,26 @@ export function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const activeLesson = route.name === 'lesson'
+    ? lessonBySlug.get(route.slug)
+    : undefined;
+
   return (
     <div className="app-shell">
       <AppHeader totalXp={progress.totalXp} />
       {route.name === 'home' && <HomeRoute progress={progress} />}
+      {route.name === 'lesson' && activeLesson && (
+        <LessonScreen
+          key={activeLesson.id}
+          lesson={activeLesson}
+          lessonProgress={progress.lessons[activeLesson.id]}
+          actions={progressStore}
+          onHome={() => navigateTo('#/')}
+        />
+      )}
+      {(route.name === 'not-found' || (route.name === 'lesson' && !activeLesson)) && (
+        <NotFound />
+      )}
       <SiteFooter />
     </div>
   );
