@@ -27,6 +27,12 @@ export const campaign01: Campaign = {
           instruction:
             'Натисни «Відкрити MakeCode», а в новій вкладці обери New Project. Дочекайся, поки з’явиться редактор.',
           expected: 'На екрані видно симулятор ліворуч, панель категорій посередині та робочу область праворуч.',
+          visual: {
+            kind: 'editor', assetId: 'editor:arcade-home',
+            alt: 'Головна сторінка MakeCode Arcade: плитка New Project із плюсом у розділі My Projects.',
+            focus: { x: 0.043, y: 0.524, width: 0.2, height: 0.22, label: 'Натисни New Project — плитку з великим плюсом.' },
+            explanation: 'Плитка New Project у розділі My Projects створює нову гру. Після введення назви відкриється редактор блоків.',
+          },
         },
         {
           id: 'lesson-01-step-02',
@@ -34,6 +40,12 @@ export const campaign01: Campaign = {
           instruction:
             'Натисни назву проєкту внизу редактора, введи «Моя перша гра» та підтвердь нову назву.',
           expected: 'У нижній частині редактора показано назву «Моя перша гра».',
+          visual: {
+            kind: 'editor', assetId: 'editor:blocks-workspace',
+            alt: 'Редактор MakeCode Arcade з полем назви проєкту KodKvest на нижній панелі.',
+            focus: { x: 0.245, y: 0.934, width: 0.137, height: 0.049, label: 'Заміни назву в білому полі внизу на «Моя перша гра».' },
+            explanation: 'На зразку проєкт названо KodKvest. У твоєму проєкті це саме поле має показувати «Моя перша гра».',
+          },
         },
         {
           id: 'lesson-01-step-03',
@@ -41,6 +53,12 @@ export const campaign01: Campaign = {
           instruction:
             'По черзі відкрий категорії Sprites, Controller та Info. Подивися на блоки й закрий категорію, не перетягуючи їх.',
           expected: 'Ти можеш показати, де обирають блоки для персонажів, керування та рахунку.',
+          visual: {
+            kind: 'editor', assetId: 'editor:blocks-workspace',
+            alt: 'Між симулятором і робочою областю розташовано список категорій, зокрема Sprites, Controller та Info.',
+            focus: { x: 0.245, y: 0.115, width: 0.139, height: 0.269, label: 'Знайди Sprites, Controller та Info у вертикальному списку.' },
+            explanation: 'Кожна категорія відкриває набір блоків: Sprites — персонажі, Controller — керування, Info — рахунок. Натисни порожню робочу область, щоб закрити набір.',
+          },
         },
         {
           id: 'lesson-01-step-04',
@@ -48,6 +66,12 @@ export const campaign01: Campaign = {
           instruction:
             'Відкрий категорію Scene, перетягни блок set background color у блок on start і вибери улюблений колір.',
           expected: 'Тло в симуляторі змінилося на вибраний колір.',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-01-step-04',
+            alt: 'У зеленому блоці on start вкладено блок set background color із зеленим кольором у круглому полі.',
+            focus: { x: 0.053, y: 0.375, width: 0.946, height: 0.438, label: 'Встав set background color усередину on start.' },
+            explanation: 'Блок set background color виконується всередині on start на початку гри й змінює тло симулятора на вибраний колір.',
+          },
           hint:
             'Блок on start уже лежить у робочій області. Встав новий блок усередину його світлої рамки.',
         },
@@ -55,8 +79,14 @@ export const campaign01: Campaign = {
           id: 'lesson-01-step-05',
           title: 'Керуй симулятором',
           instruction:
-            'Натисни кнопку паузи над симулятором, потім продовж гру й натисни Restart, щоб запустити її спочатку.',
-          expected: 'Симулятор зупиняється, продовжується й після Restart знову показує вибране тло.',
+            'Виконай Stop → Play → Restart: натисни квадрат Stop під симулятором, потім трикутник Play на тому самому місці, а далі сусідню кнопку Restart із круговими стрілками.',
+          expected: 'Після Stop → Play → Restart симулятор зупиняється, запускається знову й після Restart показує вибране тло.',
+          visual: {
+            kind: 'editor', assetId: 'editor:blocks-workspace',
+            alt: 'Під симулятором є фіолетова панель: квадрат Stop ліворуч і кругові стрілки Restart поряд.',
+            focus: { x: 0.028, y: 0.533, width: 0.053, height: 0.044, label: 'Stop → Play → Restart: перші дві кнопки під симулятором.' },
+            explanation: 'Квадрат Stop зупиняє симулятор і змінюється на трикутник Play на тому самому місці. Play запускає гру, а сусідній Restart запускає її спочатку.',
+          },
         },
         {
           id: 'lesson-01-step-06',
@@ -64,12 +94,18 @@ export const campaign01: Campaign = {
           instruction:
             'Натисни Save внизу редактора та збережи файл проєкту, якщо браузер запропонує місце для завантаження.',
           expected: 'У списку завантажень браузера з’явився файл проєкту у форматі PNG.',
+          visual: {
+            kind: 'editor', assetId: 'editor:blocks-workspace',
+            alt: 'На нижній панелі редактора праворуч від назви проєкту є фіолетова кнопка Save зі значком дискети.',
+            focus: { x: 0.383, y: 0.934, width: 0.03, height: 0.05, label: 'Натисни дискету Save праворуч від назви проєкту.' },
+            explanation: 'Кнопка з дискетою зберігає файл проєкту PNG. Його можна імпортувати в MakeCode, щоб знову відкрити свої блоки.',
+          },
         },
       ],
       challenge: {
         title: 'Пульт дослідника',
         prompt:
-          'Самостійно зміни колір тла ще раз, постав гру на паузу, перезапусти її та переконайся, що новий колір з’являється після Restart.',
+          'Самостійно зміни колір тла ще раз, виконай Stop → Play → Restart та переконайся, що новий колір з’являється після Restart.',
         hint: 'Усі потрібні кнопки вже були в кроках 4 і 5 — спробуй знайти їх без повернення до інструкцій.',
       },
       quiz: {

@@ -117,6 +117,18 @@ describe('LessonScreen', () => {
     expect(actions.rememberLesson).toHaveBeenCalledTimes(1);
   });
 
+  it('places a visual between the instruction and expected result in every first-lesson step', () => {
+    lesson.steps.forEach((step, index) => {
+      const view = renderLesson({ progress: createProgress({ completedStepIds: lesson.steps.slice(0, index).map(({ id }) => id) }) });
+      const instruction = screen.getByText(step.instruction);
+      const visual = view.container.querySelector('.step-visual');
+      expect(visual).toBeInTheDocument();
+      expect(instruction.compareDocumentPosition(visual!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(visual!.compareDocumentPosition(screen.getByText(step.expected)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      view.unmount();
+    });
+  });
+
   it('marks one step done, advances once, and exposes completed-step navigation', async () => {
     const user = userEvent.setup();
     const { actions } = renderLesson();
@@ -390,6 +402,7 @@ describe('LessonScreen', () => {
       screen.getByRole('heading', { name: lesson.steps[1]!.title }),
     ).toBeInTheDocument();
     expect(screen.getByText('Режим перегляду')).toBeVisible();
+    expect(screen.getByRole('img')).toBeVisible();
     expect(
       screen.getByText('Прогрес і XP не зміняться.'),
     ).toBeVisible();

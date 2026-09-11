@@ -44,13 +44,14 @@ test('optimizer removes unused editor CSS while preserving matching styles, used
   assert.deepEqual(after.data, before.data);
 });
 
-test('real smoke asset stays below 50 KB and renders the English block offline at its intrinsic size', async () => {
+test('real smoke asset stays below 50 KB and renders the complete on-start script offline', async () => {
   const svg = await readFile(new URL('../../src/assets/lesson-visuals/blocks/lesson-01-step-04.svg', import.meta.url), 'utf8');
   assert.ok(Buffer.byteLength(svg) < 50_000, `smoke SVG is ${Buffer.byteLength(svg)} bytes`);
   assert.match(svg, /set\s+background\s+color\s+to/);
+  assert.match(svg, /on\s+start/);
   const { info, data } = await imagePixels(svg);
-  assert.equal(info.width, 285);
-  assert.equal(info.height, 56);
+  assert.ok(info.width >= 285, 'the full background-color block is visible');
+  assert.ok(info.height > 56, 'the on-start wrapper adds vertical context');
   // The green swatch is visible, not a blank/failed image with the right bounds.
   let greenPixels = 0;
   for (let index = 0; index < data.length; index += 4) {

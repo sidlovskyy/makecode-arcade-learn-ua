@@ -5,6 +5,7 @@ import type { ProgressActions } from '../progress/useProgress';
 import { ChallengePanel } from './ChallengePanel';
 import { Quiz } from './Quiz';
 import { StepNavigator } from './StepNavigator';
+import { StepVisual } from './StepVisual';
 
 interface LessonScreenProps {
   lesson: Lesson;
@@ -70,6 +71,8 @@ function PracticalStep({
       )}
 
       <p className="practical-step__instruction">{step.instruction}</p>
+
+      {step.visual && <StepVisual visual={step.visual} eager />}
 
       <section className="expected-result" aria-labelledby="expected-result-title">
         <span className="expected-result__icon" aria-hidden="true">✓</span>
