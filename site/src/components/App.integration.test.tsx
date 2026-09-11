@@ -54,6 +54,31 @@ describe('App progress feedback', () => {
     window.history.replaceState(null, '', '#/');
   });
 
+  it.each([
+    ['vid-blokiv-do-kodu', 'vid-blokiv-do-python', 'lesson-21', 'Від блоків до Python'],
+    ['typescript-u-hri', 'python-u-hri', 'lesson-22', 'Python у грі'],
+  ])('remembers the canonical slug from %s while keeping ID-keyed progress', async (legacy, canonical, id, title) => {
+    const storedLessons = {
+      [id]: { completedStepIds: [`${id}-step-01`, `${id}-step-02`], quizPassed: false, completed: false },
+      'lesson-01': { completedStepIds: ['lesson-01-step-01'], quizPassed: true, completed: true },
+    };
+    window.localStorage.setItem('kodkvest.progress.v1', JSON.stringify({ version: 1, lessons: storedLessons, totalXp: 100, lastLessonSlug: legacy }));
+    window.history.replaceState(null, '', `#/lesson/${legacy}`);
+    const user = userEvent.setup();
+    const view = render(<App />);
+    expect(screen.getByRole('heading', { name: title, level: 1 })).toBeVisible();
+    expect(screen.getByText('Крок 3 із 6')).toBeVisible();
+    const remembered = JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!);
+    expect(remembered).toEqual({ version: 1, lessons: storedLessons, totalXp: 100, lastLessonSlug: canonical });
+    await user.click(screen.getByRole('button', { name: 'Крок готовий — далі' }));
+    expect(screen.getByText('Крок 4 із 6')).toBeVisible();
+    view.unmount();
+    window.history.replaceState(null, '', `#/lesson/${canonical}`);
+    render(<App />);
+    expect(screen.getByText('Крок 4 із 6')).toBeVisible();
+    expect(JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!).lessons[id].completedStepIds).toEqual([`${id}-step-01`, `${id}-step-02`, `${id}-step-03`]);
+  });
+
   it('awards 100 XP for lesson 1, marks it complete, and restores that total', async () => {
     const user = userEvent.setup();
     const firstView = render(<App />);

@@ -1,324 +1,387 @@
 import type { Campaign } from './types';
 
+// Selectable source examples, verified in Arcade's Python editor.
+const hero = `img("""
+    . . 5 5 5 5 . .
+    . 5 5 5 5 5 5 .
+    5 5 f 5 5 f 5 5
+    5 5 5 5 5 5 5 5
+    . 5 5 5 5 5 5 .
+    . . 5 . . 5 . .
+""")`;
+const bridge = (variable = false, condition = false, final = false) => `${variable ? `speed = ${final ? 120 : 80}\n\n` : ''}def on_a_pressed():
+    my_sprite.say_text("${final ? 'Python працює!' : 'Код працює!'}")${condition ? '\n    info.change_score_by(1)\n    if info.score() >= 3:\n        my_sprite.say_text("Три очки!")' : ''}
+controller.A.on_event(ControllerButtonEvent.PRESSED, on_a_pressed)
+
+my_sprite = sprites.create(${hero}, SpriteKind.player)
+controller.move_sprite(my_sprite, ${variable ? 'speed, speed' : '80, 80'})${condition ? '\ninfo.set_score(0)' : ''}`;
+const enemyFunction = (returns = true) => `def spawn_enemy(speed):
+    enemy = sprites.create(img("""
+        . 2 2 .
+        2 2 2 2
+        2 . . 2
+    """), SpriteKind.enemy)
+    enemy.vy = speed${returns ? '\n    return enemy' : ''}`;
+const waveData = 'wave = 0\nspeeds = [30, 45, 60]';
+const waveLoop = 'for speed in speeds:\n    spawn_enemy(speed)\n    pause(500)';
+const pixels = `my_player = sprites.create(img("""
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . 5 5 5 5 5 5 . . . . .
+    . . . . 5 5 5 5 5 5 5 5 . . . .
+    . . . . 5 5 f 5 5 f 5 5 . . . .
+    . . . . 5 5 5 5 5 5 5 5 . . . .
+    . . . . . 5 5 5 5 5 5 . . . . .
+    . . . . . . 8 8 8 8 . . . . . .
+    . . . . . 8 8 8 8 8 8 . . . . .
+    . . . . 8 8 8 8 8 8 8 8 . . . .
+    . . . . . . 8 8 8 8 . . . . . .
+    . . . . . . 8 8 8 8 . . . . . .
+    . . . . . . 8 . . 8 . . . . . .
+    . . . . . . 8 . . 8 . . . . . .
+    . . . . . 8 8 . . 8 8 . . . . .
+    . . . . . . . . . . . . . . . .
+"""), SpriteKind.player)`;
+const layers = `@namespace
+class SpriteKind:
+    Background = SpriteKind.create()
+
+${pixels}
+far_image = image.create(320, 120)
+for index in range(20):
+    far_image.set_pixel(index * 16, 60, 1)
+    far_image.set_pixel(index * 16 + 8, 70, 5)
+far = sprites.create(far_image, SpriteKind.Background)
+far.z = -10
+my_player.z = 0
+hud = sprites.create(img("""
+    9 9 9 9
+    9 . . 9
+    9 . . 9
+    9 9 9 9
+"""), SpriteKind.Background)
+hud.z = 20`;
+const scene = `${layers}
+tiles.set_current_tilemap(tilemap("wide"))
+controller.move_sprite(my_player, 80, 80)
+my_player.set_position(40, 60)
+scene.camera_follow_sprite(my_player)
+far.set_flag(SpriteFlag.RELATIVE_TO_CAMERA, True)
+hud.set_flag(SpriteFlag.RELATIVE_TO_CAMERA, True)
+hud.set_position(10, 10)`;
+const parallax = `${scene}
+
+def on_update():
+    far.x = 80 - my_player.x / 8
+game.on_update(on_update)`;
+const mini = `${parallax.replace('    Background = SpriteKind.create()', '    Background = SpriteKind.create()\n    MiniMap = SpriteKind.create()')}
+my_minimap = minimap.minimap(MinimapScale.QUARTER)
+minimap.include_sprite(my_minimap, my_player)
+minimap_sprite = sprites.create(minimap.get_image(my_minimap), SpriteKind.MiniMap)
+minimap_sprite.z = 50
+minimap_sprite.set_flag(SpriteFlag.RELATIVE_TO_CAMERA, True)
+minimap_sprite.set_position(118, 18)`;
+const mvp = `def setup_player():
+    my_player = sprites.create(img("""
+        5 5 5
+        5 f 5
+        5 5 5
+    """), SpriteKind.player)
+    my_player.set_position(20, 60)
+    controller.move_sprite(my_player, 80, 80)
+    my_player.set_stay_in_screen(True)
+    return my_player
+
+def setup_goal():
+    goal = sprites.create(img("""
+        . 9 .
+        9 9 9
+        . 9 .
+    """), SpriteKind.food)
+    goal.set_position(140, 60)
+
+def on_goal(sprite, other_sprite):
+    game.over(True)
+sprites.on_overlap(SpriteKind.player, SpriteKind.food, on_goal)
+
+def on_danger(sprite, other_sprite):
+    game.over(False)
+sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, on_danger)
+
+my_player = setup_player()
+setup_goal()
+danger = sprites.create(img("""
+    2 . 2
+    . 2 .
+    2 . 2
+"""), SpriteKind.enemy)
+danger.set_position(80, 60)`;
+
 export const campaign06: Campaign = {
-  id: 'campaign-06',
-  order: 6,
-  title: 'Майстер коду',
-  description: 'Перейди від блоків до TypeScript, опануй складну графіку та створи власну завершену гру.',
-  color: 'blue',
-  reward: 'Автор власної гри',
+  id: 'campaign-06', order: 6, title: 'Майстер коду',
+  description: 'Перейди від блоків до Python, опануй графіку та створи власну завершену гру.',
+  color: 'blue', reward: 'Автор власної гри',
   lessons: [
     {
-      id: 'lesson-21',
-      slug: 'vid-blokiv-do-kodu',
-      order: 21,
-      title: 'Від блоків до коду',
-      summary: 'Перемикайся між Blocks і JavaScript та знаходь відповідність між ними.',
-      durationMinutes: 40,
-      difficulty: 'master',
-      concepts: ['Blocks', 'JavaScript', 'згенерований код', 'сумісність'],
+      id: 'lesson-21', slug: 'vid-blokiv-do-python', order: 21, title: 'Від блоків до Python',
+      summary: 'Зістав знайомі блоки з Python, зміни програму й перевір повернення до Blocks.',
+      durationMinutes: 40, difficulty: 'master',
+      concepts: ['Blocks', 'Python', 'обробник події', 'відступи', 'перетворення коду'],
       prerequisites: ['lesson-20'],
-      objective: 'Перемикатися між блоками й JavaScript, читати згенерований код і повертати зміни до блоків.',
+      objective: 'Знайти в Python відповідники створення героя, події та умови, змінити швидкість і перевірити коло Blocks → Python → Blocks.',
       steps: [
         {
-          id: 'lesson-21-step-01',
-          title: 'Збери знайомі блоки',
-          instruction:
-            'Створи проєкт «Блоки й код». У Blocks додай Player, керування 80 на 80 та подію A, що показує «Привіт!».',
-          expected: 'У симуляторі герой рухається, а A показує повідомлення.',
+          id: 'lesson-21-step-01', title: 'Збери знайомі блоки',
+          instruction: 'Створи проєкт «Блоки й Python». У Blocks додай Player, керування 80 на 80 та подію A з повідомленням «Код працює!». Зображення героя на зразку можна змінити.',
+          expected: 'Герой рухається стрілками, а A показує «Код працює!».',
+          visual: { kind: 'blocks', assetId: 'blocks:lesson-21-step-01',
+            alt: 'Початкова програма: створення Player, керування 80 на 80 і повідомлення за натисканням A.',
+            focus: { x: 0, y: 0, width: 1, height: 1, label: 'Збери початок і подію A.' },
+            explanation: 'Цю працюючу програму далі будемо читати у двох поданнях. Усі блоки виконують знайомі дії.' },
         },
         {
-          id: 'lesson-21-step-02',
-          title: 'Перейди до тексту',
-          instruction: 'Натисни перемикач JavaScript угорі редактора й зачекай, поки MakeCode покаже текст програми.',
-          expected: 'Замість блоків видно рядки з sprites.create, controller.moveSprite та controller.A.onEvent.',
-          hint:
-            'Якщо перемикача не видно, розгорни вікно редактора. Кнопки Blocks, JavaScript і Python розміщені у верхній панелі.',
+          id: 'lesson-21-step-02', title: 'Знайди створення спрайта в Python',
+          instruction: 'У верхньому перемикачі мов відкрий меню та обери Python. Знайди my_sprite = sprites.create і порівняй його з блоком створення Player. Залиш весь згенерований малюнок між потрійними лапками.',
+          expected: 'У Python видно той самий малюнок, SpriteKind.player і controller.move_sprite(my_sprite, 80, 80).',
+          hint: 'Регістр важливий: стандартний вид героя записується SpriteKind.player. Меню мов відкривається стрілкою біля текстового редактора.',
+          visual: { kind: 'comparison', blocks: { assetId: 'blocks:lesson-21-step-02',
+            alt: 'Та сама початкова програма; створення Player відповідає sprites.create у Python.',
+            focus: { x: 0.015, y: 0.247, width: 0.535, height: 0.382, label: 'Знайди створення Player.' } },
+            python: { label: 'Та сама програма в Python', code: bridge() },
+            explanation: 'Присвоєння зберігає створений спрайт у my_sprite. img містить пікселі: крапка прозора, цифра задає колір.' },
         },
         {
-          id: 'lesson-21-step-03',
-          title: 'Знайди відповідники',
-          instruction:
-            'Клацни рядок controller.moveSprite і знайди числа 80, 80. Потім знайди текст «Привіт!» усередині функції події A.',
-          expected: 'Ти можеш показати, який рядок відповідає блоку керування, а який — команді кнопки A.',
+          id: 'lesson-21-step-03', title: 'Зістав подію та обробник',
+          instruction: 'Знайди def on_a_pressed(): і рядок із say_text під ним. Потім знайди controller.A.on_event: він пов’язує натискання A з функцією on_a_pressed. Натисни A в симуляторі.',
+          expected: 'Ти пояснюєш, чому повідомлення з’являється після натискання A, і показуєш відступ усередині функції.',
+          hint: 'У реєстрації події передаємо ім’я on_a_pressed без дужок. Чотири пробіли перед say_text означають, що команда належить функції.',
+          visual: { kind: 'comparison', blocks: { assetId: 'blocks:lesson-21-step-03',
+            alt: 'Блок on A button pressed містить команду повідомлення спрайта.',
+            focus: { x: 0.592, y: 0, width: 0.408, height: 0.671, label: 'Подія A та вкладена команда.' } },
+            python: { label: 'Іменований обробник A', code: bridge() },
+            explanation: 'def оголошує функцію, а on_event реєструє її як обробник. Рядок реєстрації не має відступу й стоїть поза функцією.' },
         },
         {
-          id: 'lesson-21-step-04',
-          title: 'Зміни число в коді',
-          instruction: 'У controller.moveSprite зміни обидва значення 80 на 120. Запусти гру й перевір швидкість.',
-          expected: 'Герой рухається швидше, а редактор не показує помилок.',
+          id: 'lesson-21-step-04', title: 'Керуй швидкістю через змінну',
+          instruction: 'Додай speed = 80 та заміни обидва числа в move_sprite на speed, як у прикладі. Запусти, потім зміни лише присвоєння на speed = 120 і запусти знову.',
+          expected: 'Одне змінене число прискорює рух по обох осях; A продовжує працювати.',
+          visual: { kind: 'python', label: 'Одна змінна для двох напрямків', code: bridge(true),
+            explanation: 'Спочатку перевір 80, потім 120. Ім’я speed зберігає число, яке двічі передається в controller.move_sprite.' },
         },
         {
-          id: 'lesson-21-step-05',
-          title: 'Повернися до Blocks',
-          instruction: 'Натисни Blocks і відкрий блок move sprite.',
-          expected: 'Проєкт знову показано блоками, а в блоці керування стоять значення 120 і 120.',
+          id: 'lesson-21-step-05', title: 'Зістав умову з if',
+          instruction: 'Додай info.set_score(0) після керування. У функції A після першого повідомлення додай зміну рахунку та if із прикладу. Для порівняння поверни speed до 80. Натисни A тричі.',
+          expected: 'Рахунок зростає 1, 2, 3. Із третього натискання повідомлення змінюється на «Три очки!».',
+          hint: 'if має чотири пробіли перед собою, а команда всередині нього — вісім. Умова >= 3 означає «не менше трьох».',
+          visual: { kind: 'comparison', blocks: { assetId: 'blocks:lesson-21-step-05',
+            alt: 'У події A рахунок зростає на один; умова score ≥ 3 показує повідомлення «Три очки!».',
+            focus: { x: 0.625, y: 0.464, width: 0.373, height: 0.46, label: 'Порівняй умову та вкладену дію.' } },
+            python: { label: 'Умова всередині обробника', code: bridge(true, true) },
+            explanation: 'Вкладені блоки стають вкладеними відступами. Після двокрапки if лише його відсунута команда залежить від рахунку.' },
         },
         {
-          id: 'lesson-21-step-06',
-          title: 'Зроби повне коло',
-          instruction:
-            'У Blocks зміни повідомлення на «Код працює!», перейди в JavaScript і перевір новий текст у say, а потім ще раз повернися до Blocks.',
-          expected: 'Одна програма зберігає обидві зміни під час переходів Blocks → JavaScript → Blocks.',
+          id: 'lesson-21-step-06', title: 'Перевір повне коло',
+          instruction: 'Перейди до Blocks, задай speed значення 120 і перше повідомлення «Python працює!». Перевір блок умови, повернися до Python та зіграй: рух, A один раз, A ще двічі.',
+          expected: 'Після кола Python → Blocks → Python лишилися швидкість 120, новий текст і перевірка рахунку; програма запускається.',
+          hint: 'Якщо повернення до блоків не вдається, скасуй останню зміну й порівняй код зі зразком. Власний текстовий код не завжди має відповідний блок.',
+          visual: { kind: 'comparison', blocks: { assetId: 'blocks:lesson-21-step-06',
+            alt: 'Завершена програма у Blocks: speed 120, нове повідомлення та збережена умова рахунку.',
+            focus: { x: 0.014, y: 0.152, width: 0.986, height: 0.772, label: 'Перевір збережені зміни.' } },
+            python: { label: 'Python після повернення', code: bridge(true, true, true) },
+            explanation: 'Порівнюй дію програми, значення та події. MakeCode може переставити оголошення або змінити імена під час перетворення.' },
         },
       ],
-      challenge: {
-        title: 'Три відповідності',
-        prompt:
-          'Додай у Blocks зміну score, паузу та game over. У JavaScript знайди три відповідні виклики й поясни, де записані їхні значення.',
-        hint: 'Шукай назви категорій у початку викликів: info, pause і game.',
-      },
-      quiz: {
-        question: 'Що відбувається, коли ти переходиш із Blocks у JavaScript?',
-        options: [
-          'MakeCode перетворює ті самі команди на текстовий код',
-          'MakeCode видаляє всі блоки й починає порожній проєкт',
-          'Запускається інша, не пов’язана гра',
-        ],
-        correctIndex: 0,
-        explanation:
-          'Blocks і JavaScript — два подання тієї самої програми. Сумісні зміни можна побачити з обох боків.',
-      },
-      xp: 225,
-      makeCodeUrl: 'https://arcade.makecode.com/blocks/javascript-blocks',
+      challenge: { title: 'Три відповідності', prompt: 'У Blocks додай до події B зміну рахунку, паузу й перемогу. Перейди до Python, знайди три відповідні виклики та перевір повернення до блоків.', hint: 'Шукай info.change_score_by, pause і game.over. Перевір подію B після перезапуску.' },
+      quiz: { question: 'Який рядок пов’язує обробник on_a_pressed із натисканням A?',
+        options: ['speed = 80', 'controller.A.on_event(ControllerButtonEvent.PRESSED, on_a_pressed)', 'my_sprite = sprites.create(...)'], correctIndex: 1,
+        explanation: 'on_event отримує вид події та ім’я функції без дужок. Тіло функції виконається, коли гравець натисне A.' },
+      xp: 225, makeCodeUrl: 'https://arcade.makecode.com/python',
     },
     {
-      id: 'lesson-22',
-      slug: 'typescript-u-hri',
-      order: 22,
-      title: 'TypeScript у грі',
-      summary: 'Редагуй типізовані змінні, умови, цикли, масиви та функції в тексті.',
-      durationMinutes: 50,
-      difficulty: 'master',
-      concepts: ['типи', 'number[]', 'for…of', 'функція з параметром'],
+      id: 'lesson-22', slug: 'python-u-hri', order: 22, title: 'Python у грі',
+      summary: 'Побудуй хвилю ворогів: змінна, список швидкостей, функція, цикл та умова.',
+      durationMinutes: 50, difficulty: 'master',
+      concepts: ['змінна', 'список', 'параметр', 'return', 'for', 'if/else', 'відступи'],
       prerequisites: ['lesson-21'],
-      objective: 'Написати в редакторі коду типізовані змінні, умову, цикл, масив і функцію та запустити результат.',
+      objective: 'Написати у Python функцію створення ворога, передати їй швидкості зі списку й обрати складність через if/else.',
       steps: [
         {
-          id: 'lesson-22-step-01',
-          title: 'Назви типи',
-          instruction:
-            'Створи спрайт у Blocks, перейди в JavaScript і перейменуй змінну на player. Не видаляй створення спрайта: повний рядок має виглядати як let player: Sprite = sprites.create(...), де замість трьох крапок лишається згенерований вираз зображення та SpriteKind.Player.',
-          expected: 'Код містить і тип Sprite, і sprites.create(...), компілюється, а наведення на player показує тип Sprite.',
+          id: 'lesson-22-step-01', title: 'Створи змінну хвилі',
+          instruction: 'У новому проєкті обери Python. Введи wave = 0 і покажи це число як рахунок. Зміни wave на 2, перевір результат і поверни 0.',
+          expected: 'Рахунок відповідає числу у wave; після повернення значення він дорівнює нулю.',
+          visual: { kind: 'python', label: 'Змінна з числовим значенням', code: 'wave = 0\ninfo.set_score(wave)',
+            explanation: 'Змінна має ім’я та значення. MakeCode розуміє wave як число з присвоєного 0 і способу використання.' },
         },
         {
-          id: 'lesson-22-step-02',
-          title: 'Створи типізовані дані',
-          instruction:
-            'Додай let wave: number = 0 і let speeds: number[] = [30, 45, 60]. Після запуску покажи speeds.length.',
-          expected: 'Симулятор показує 3, а редактор розуміє wave як число і speeds як масив чисел.',
+          id: 'lesson-22-step-02', title: 'Збери список швидкостей',
+          instruction: 'Додай speeds = [30, 45, 60]. Тимчасово покажи довжину списку через len(speeds), як у прикладі.',
+          expected: 'На рахунку видно 3 — кількість значень у списку, а не одну зі швидкостей.',
+          visual: { kind: 'python', label: 'Три числа в одному списку', code: `${waveData}\ninfo.set_score(len(speeds))`,
+            explanation: 'Квадратні дужки об’єднують значення в список; коми відділяють елементи. len рахує елементи.' },
         },
         {
-          id: 'lesson-22-step-03',
-          title: 'Напиши функцію',
-          instruction:
-            'Створи function spawnEnemy(speed: number): Sprite. Усередині створи Enemy, задай enemy.vy = speed і поверни enemy командою return.',
-          expected: 'Функція приймає число, створює рухомого ворога й повертає спрайт без помилок типів.',
-          hint:
-            'Зображення Enemy можеш спочатку створити в Blocks і лишити згенерований вираз image у рядку sprites.create.',
+          id: 'lesson-22-step-03', title: 'Передай аргумент функції',
+          instruction: 'Заміни перевірку довжини на функцію spawn_enemy(speed) і виклик spawn_enemy(30). Збережи відступи: створення спрайта й enemy.vy належать функції.',
+          expected: 'Один ворог рухається вниз зі швидкістю 30; зміна аргументу на 60 прискорює його.',
+          hint: 'speed — параметр у визначенні функції; 30 — аргумент у виклику. Числове використання enemy.vy допомагає редактору визначити тип параметра.',
+          visual: { kind: 'python', label: 'Функція з параметром швидкості', code: `${waveData}\n\n${enemyFunction(false)}\n\nspawn_enemy(30)`,
+            explanation: 'Визначення def описує дію, а виклик запускає її. Функція може приймати інше число при кожному виклику.' },
         },
         {
-          id: 'lesson-22-step-04',
-          title: 'Перебери масив',
-          instruction:
-            'Додай цикл for (const speed of speeds). Усередині виклич spawnEnemy(speed) і після кожного виклику зроби pause(500).',
-          expected: 'Після запуску по черзі з’являються три вороги зі швидкостями 30, 45 і 60.',
+          id: 'lesson-22-step-04', title: 'Поверни створеного ворога',
+          instruction: 'Додай return enemy наприкінці функції. Збережи результат виклику у first_enemy та задай йому позицію (20, 10).',
+          expected: 'Повернений ворог починає рух у точці (20, 10); поза функцією ти можеш змінювати цей спрайт.',
+          visual: { kind: 'python', label: 'return передає результат назовні', code: `${waveData}\n\n${enemyFunction()}\n\nfirst_enemy = spawn_enemy(30)\nfirst_enemy.set_position(20, 10)`,
+            explanation: 'return повертає саме створений спрайт. first_enemy посилається на нього й дозволяє викликати set_position після завершення функції.' },
         },
         {
-          id: 'lesson-22-step-05',
-          title: 'Додай умову',
-          instruction:
-            'У події overlap Player з Enemy зменшуй life. Додай if (info.life() === 1), щоб останнє серце супроводжувалося попередженням.',
-          expected: 'Після зменшення життя до 1 гра показує попередження, а за інших значень — ні.',
+          id: 'lesson-22-step-05', title: 'Перебери список циклом',
+          instruction: 'Заміни одиночний виклик і позицію на цикл for speed in speeds. Усередині виклич spawn_enemy(speed) та pause(500).',
+          expected: 'З інтервалом пів секунди з’являються три вороги зі швидкостями 30, 45 і 60.',
+          visual: { kind: 'python', label: 'Одна ітерація для кожної швидкості', code: `${waveData}\n\n${enemyFunction()}\n\n${waveLoop}`,
+            explanation: 'for по черзі бере значення зі списку. Обидва рядки з чотирма пробілами повторюються для кожного значення; pause вимірюється в мілісекундах.' },
         },
         {
-          id: 'lesson-22-step-06',
-          title: 'Виправ навмисну помилку',
-          instruction:
-            'Тимчасово заміни let wave: number = 0 на let wave: number = "нуль". Прочитай підкреслену помилку й поверни число 0.',
-          expected: 'Редактор попереджає, що string не підходить до number; після виправлення симулятор знову запускається.',
+          id: 'lesson-22-step-06', title: 'Обери складність через if/else',
+          instruction: 'Перед циклом обери список через if wave >= 3 та else. Запусти з wave = 0, потім задай wave = 3 і порівняй рух. Поясни аргумент, return та всі відступи.',
+          expected: 'За wave 0 рухаються три вороги зі швидкостями 30, 45, 60; за wave 3 — 60, 75, 90. Обидві гілки запускаються без помилок.',
+          hint: 'else стоїть на одному рівні з if. Цикл стоїть після обох гілок без відступу, тому виконується за будь-якої складності.',
+          visual: { kind: 'python', label: 'Завершена хвиля з двома складностями',
+            code: `wave = 0\n\n${enemyFunction()}\n\nif wave >= 3:\n    speeds = [60, 75, 90]\nelse:\n    speeds = [30, 45, 60]\n\n${waveLoop}`,
+            explanation: 'Умова обирає список. Цикл передає кожне число як аргумент speed, функція створює й повертає ворога, а відступи задають межі функції, гілок і циклу.' },
         },
       ],
-      challenge: {
-        title: 'Функція нової хвилі',
-        prompt:
-          'Напиши function startWave(speeds: number[]): void, яка циклом викликає spawnEnemy для кожної швидкості. Передай їй інший масив із чотирьох чисел.',
-        hint: 'Параметр speeds має той самий тип number[], а void означає, що функція нічого не повертає.',
-      },
-      quiz: {
-        question: 'Що означає тип number[] у TypeScript?',
-        options: [
-          'Один спрайт із номером',
-          'Масив, у якому зберігаються числа',
-          'Функцію без результату',
-        ],
-        correctIndex: 1,
-        explanation: 'Квадратні дужки після number означають список числових значень: number[].',
-      },
-      xp: 275,
-      makeCodeUrl: 'https://arcade.makecode.com/javascript',
+      challenge: { title: 'Функція нової хвилі', prompt: 'Створи функцію start_wave(speeds), що перебирає список, викликає spawn_enemy для кожної швидкості й робить паузу. Передай список із чотирьох чисел.', hint: 'Цикл усередині функції має чотири пробіли, а його дві команди — вісім. Перевір, що з’явилися саме чотири вороги.' },
+      quiz: { question: 'Що повертає return enemy у функції spawn_enemy?',
+        options: ['Створений спрайт, який можна далі змінювати', 'Кількість пробілів у коді', 'Увесь список швидкостей'], correctIndex: 0,
+        explanation: 'return передає результат виклику. Якщо записати first_enemy = spawn_enemy(30), ця змінна зберігатиме створений спрайт.' },
+      xp: 275, makeCodeUrl: 'https://arcade.makecode.com/python',
     },
     {
-      id: 'lesson-23',
-      slug: 'hrafika-maistra',
-      order: 23,
-      title: 'Графіка майстра',
-      summary: 'Керуй пікселями в коді, глибиною шарів, паралаксом і мінікартою.',
-      durationMinutes: 55,
-      difficulty: 'master',
-      concepts: ['image-код', 'z-шари', 'паралакс', 'мінікарта'],
+      id: 'lesson-23', slug: 'hrafika-maistra', order: 23, title: 'Графіка майстра',
+      summary: 'Редагуй пікселі у Python, побудуй шари, паралакс і мінікарту.',
+      durationMinutes: 55, difficulty: 'master',
+      concepts: ['img у Python', 'z-шари', 'паралакс', 'мінікарта', 'інтервал оновлення'],
       prerequisites: ['lesson-22'],
-      objective: 'Створити зображення в коді, розташувати спрайти на z-шарах, додати простий паралакс і мінікарту.',
+      objective: 'Створити графіку у Python, розташувати спрайти на шарах і оновлювати мінікарту офіційним розширенням.',
       steps: [
         {
-          id: 'lesson-23-step-01',
-          title: 'Прочитай image-код',
-          instruction:
-            'Створи 16×16 спрайт у Blocks і перейди в JavaScript. У виразі img зміни кілька цифр кольору та прозорих крапок.',
-          expected: 'Зображення в симуляторі змінюється саме в тих пікселях, які ти відредагував у тексті.',
+          id: 'lesson-23-step-01', title: 'Відредагуй пікселі у Python',
+          instruction: 'У новому проєкті Python створи героя 16×16 зі зразка. Зміни кілька цифр кольору та прозорих крапок між потрійними лапками, зберігаючи 16 рядків по 16 пікселів.',
+          expected: 'У симуляторі змінюються саме відредаговані пікселі героя.',
+          visual: { kind: 'python', label: 'Малюнок 16×16 як текст', code: pixels,
+            explanation: 'img перетворює сітку символів на зображення. Це справжній текст: його можна виділити, скопіювати та змінити у Python.' },
         },
         {
-          id: 'lesson-23-step-02',
-          title: 'Побудуй шари',
-          instruction:
-            'Створи три спрайти, що частково перекриваються: far, player і hud. Задай їм z відповідно -10, 0 і 20.',
-          expected: 'far намальований позаду героя, а hud — поверх обох, незалежно від порядку створення.',
+          id: 'lesson-23-step-02', title: 'Побудуй три шари',
+          instruction: 'Продовж попередній код: створи far із зорями та hud за зразком. Задай far.z = -10, my_player.z = 0 і hud.z = 20. На старті вони розміщені навколо центру екрана.',
+          expected: 'Герой перекриває далекі зорі, а рамка hud видима поверх героя.',
+          visual: { kind: 'python', label: 'Глибина визначається властивістю z', code: layers,
+            explanation: 'Більше z малюється попереду. Прозоре полотно far має 320×120 пікселів; цикл додає ряди зір. Оголошення @namespace створює власний вид Background для декорацій.' },
         },
         {
-          id: 'lesson-23-step-03',
-          title: 'Підготуй рухому сцену',
-          instruction:
-            'Додай широку tilemap, Player із керуванням і camera follow. Для far увімкни RelativeToCamera та намалюй широке прозоре зображення з далекими зорями.',
-          expected: 'Камера рухається за героєм, а far лишається прив’язаним до екрана позаду ігрових об’єктів.',
+          id: 'lesson-23-step-03', title: 'Підготуй рухому сцену',
+          instruction: 'У вкладці Assets створи Tilemap із назвою wide, шириною 20 та висотою 8 клітинок. Залиш небо прозорим, а нижній ряд заповни плиткою землі. У Python додай вибір цієї карти, керування та камеру зі зразка.',
+          expected: 'Камера йде за героєм по карті 320×128 пікселів; зорі лишаються позаду, а hud стоїть у куті екрана.',
+          hint: 'wide — назва ресурсу карти, створеного в Assets. У tilemap("wide") вона має збігатися з назвою в редакторі. Непрозорі плитки неба приховають далекі зорі.',
+          visual: { kind: 'python', label: 'Python використовує карту wide з Assets', code: scene,
+            explanation: 'RELATIVE_TO_CAMERA прив’язує декорації до екрана. Герой лишається у координатах карти. Намалюй wide перед запуском цього прикладу.' },
         },
         {
-          id: 'lesson-23-step-04',
-          title: 'Створи паралакс',
-          instruction:
-            'У game on update задавай far.x = 80 - player.x / 8. Пройди картою праворуч і назад.',
-          expected: 'Далекі зорі зсуваються протилежно руху героя, але у вісім разів повільніше, створюючи відчуття глибини.',
-          hint:
-            'Прапорець RelativeToCamera не дає камері автоматично рухати far; тому невеликий зсув x створює контрольований паралакс.',
+          id: 'lesson-23-step-04', title: 'Рухай далекі зорі повільніше',
+          instruction: 'Додай функцію on_update та реєстрацію game.on_update. Усередині задай far.x = 80 - my_player.x / 8. Пройди картою праворуч і назад.',
+          expected: 'Коли x героя зростає на 80, x далекого шару зменшується на 10; рух назад змінює напрямок зсуву.',
+          hint: 'Рядок із far.x має чотири пробіли, а game.on_update — жодного. Прапорець RELATIVE_TO_CAMERA дає змогу керувати зсувом вручну.',
+          visual: { kind: 'python', label: 'Оновлення паралаксу кожного кадру', code: parallax,
+            explanation: 'Формула ділить рух на вісім і змінює його напрямок. Це простий ефект глибини для нашої короткої карти wide.' },
         },
         {
-          id: 'lesson-23-step-05',
-          title: 'Додай офіційну мінікарту',
-          instruction:
-            'В Extensions знайди microsoft/arcade-minimap. Створи myMinimap у масштабі Quarter, виконай draw Player on myMinimap, а потім створи minimapSprite із зображення myMinimap image. Задай minimapSprite новий kind MiniMap, z 50, RelativeToCamera ON і постав його у верхній правий кут.',
-          expected: 'У куті видно зменшену карту рівня з позначкою поточного місця героя.',
-          hint:
-            'Блок minimap створює об’єкт Minimap, а не спрайт. Передай блок myMinimap image у звичайний блок створення sprite, щоб карту було видно на екрані.',
+          id: 'lesson-23-step-05', title: 'Додай офіційну мінікарту',
+          instruction: 'В Extensions знайди https://github.com/microsoft/arcade-minimap і додай розширення. У Python додай вид MiniMap та команди minimap зі зразка. Зістав блок draw my_player on my_minimap із викликом include_sprite.',
+          expected: 'У верхньому правому куті видно карту wide у масштабі Quarter із позначкою стартового місця героя.',
+          hint: 'include_sprite отримує спочатку карту, потім спрайт: minimap.include_sprite(my_minimap, my_player). get_image дістає малюнок карти, з якого створюється окремий спрайт.',
+          visual: { kind: 'comparison', blocks: { assetId: 'blocks:lesson-23-step-05',
+            alt: 'Програма з картою wide, паралаксом та рідними блоками minimap Quarter, draw my_player і my_minimap image.',
+            focus: { x: 0.01, y: 0.744, width: 0.498, height: 0.238, label: 'Створення та відображення мінікарти.' } },
+            python: { label: 'Python із розширенням arcade-minimap', code: mini },
+            explanation: 'my_minimap — об’єкт карти; minimap_sprite — спрайт її зображення. z 50 і прив’язка до камери розміщують його над ігровою сценою. Поки це один знімок.' },
         },
         {
-          id: 'lesson-23-step-06',
-          title: 'Оновлюй без гальм',
-          instruction:
-            'У game on update every 500 ms щоразу заново створи myMinimap у масштабі Quarter, виконай draw Player on myMinimap і задай minimapSprite image to myMinimap image. Пройди всю карту й стеж за плавністю.',
-          expected: 'Приблизно двічі на секунду позначка переходить у нове місце без старого сліду, а керування й паралакс лишаються плавними.',
+          id: 'lesson-23-step-06', title: 'Оновлюй мінікарту двічі на секунду',
+          instruction: 'Додай on_update_interval і реєстрацію game.on_update_interval(500, on_update_interval). Щоразу створюй свіжу карту, малюй героя й оновлюй зображення minimap_sprite.',
+          expected: 'Позначка пересувається приблизно двічі на секунду без старого сліду; керування та паралакс лишаються плавними.',
+          visual: { kind: 'python', label: 'Нова карта прибирає стару позначку',
+            code: `${mini}\n\ndef on_update_interval():\n    current_map = minimap.minimap(MinimapScale.QUARTER)\n    minimap.include_sprite(current_map, my_player)\n    minimap_sprite.set_image(minimap.get_image(current_map))\ngame.on_update_interval(500, on_update_interval)`,
+            explanation: 'current_map локальна для одного оновлення. Перемальовуємо карту раз на 500 мс, а паралакс продовжує оновлюватись кожного кадру.' },
         },
       ],
-      challenge: {
-        title: 'Другий шар глибини',
-        prompt:
-          'Додай nearLayer із z -5, який рухається за формулою 80 - player.x / 3. Порівняй його рух із far.',
-        hint: 'Ближчий шар має зміщуватися швидше за далекий, тому дільник 3 менший за 8.',
-      },
-      quiz: {
-        question: 'Як значення z впливає на спрайт?',
-        options: [
-          'Визначає, який спрайт малюється попереду або позаду',
-          'Змінює кількість життів',
-          'Задає швидкість кнопок',
-        ],
-        correctIndex: 0,
-        explanation: 'Більше z означає ближчий шар, який малюється поверх спрайтів із меншим z.',
-      },
-      xp: 300,
-      makeCodeUrl: 'https://arcade.makecode.com/pkg/microsoft/arcade-minimap',
+      challenge: { title: 'Другий шар глибини', prompt: 'У Python додай near_layer із z -5 та прапорцем RELATIVE_TO_CAMERA. У наявному on_update задай near_layer.x = 80 - my_player.x / 3 і порівняй рух із far.', hint: 'Створи near_layer до запуску оновлень. Дільник 3 дає більший зсув, ніж 8, тому ближчий шар рухається швидше.' },
+      quiz: { question: 'Навіщо під час оновлення створювати новий об’єкт мінікарти?',
+        options: ['Щоб збільшити швидкість героя', 'Щоб прибрати стару позначку перед малюванням нової', 'Щоб змінити ім’я проєкту'], correctIndex: 1,
+        explanation: 'include_sprite малює на зображенні карти. Новий знімок кожні 500 мс прибирає попередню позначку, а set_image показує оновлений результат.' },
+      xp: 300, makeCodeUrl: 'https://arcade.makecode.com/pkg/microsoft/arcade-minimap',
     },
     {
-      id: 'lesson-24',
-      slug: 'moia-vlasna-hra',
-      order: 24,
-      title: 'Моя власна гра',
-      summary: 'Спроєктуй MVP, дай його протестувати, удоскональ і безпечно опублікуй.',
-      durationMinutes: 60,
-      difficulty: 'master',
-      concepts: ['MVP', 'ігровий цикл', 'тестування', 'безпечна публікація'],
+      id: 'lesson-24', slug: 'moia-vlasna-hra', order: 24, title: 'Моя власна гра',
+      summary: 'Спроєктуй MVP у Python, протестуй його, поліпш і безпечно поділися.',
+      durationMinutes: 60, difficulty: 'master',
+      concepts: ['MVP', 'функції Python', 'ігровий цикл', 'тестування', 'безпечна публікація'],
       prerequisites: ['lesson-23'],
-      objective: 'Створити мінімальну версію власної гри, перевірити її з іншою людиною, поліпшити й поділитися без особистих даних.',
+      objective: 'Створити власний ігровий цикл у Python, перевірити перемогу й поразку, зберегти резервну копію та підготувати гру до безпечної публікації.',
       steps: [
         {
-          id: 'lesson-24-step-01',
-          title: 'Запиши задум',
-          instruction:
-            'Одним реченням запиши: «Гравець робить …, щоб …, але йому заважає …». Обери лише одну головну дію.',
-          expected: 'Є короткий задум із дією, метою та перешкодою, який можна пояснити за 20 секунд.',
+          id: 'lesson-24-step-01', title: 'Запиши задум',
+          instruction: 'Закінчи речення: «Гравець робить …, щоб …, але йому заважає …». Обери одну головну дію та поясни задум за 20 секунд.',
+          expected: 'У задумі є дія, мета й перешкода; його можна реалізувати знайомими командами Python.',
+          visual: { kind: 'guide', title: 'Картка задуму', items: ['Дія: що гравець робить найчастіше?', 'Мета: як він зрозуміє, що переміг?', 'Перешкода: що може призвести до поразки?', 'Приклад: керуй мандрівником, щоб дістатися кристала, оминаючи пастку. Заміни тему своєю.'] },
         },
         {
-          id: 'lesson-24-step-02',
-          title: 'Визнач MVP',
-          instruction:
-            'Склади список із чотирьох обов’язкових частин: керований герой, мета, небезпека, перемога або поразка. Усе інше запиши окремо як «потім».',
-          expected: 'Основний список має рівно чотири частини, а додаткові ідеї не заважають почати.',
+          id: 'lesson-24-step-02', title: 'Визнач MVP',
+          instruction: 'Склади список із чотирьох обов’язкових частин: керований герой, мета, небезпека, перемога або поразка. Інші ідеї відклади до списку «потім».',
+          expected: 'Є чотири перевірні частини MVP і окремий список додаткових ідей.',
+          visual: { kind: 'guide', title: 'Мінімальна гра, яку можна пройти', items: ['Герой: рухається від керування.', 'Мета: до неї можна дістатися й отримати перемогу.', 'Небезпека: контакту можна уникнути, а зіткнення дає поразку.', 'Завершення: після кожного результату Play Again повертає початок.', 'Потім: нова графіка, музика, бонуси або рівні.'] },
         },
         {
-          id: 'lesson-24-step-03',
-          title: 'Збери ігровий цикл',
-          instruction:
-            'Створи новий проєкт із нейтральною назвою без свого імені. Реалізуй чотири частини MVP й зіграй від старту до перемоги або поразки.',
-          expected: 'У гру можна зайти, виконати головну дію, отримати результат і почати ще раз через Play Again.',
-          hint:
-            'Спершу використовуй прості зображення з Gallery. Власну графіку додавай лише після того, як правила вже працюють.',
+          id: 'lesson-24-step-03', title: 'Створи ігровий цикл у Python',
+          instruction: 'Створи проєкт із нейтральною назвою без свого імені та обери Python. Використай каркас: налаштуй setup_player, setup_goal, небезпеку й обробники зіткнень під свій задум. Спочатку перевір обидва результати.',
+          expected: 'Герой рухається, мета дає перемогу, небезпека дає поразку; Play Again відновлює гру.',
+          hint: 'У каркасі пастку можна обійти зверху або знизу. Змінюй одну частину за раз; власні зображення додавай після перевірки правил.',
+          visual: { kind: 'python', label: 'MVP: функції налаштування та два обробники', code: mvp,
+            explanation: 'setup_player повертає героя, setup_goal розміщує мету. on_goal і on_danger відповідають за різні завершення. Малюнки, координати й швидкість тут — приклад для твоєї теми.' },
         },
         {
-          id: 'lesson-24-step-04',
-          title: 'Перевір самостійно',
-          instruction:
-            'Перевір п’ять ситуацій: старт, керування, досягнення мети, зіткнення з небезпекою та Restart. Виправ усе, що не дає очікуваного результату.',
-          expected: 'Усі п’ять ситуацій працюють після двох послідовних запусків без втручання в код.',
+          id: 'lesson-24-step-04', title: 'Перевір самостійно',
+          instruction: 'Перевір старт, керування, досягнення мети, зіткнення з небезпекою та Restart. Виправ Python-код і повтори перевірки двічі.',
+          expected: 'Усі п’ять ситуацій працюють після двох послідовних запусків без ручного втручання в код.',
+          visual: { kind: 'guide', title: 'П’ять перевірок — два проходи', items: ['Старт: усі об’єкти у своїх початкових місцях.', 'Керування: перевір усі напрямки та край екрана.', 'Мета: обійди небезпеку й отримай перемогу.', 'Небезпека: після Play Again навмисно отримай поразку.', 'Restart: знову є початкові об’єкти та працездатне керування.', 'Запиши помилку, виправ її та повтори весь список двічі.'] },
         },
         {
-          id: 'lesson-24-step-05',
-          title: 'Проведи тест із гравцем',
-          instruction:
-            'Дай гру другові, подрузі або дорослому й не пояснюй правила першу хвилину. Запитай, що було зрозуміло, складно й цікаво.',
-          expected: 'Ти записав щонайменше одну конкретну проблему або одну ідею покращення від гравця.',
+          id: 'lesson-24-step-05', title: 'Проведи тест із гравцем',
+          instruction: 'Дай гру другові, подрузі або дорослому. Першу хвилину не підказуй. Запитай, що було зрозуміло, складно й цікаво.',
+          expected: 'Записано одну конкретну проблему або ідею покращення з поведінки чи відгуку гравця.',
+          visual: { kind: 'guide', title: 'Спостереження замість підказок', items: ['Запиши, що гравець зробив першим.', 'Познач місце, де він зупинився або помилився.', 'Запитай: «Якою була мета? Що заважало? Що хочеться повторити?»', 'Обери одну зміну, яка допоможе зрозуміти або пройти гру.'] },
         },
         {
-          id: 'lesson-24-step-06',
-          title: 'Поліпш і збережи',
-          instruction:
-            'Внеси одне покращення, повтори п’ять перевірок і натисни Save, щоб мати резервний PNG-файл проєкту.',
-          expected: 'Покращена гра проходить усі перевірки, а на пристрої збережено резервний файл.',
+          id: 'lesson-24-step-06', title: 'Поліпш Python-код і збережи',
+          instruction: 'Внеси одне покращення в Python, повтори п’ять перевірок і натисни Save зі значком дискети, щоб завантажити резервний PNG-файл проєкту.',
+          expected: 'Поліпшена гра проходить перевірки, а резервний файл є у завантаженнях пристрою.',
+          visual: { kind: 'editor', assetId: 'editor:blocks-workspace',
+            alt: 'Кнопка Save зі значком дискети внизу редактора праворуч від назви проєкту.',
+            focus: { x: 0.383, y: 0.934, width: 0.03, height: 0.05, label: 'Збережи резервну копію через Save.' },
+            explanation: 'На знімку відкрите подання Blocks; Save розміщена в тому самому місці й у Python. PNG містить проєкт, тож зберігай цей файл як резервну копію.' },
         },
         {
-          id: 'lesson-24-step-07',
-          title: 'Поділися безпечно',
-          instruction:
-            'Перед Share прибери з назви й текстів справжнє ім’я, фото, школу, адресу та контакти. Попроси дорослого перевірити гру, а тоді створи посилання лише для людей, яким довіряєш.',
-          expected: 'У проєкті немає особистих даних; дорослий погодив публікацію, а ти зберіг посилання в безпечному місці.',
+          id: 'lesson-24-step-07', title: 'Поділися безпечно',
+          instruction: 'Перед Share прибери з назви й текстів справжнє ім’я, фото, школу, адресу та контакти. Попроси дорослого перевірити гру та погодити публікацію, а потім поділися посиланням із людьми, яким довіряєш.',
+          expected: 'У грі немає особистих даних, дорослий погодив публікацію, а посилання збережене в безпечному місці.',
+          visual: { kind: 'guide', title: 'Перевірка перед Share', items: ['Переглянь назву, малюнки, повідомлення й коментарі Python: прибери особисті дані.', 'Разом із дорослим зіграйте та перегляньте код перед публікацією.', 'Лише після погодження натисни Share та збережи посилання.', 'Люди з посиланням можуть відкрити гру й код і передати посилання іншим.'] },
         },
       ],
-      challenge: {
-        title: 'Версія 1.1',
-        prompt:
-          'Після першої завершеної версії додай лише одну нову можливість із розділу «потім» і знову проведи повну перевірку.',
-        hint: 'Обери зміну, яку можна завершити за 20 хвилин: звук, один бонус, новий рівень або кращу стартову підказку.',
-      },
-      quiz: {
-        question: 'Що треба зробити перед створенням публічного посилання на гру?',
-        options: [
-          'Додати повне ім’я та школу автора',
-          'Прибрати особисті дані й попросити дорослого перевірити публікацію',
-          'Видалити умови перемоги',
-        ],
-        correctIndex: 1,
-        explanation:
-          'Посилання відкриває гру й код людям, які його мають. Особисті дані не потрібні, а рішення про публікацію варто перевірити з дорослим.',
-      },
-      xp: 400,
-      makeCodeUrl: 'https://arcade.makecode.com/share',
+      challenge: { title: 'Версія 1.1', prompt: 'Додай у Python одну можливість зі списку «потім» і знову проведи всі перевірки. Збережи нову резервну копію.', hint: 'Обери зміну на 20 хвилин: звук, бонус або стартову підказку. Якщо знову публікуєш, повтори перевірку приватності з дорослим.' },
+      quiz: { question: 'Що потрібно зробити перед Share власної гри?',
+        options: ['Додати повне ім’я та школу', 'Прибрати особисті дані й попросити дорослого перевірити публікацію', 'Видалити умови перемоги'], correctIndex: 1,
+        explanation: 'Посилання відкриває гру й Python-код людям, які його мають. Прибери особисті дані та разом із дорослим погодь публікацію.' },
+      xp: 400, makeCodeUrl: 'https://arcade.makecode.com/share',
     },
   ],
 };

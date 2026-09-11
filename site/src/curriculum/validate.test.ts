@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { curriculum, lessons } from './index';
+import { curriculum, lessons, lessonBySlug } from './index';
 import { campaign01 } from './campaign-01';
 import { campaign02 } from './campaign-02';
 import { campaign03 } from './campaign-03';
 import { campaign04 } from './campaign-04';
 import { campaign05 } from './campaign-05';
+import { campaign06 } from './campaign-06';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -101,8 +102,8 @@ const expectedLessonIdentities = [
   ['lesson-18', 'rozumni-suprotyvnyky', 'Розумні супротивники'],
   ['lesson-19', 'vid-prototypu-do-hry', 'Від прототипу до гри'],
   ['lesson-20', 'arena-bosiv', 'Арена босів'],
-  ['lesson-21', 'vid-blokiv-do-kodu', 'Від блоків до коду'],
-  ['lesson-22', 'typescript-u-hri', 'TypeScript у грі'],
+  ['lesson-21', 'vid-blokiv-do-python', 'Від блоків до Python'],
+  ['lesson-22', 'python-u-hri', 'Python у грі'],
   ['lesson-23', 'hrafika-maistra', 'Графіка майстра'],
   ['lesson-24', 'moia-vlasna-hra', 'Моя власна гра'],
 ];
@@ -117,6 +118,38 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('completes the final campaign as Blocks to Python without changing progress IDs', () => {
+    expect(campaign06.lessons.map(({ slug, title }) => [slug, title])).toEqual([
+      ['vid-blokiv-do-python', 'Від блоків до Python'],
+      ['python-u-hri', 'Python у грі'],
+      ['hrafika-maistra', 'Графіка майстра'],
+      ['moia-vlasna-hra', 'Моя власна гра'],
+    ]);
+    expect(JSON.stringify(campaign06)).not.toMatch(/JavaScript|TypeScript/);
+    const counts = { blocks: 0, editor: 0, guide: 0, python: 0, comparison: 0 };
+    for (const lesson of campaign06.lessons) {
+      expect(lesson.steps.map(({ id }) => id)).toEqual(Array.from({ length: lesson.id === 'lesson-24' ? 7 : 6 }, (_, i) => `${lesson.id}-step-0${i + 1}`));
+      for (const step of lesson.steps) if (step.visual) counts[step.visual.kind] += 1;
+    }
+    expect(counts).toEqual({ blocks: 1, editor: 1, guide: 5, python: 13, comparison: 5 });
+    expect(campaign06.lessons.map(lesson => lesson.steps.map(step => step.visual?.kind))).toEqual([
+      ['blocks', 'comparison', 'comparison', 'python', 'comparison', 'comparison'],
+      ['python', 'python', 'python', 'python', 'python', 'python'],
+      ['python', 'python', 'python', 'python', 'comparison', 'python'],
+      ['guide', 'guide', 'python', 'guide', 'guide', 'editor', 'guide'],
+    ]);
+    expect(lessons.flatMap(lesson => lesson.steps).filter(step => step.visual)).toHaveLength(145);
+  });
+
+  it.each([
+    ['vid-blokiv-do-kodu', 'vid-blokiv-do-python', 'lesson-21'],
+    ['typescript-u-hri', 'python-u-hri', 'lesson-22'],
+  ])('resolves legacy %s to the canonical lesson object', (legacy, canonical, id) => {
+    expect(lessonBySlug.get(legacy)?.id).toBe(id);
+    expect(lessonBySlug.get(legacy)?.slug).toBe(canonical);
+    expect(lessonBySlug.get(legacy)).toBe(lessonBySlug.get(canonical));
+  });
+
   it('gives every game-designer step the approved twenty blocks and four play-test guides', () => {
     const steps = campaign05.lessons.flatMap((lesson) => lesson.steps);
     expect(steps).toHaveLength(24);
