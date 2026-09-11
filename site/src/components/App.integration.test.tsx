@@ -167,7 +167,7 @@ describe('App progress feedback', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        'XP зараховано для цієї сесії, але після закриття сторінки прогрес зникне.',
+        'XP буде зараховано для цієї сесії, але після закриття сторінки прогрес зникне.',
       ),
     ).toBeVisible();
 
