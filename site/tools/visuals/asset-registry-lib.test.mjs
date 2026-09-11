@@ -74,6 +74,19 @@ test('check rejects SVG assets with zero dimensions', async (t) => {
   await assert.rejects(generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry], check: true }), /lesson-01-step-04.*positive/);
 });
 
+test('registry generation and check reject embedded SMIL resource mutations without publishing changes', async (t) => {
+  const fixture = await project(t);
+  await generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry] });
+  const previous = await readFile(fixture.registry, 'utf8');
+  const active = svg.replace('/>', '><image><set attributeName="href" to="https://example.com/remote.png" begin="0s"/></image></svg>');
+  const resource = `data:image/svg+xml;base64,${Buffer.from(active).toString('base64')}`;
+  await writeFile(path.join(fixture.blocks, `${entry.id}.svg`), svg.replace('/>', `><image href="${resource}"/></svg>`));
+  for (const check of [false, true]) {
+    await assert.rejects(generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry], check }), /lesson-01-step-04.*SMIL/);
+    assert.equal(await readFile(fixture.registry, 'utf8'), previous);
+  }
+});
+
 for (const resource of ['&#104;ttps://example.com/paint.svg#paint', String.raw`\68 ttps://example.com/paint.svg#paint`]) {
   test(`registry rejects encoded remote CSS resource ${resource}`, async (t) => {
     const fixture = await project(t);

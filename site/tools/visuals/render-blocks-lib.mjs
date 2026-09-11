@@ -18,6 +18,12 @@ const imageHelpers = new Set([
   'color', 'color-mix', 'light-dark', 'calc', 'min', 'max', 'clamp', 'element', '-moz-element',
 ]);
 
+// Static lesson assets must not mutate resource attributes after validation.
+// Match local names so namespace prefixes cannot hide SVG/SMIL animation.
+const smilElements = new Set([
+  'set', 'animate', 'animatecolor', 'animatetransform', 'animatemotion', 'mpath', 'discard',
+]);
+
 function validateEmbeddedSvg(value, id, depth) {
   const data = /^data:image\/svg\+xml(?:;charset=[a-z0-9._-]+)?(;base64)?,(.*)$/is.exec(value);
   if (!data) return false;
@@ -171,6 +177,7 @@ export function validateSvg(svg, id, depth = 0) {
     const root = dom.window.document.documentElement;
     if (root.localName !== 'svg' || root.namespaceURI !== 'http://www.w3.org/2000/svg') fail('invalid SVG root');
     for (const element of [root, ...root.querySelectorAll('*')]) {
+      if (smilElements.has(element.localName.toLowerCase())) fail('unsupported SMIL element in static SVG');
       if (['script', 'foreignobject'].includes(element.localName.toLowerCase())) fail('unsafe SVG element');
       if (element.localName === 'style') validateCssResources(element.textContent, fail, id, depth);
       for (const attribute of element.attributes) {

@@ -213,6 +213,32 @@ test('rejects XML stylesheet instructions hidden before an embedded SVG root', (
   assert.throws(() => validateSvg(svg.replace('</svg>', `<image href="${resource}"/></svg>`), id), /lesson-01-step-04.*processing instruction/);
 });
 
+for (const [tag, attributes] of [
+  ['set', 'attributeName="href" to="https://example.com/remote.png" begin="0s"'],
+  ['animate', 'attributeName="href" values="#safe;https://example.com/remote.png" dur="1s"'],
+  ['animateColor', 'attributeName="fill" from="red" to="blue" dur="1s"'],
+  ['animateTransform', 'attributeName="transform" type="translate" from="0 0" to="10 10" dur="1s"'],
+  ['animateMotion', 'path="M0 0L10 10" dur="1s"'],
+  ['mpath', 'href="#motion-path"'],
+  ['discard', 'begin="0s"'],
+]) {
+  for (const location of ['top-level', 'embedded href', 'embedded CSS']) {
+    test(`static SVG rejects SMIL ${tag} in ${location}`, () => {
+      const active = svg.replace('</svg>', `<image><${tag} ${attributes}/></image></svg>`);
+      const resource = `data:image/svg+xml;base64,${Buffer.from(active).toString('base64')}`;
+      const markup = location === 'top-level' ? active : location === 'embedded href'
+        ? svg.replace('</svg>', `<image href="${resource}"/></svg>`)
+        : svg.replace('<text>', `<text style="fill: url('${resource}')">`);
+      assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*SMIL/);
+    });
+  }
+}
+
+test('static SVG rejects namespace-prefixed SMIL elements by local name', () => {
+  const markup = svg.replace('</svg>', '<s:set xmlns:s="http://www.w3.org/2000/svg" attributeName="href" to="https://example.com/remote.png"/></svg>');
+  assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*SMIL/);
+});
+
 test('removes official editor cursor and toolbox sprite CSS without changing block geometry or visible styles', () => {
   const style = '<style>.blocklyTreeIcon { background: url(https://cdn.makecode.com/commit/abc/blockly/media/sprites.svg) no-repeat -48px -16px; color: red; } .blocklyDraggable { cursor: url("https://cdn.makecode.com/commit/abc/blockly/media/handclosed.cur"), auto; }</style>';
   const normalized = normalizeRendererSvg(svg.replace('<text>', `${style}<text>`), id);
