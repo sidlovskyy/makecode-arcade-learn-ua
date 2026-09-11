@@ -1846,3 +1846,59 @@ svg {
     display: none;
   }
 }
+
+.review-mode-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 22px;
+  padding: 15px 17px;
+  border: 1px solid #c8bdf5;
+  border-radius: var(--radius-sm);
+  background: #f1edff;
+  color: var(--text);
+}
+
+.review-mode-notice span,
+.review-mode-notice strong,
+.review-mode-notice small {
+  display: block;
+}
+
+.review-mode-notice strong {
+  color: var(--purple-deep);
+  font-size: 0.9rem;
+}
+
+.review-mode-notice small {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.review-mode-notice button {
+  min-height: 44px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 2px solid var(--purple-deep);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--purple-deep);
+  font-weight: 850;
+}
+
+.review-mode-notice button:hover {
+  background: #e6dfff;
+}
+
+@media (max-width: 600px) {
+  .review-mode-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .review-mode-notice button {
+    width: 100%;
+  }
+}

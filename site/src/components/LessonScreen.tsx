@@ -27,8 +27,10 @@ interface PracticalStepProps {
   stepNumber: number;
   stepCount: number;
   isCompleted: boolean;
+  isReviewMode?: boolean;
   onBack?: () => void;
   onContinue(): void;
+  onReturnToSummary?: () => void;
 }
 
 function PracticalStep({
@@ -36,8 +38,10 @@ function PracticalStep({
   stepNumber,
   stepCount,
   isCompleted,
+  isReviewMode = false,
   onBack,
   onContinue,
+  onReturnToSummary,
 }: PracticalStepProps) {
   const [isHintVisible, setIsHintVisible] = useState(false);
   const hintId = useId();
@@ -50,6 +54,19 @@ function PracticalStep({
         {isCompleted && <span className="completed-label">✓ Виконано</span>}
       </div>
       <h2 id="practical-step-title">{step.title}</h2>
+
+      {isReviewMode && onReturnToSummary && (
+        <aside className="review-mode-notice" aria-label="Перегляд завершеної місії">
+          <span>
+            <strong>Режим перегляду</strong>
+            <small>Прогрес і XP не зміняться.</small>
+          </span>
+          <button type="button" onClick={onReturnToSummary}>
+            До підсумку місії
+          </button>
+        </aside>
+      )}
+
       <p className="practical-step__instruction">{step.instruction}</p>
 
       <section className="expected-result" aria-labelledby="expected-result-title">
@@ -90,7 +107,11 @@ function PracticalStep({
           </button>
         )}
         <button className="button button--primary" type="button" onClick={onContinue}>
-          {isLastStep
+          {isReviewMode
+            ? isLastStep
+              ? 'Завершити перегляд'
+              : 'Наступний крок'
+            : isLastStep
             ? 'Кроки готові — до випробування'
             : isCompleted
               ? 'До наступного кроку'
@@ -134,6 +155,7 @@ export function LessonScreen({
   const [completionRequested, setCompletionRequested] = useState(
     Boolean(lessonProgress?.completed),
   );
+  const [isReviewingCompletedLesson, setIsReviewingCompletedLesson] = useState(false);
   const quizPassedRef = useRef(Boolean(lessonProgress?.quizPassed));
   const completionRequestedRef = useRef(Boolean(lessonProgress?.completed));
   const { finishLesson, markQuizPassed, markStepDone, rememberLesson } = actions;
@@ -143,7 +165,8 @@ export function LessonScreen({
   }, [lesson.slug, rememberLesson]);
 
   const currentStep = lesson.steps[currentStepIndex]!;
-  const isLessonComplete = Boolean(lessonProgress?.completed) || completionRequested;
+  const hasCompletedLesson = Boolean(lessonProgress?.completed) || completionRequested;
+  const showCompletionSummary = hasCompletedLesson && !isReviewingCompletedLesson;
 
   function handleSelectStep(index: number) {
     const selectedStep = lesson.steps[index];
@@ -154,6 +177,10 @@ export function LessonScreen({
 
     setCurrentStepIndex(index);
     setPhase('steps');
+
+    if (hasCompletedLesson) {
+      setIsReviewingCompletedLesson(true);
+    }
   }
 
   function handleStepContinue() {
@@ -172,6 +199,20 @@ export function LessonScreen({
     }
 
     setCurrentStepIndex((index) => index + 1);
+  }
+
+  function handleReviewContinue() {
+    if (currentStepIndex === lesson.steps.length - 1) {
+      handleReturnToCompletionSummary();
+      return;
+    }
+
+    setCurrentStepIndex((index) => index + 1);
+  }
+
+  function handleReturnToCompletionSummary() {
+    setIsReviewingCompletedLesson(false);
+    setPhase('quiz');
   }
 
   function handleQuizPassed() {
@@ -227,7 +268,9 @@ export function LessonScreen({
           <aside className="lesson-sidebar">
             <StepNavigator
               steps={lesson.steps}
-              currentIndex={phase === 'steps' ? currentStepIndex : -1}
+              currentIndex={phase === 'steps' && (!hasCompletedLesson || isReviewingCompletedLesson)
+                ? currentStepIndex
+                : -1}
               completedStepIds={completedStepIds}
               onSelectStep={handleSelectStep}
             />
@@ -251,7 +294,7 @@ export function LessonScreen({
           </aside>
 
           <div className="lesson-workspace">
-            {isLessonComplete ? (
+            {showCompletionSummary ? (
               <section className="lesson-card-surface completion-panel" aria-labelledby="completion-title">
                 <span className="completion-panel__burst" aria-hidden="true">✦</span>
                 <p className="eyebrow">Місію завершено</p>
@@ -274,10 +317,16 @@ export function LessonScreen({
                     stepNumber={currentStepIndex + 1}
                     stepCount={lesson.steps.length}
                     isCompleted={completedStepIds.has(currentStep.id)}
+                    isReviewMode={isReviewingCompletedLesson}
                     onBack={currentStepIndex > 0
                       ? () => handleSelectStep(currentStepIndex - 1)
                       : undefined}
-                    onContinue={handleStepContinue}
+                    onContinue={isReviewingCompletedLesson
+                      ? handleReviewContinue
+                      : handleStepContinue}
+                    onReturnToSummary={isReviewingCompletedLesson
+                      ? handleReturnToCompletionSummary
+                      : undefined}
                   />
                 )}
 

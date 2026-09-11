@@ -273,6 +273,89 @@ describe('LessonScreen', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText(`+${lesson.xp} XP`)).toBeVisible();
   });
+
+  it('resumes a passed quiz at one completion action without passing it again', async () => {
+    const user = userEvent.setup();
+    const actions = createActions();
+    renderLesson({
+      progress: createProgress({
+        completedStepIds: lesson.steps.map((step) => step.id),
+        quizPassed: true,
+      }),
+      actions,
+    });
+
+    expect(screen.getByText(lesson.quiz.question)).toBeVisible();
+    expect(screen.getByText(lesson.quiz.explanation)).toBeVisible();
+    expect(
+      screen.getAllByRole('button', { name: 'Завершити місію' }),
+    ).toHaveLength(1);
+    expect(actions.markQuizPassed).not.toHaveBeenCalled();
+    expect(actions.finishLesson).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Завершити місію' }),
+    );
+
+    expect(actions.markQuizPassed).not.toHaveBeenCalled();
+    expect(actions.finishLesson).toHaveBeenCalledTimes(1);
+    expect(actions.finishLesson).toHaveBeenCalledWith(
+      lesson.id,
+      lesson.slug,
+      lesson.xp,
+    );
+  });
+
+  it('lets a learner review completed steps and return to the completion summary without changing progress', async () => {
+    const user = userEvent.setup();
+    const actions = createActions();
+    renderLesson({
+      progress: createProgress({
+        completedStepIds: lesson.steps.map((step) => step.id),
+        quizPassed: true,
+        completed: true,
+      }),
+      actions,
+    });
+
+    expect(
+      screen.getByRole('heading', { name: 'Супер! Нова навичка твоя.' }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: `Крок 2: ${lesson.steps[1]!.title}. Виконано`,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', { name: lesson.steps[1]!.title }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Режим перегляду')).toBeVisible();
+    expect(
+      screen.getByText('Прогрес і XP не зміняться.'),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Наступний крок' }));
+
+    expect(
+      screen.getByRole('heading', { name: lesson.steps[2]!.title }),
+    ).toBeInTheDocument();
+    expect(actions.markStepDone).not.toHaveBeenCalled();
+    expect(actions.markQuizPassed).not.toHaveBeenCalled();
+    expect(actions.finishLesson).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole('button', { name: 'До підсумку місії' }),
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'Супер! Нова навичка твоя.' }),
+    ).toBeInTheDocument();
+    expect(actions.markStepDone).not.toHaveBeenCalled();
+    expect(actions.markQuizPassed).not.toHaveBeenCalled();
+    expect(actions.finishLesson).not.toHaveBeenCalled();
+  });
 });
 
 describe('lesson routing', () => {
