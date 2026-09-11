@@ -97,6 +97,45 @@ test('rejects escaped CSS URL functions and encoded presentation attribute URLs'
   assert.throws(() => validateSvg(svg.replace('</svg>', String.raw`<style>@\69mport 'https://example.com/a.css';</style></svg>`), id), /lesson-01-step-04.*remote/);
 });
 
+for (const expression of [
+  'image-set("https://example.com/x.png" 1x)',
+  '-webkit-image-set("../x.png" 1x)',
+  String.raw`image-set("\68 ttps://example.com/x.png" 1x)`,
+  String.raw`image-\73 et("&#104;ttps://example.com/x.png" 1x)`,
+  'image("https://example.com/x.png", red)',
+  'src("https://example.com/x.png")',
+  'cross-fade(image-set("https://example.com/x.png" 1x), url(#paint), 50%)',
+  'image-set(url(#paint) 1x, "https://example.com/x.png" 2x)',
+  'image-set(var(--remote) 1x)',
+  'image-set(attr(data-src) 1x)',
+  'image-set(--custom-image() 1x)',
+]) {
+  for (const location of ['attribute', 'element']) {
+    test(`rejects external or unresolved CSS image expression ${expression} in ${location}`, () => {
+      const markup = location === 'attribute'
+        ? svg.replace('<text>', `<text style="mask-image: ${expression.replaceAll('"', '&quot;')}">`)
+        : svg.replace('</svg>', `<style>text { mask-image: ${expression}; }</style></svg>`);
+      assert.throws(() => validateSvg(markup, id), /lesson-01-step-04.*(?:remote|unsupported)/);
+    });
+  }
+}
+
+for (const expression of [
+  'image-set("#paint" 1x, url(#paint) 2x)',
+  '-webkit-image-set("data:image/png;base64,AAAA" 1x)',
+  'image-set("data:image/webp;base64,AAAA" type("image/webp") 1x)',
+  'image("#paint", red)',
+  'src("#paint")',
+  'cross-fade(image-set("#paint" 1x), linear-gradient(red, blue), 50%)',
+  'image-set(linear-gradient(rgb(0, 0, 0), rgb(255, 255, 255)) 1x)',
+]) {
+  test(`preserves recognized self-contained CSS image expression ${expression}`, () => {
+    const markup = svg.replace('<text>', `<text style="mask-image: ${expression.replaceAll('"', '&quot;')}">`)
+      .replace('</svg>', `<style>text { mask-image: ${expression}; }</style></svg>`);
+    assert.deepEqual(validateSvg(markup, id), { width: 120, height: 40 });
+  });
+}
+
 for (const resource of [
   '#paint',
   String.raw`\23 paint`,

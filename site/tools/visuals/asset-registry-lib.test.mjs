@@ -84,3 +84,19 @@ for (const resource of ['&#104;ttps://example.com/paint.svg#paint', String.raw`\
     assert.equal(await readFile(fixture.registry, 'utf8'), previous);
   });
 }
+
+for (const expression of [
+  'image-set("https://example.com/x.png" 1x)',
+  '-webkit-image-set("../x.png" 1x)',
+  String.raw`image("\68 ttps://example.com/x.png")`,
+  'src("https://example.com/x.png")',
+]) {
+  test(`registry rejects string-based external CSS image expression ${expression}`, async (t) => {
+    const fixture = await project(t);
+    await generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry] });
+    const previous = await readFile(fixture.registry, 'utf8');
+    await writeFile(path.join(fixture.blocks, `${entry.id}.svg`), svg.replace('/>', `><style>svg { mask-image: ${expression}; }</style></svg>`));
+    await assert.rejects(generateVisualRegistry({ siteRoot: fixture.root, catalog: [entry], check: true }), /lesson-01-step-04.*remote/);
+    assert.equal(await readFile(fixture.registry, 'utf8'), previous);
+  });
+}

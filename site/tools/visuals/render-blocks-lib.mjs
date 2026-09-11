@@ -7,6 +7,15 @@ import { tokenize, TokenType } from '@csstools/css-tokenizer';
 const resourceAttributes = new Set([
   'style', 'fill', 'stroke', 'filter', 'clip-path', 'mask', 'cursor',
   'marker', 'marker-start', 'marker-mid', 'marker-end', 'color-profile',
+  'mask-image', 'background-image', 'border-image-source', 'list-style-image', 'shape-outside',
+]);
+
+const imageFunctions = new Set(['image', 'image-set', '-webkit-image-set', 'cross-fade', '-webkit-cross-fade']);
+const imageHelpers = new Set([
+  'linear-gradient', 'radial-gradient', 'conic-gradient',
+  'repeating-linear-gradient', 'repeating-radial-gradient', 'repeating-conic-gradient',
+  'rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch',
+  'color', 'color-mix', 'light-dark', 'calc', 'min', 'max', 'clamp', 'element', '-moz-element',
 ]);
 
 function validateCssResources(css, fail, id, depth) {
@@ -41,18 +50,42 @@ function validateCssResources(css, fail, id, depth) {
     }
     fail(`remote or unsupported SVG stylesheet resource: ${value.slice(0, 120)}`);
   };
+  const functions = [];
   for (let index = 0; index < tokens.length; index++) {
     const [type, , , , data] = tokens[index];
+    const parent = functions.at(-1);
     if (type === TokenType.AtKeyword && data.value.toLowerCase() === 'import') fail('remote SVG stylesheet import');
     if (type === TokenType.URL) validateUrl(data.value);
-    if (type === TokenType.Function && data.value.toLowerCase() === 'url') {
-      const argument = tokens[index + 1];
-      if (argument?.[0] !== TokenType.String || tokens[index + 2]?.[0] !== TokenType.CloseParen) {
-        fail('unsupported SVG stylesheet URL syntax');
+    if (type === TokenType.Function) {
+      const name = data.value.toLowerCase();
+      const urlFunction = name === 'url' || name === 'src';
+      const imageType = name === 'type' && ['image-set', '-webkit-image-set'].includes(parent?.name);
+      if (urlFunction || imageType) {
+        const argument = tokens[index + 1];
+        if (argument?.[0] !== TokenType.String || tokens[index + 2]?.[0] !== TokenType.CloseParen) {
+          fail('unsupported SVG stylesheet URL syntax');
+        }
+        if (imageType && !/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(argument[4].value)) {
+          fail('unsupported SVG image type syntax');
+        }
       }
-      validateUrl(argument[4].value);
+      if (parent?.resource && !urlFunction && !imageType && !imageFunctions.has(name) && !imageHelpers.has(name)) {
+        // Dynamic/custom functions could turn strings elsewhere into URLs.
+        // Accept only image syntax whose resource arguments we can inspect.
+        fail(`unsupported SVG image resource function: ${name}`);
+      }
+      functions.push({ name, resource: parent?.resource || urlFunction || imageFunctions.has(name), imageType });
+    } else if (type === TokenType.OpenParen) {
+      functions.push({ resource: parent?.resource });
+    } else if (type === TokenType.CloseParen) {
+      functions.pop();
+    } else if (type === TokenType.String && parent?.resource && !parent.imageType) {
+      // image()/image-set() accept URL strings without a url() wrapper.
+      // type("image/png") is metadata, not a fetched resource.
+      validateUrl(data.value);
     }
   }
+  if (functions.some(({ resource }) => resource)) fail('unsupported unclosed SVG image resource function');
 }
 
 export function validateCatalog(catalog) {
