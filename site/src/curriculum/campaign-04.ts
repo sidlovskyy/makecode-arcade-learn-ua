@@ -22,6 +22,12 @@ export const campaign04: Campaign = {
       steps: [
         {
           id: 'lesson-13-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-13-step-01',
+            alt: 'On start створює mySprite типу Player із зображенням 16×16 і керуванням vx 80, vy 80.',
+            focus: { x: 0.028, y: 0.247, width: 0.972, height: 0.63, label: 'Створи героя й додай керування 80 на 80.' },
+            explanation: 'Малюнок героя — приклад 16×16. Поки що спрайт має один нерухомий кадр; швидкості 80 діють на обидві осі.',
+          },
           title: 'Створи персонажа',
           instruction:
             'Створи проєкт «Живий герой», додай спрайт Player розміром 16×16 і керування зі швидкістю 80.',
@@ -29,28 +35,52 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-13-step-02',
-          title: 'Додай Animation',
+          visual: {
+            kind: 'editor', assetId: 'editor:animation-extension',
+            alt: 'Сторінка Extensions: у Recommended є офіційна картка animation з каченятами.',
+            focus: { x: 0.295, y: 0.350, width: 0.199, height: 0.354, label: 'Якщо Animation відсутня, обери офіційну картку animation.' },
+            explanation: 'У поточному Arcade категорія Animation вже є в новому проєкті. Відкрий її одразу. Знімок показує запасний шлях через Extensions → Recommended → animation; цей пакет також додає розширені анімації станів.',
+          },
+          title: 'Знайди Animation',
           instruction:
-            'Відкрий Extensions під панеллю блоків, знайди офіційне розширення animation і додай його до проєкту.',
-          expected: 'На панелі блоків з’явилася нова категорія Animation.',
+            'Знайди й відкрий Animation на панелі блоків. Якщо категорії немає, відкрий Extensions, знайди офіційну картку animation та додай її до проєкту.',
+          expected: 'Категорія Animation відкрита, і в ній доступний блок кадрової анімації animate frames.',
         },
         {
           id: 'lesson-13-step-03',
+          visual: {
+            kind: 'editor', assetId: 'editor:animation-frames',
+            alt: 'Редактор анімації: полотно 16×16, праворуч три порожні кадри, кнопки дублювання та додавання кадру.',
+            focus: { x: 0.909, y: 0.546, width: 0.067, height: 0.080, label: 'Дублюй і додавай кадри праворуч, доки їх не стане чотири.' },
+            explanation: 'Це знімок інструментів, ще без малюнка: показано три порожні кадри та інтервал 200 ms. Створи чотири власні кадри 16×16 у порядку ліва нога, рівно, права нога, рівно. Інтервал 150 ms задаси наступним кроком.',
+          },
           title: 'Намалюй кадри ходи',
           instruction:
-            'Додай run image animation для героя. Створи чотири кадри однакового розміру: ліва нога вперед, рівно, права нога вперед, рівно.',
+            'У Animation додай animate mySprite frames (run image animation), натисни поле кадрів і створи чотири кадри 16×16: ліва нога вперед, рівно, права нога вперед, рівно.',
           expected: 'У блоці анімації є чотири кадри 16×16, що відрізняються положенням ніг.',
           hint:
             'Скопіюй перший кадр у наступні й змінюй лише 2–4 пікселі. Так герой не буде смикатися через різний розмір.',
         },
         {
           id: 'lesson-13-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-13-step-04',
+            alt: 'Після створення Player і керування блок animate mySprite містить чотири кадри, interval 150 ms і loop ON.',
+            focus: { x: 0.028, y: 0.417, width: 0.393, height: 0.522, label: 'Задай 150 ms і ввімкни loop.' },
+            explanation: 'Поле frames зберігає чотири кадри 16×16; відкрий його, щоб переглянути всі. Loop ON повторює їх безперервно, навіть коли герой стоїть на місці.',
+          },
           title: 'Налаштуй темп',
           instruction: 'Задай інтервал кадрів 150 ms, увімкни loop і запусти гру.',
           expected: 'Кадри безперервно змінюються, і персонаж виглядає так, ніби крокує.',
         },
         {
           id: 'lesson-13-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-13-step-05',
+            alt: 'Функція startWalking містить animate mySprite із 150 ms і loop ON; on start створює героя, додає керування та викликає startWalking.',
+            focus: { x: 0.019, y: 0, width: 0.981, height: 1, label: 'Винеси анімацію у startWalking і виклич функцію після створення героя.' },
+            explanation: 'Визначення функції — окремий стек. Виклик startWalking в on start запускає її вміст після створення mySprite. Чотири кадри й темп залишаються тими самими.',
+          },
           title: 'Винеси анімацію у функцію',
           instruction:
             'У Functions створи функцію startWalking, перенеси в неї блок run image animation і виклич startWalking після створення героя.',
@@ -58,6 +88,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-13-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-13-step-06',
+            alt: 'Функція celebrate запускає confetti 500 ms і звук ba ding; події A та B викликають ту саму функцію.',
+            focus: { x: 0.237, y: 0, width: 0.763, height: 0.835, label: 'Запиши святкування один раз і викликай з обох кнопок.' },
+            explanation: '500 ms і звук ba ding — приклад короткого святкування. Обидві події містять тільки виклик celebrate, а startWalking і початкове налаштування героя збережено.',
+          },
           title: 'Повтори поведінку без копій',
           instruction:
             'Створи функцію celebrate: додай у неї короткий ефект confetti та звук. Виклич celebrate і в події A, і в події B.',
@@ -98,6 +134,12 @@ export const campaign04: Campaign = {
       steps: [
         {
           id: 'lesson-14-step-01',
+          visual: {
+            kind: 'editor', assetId: 'editor:tilemap-editor',
+            alt: 'Редактор tilemap із порожньою сіткою, палітрою Gallery ліворуч і кнопкою Done праворуч унизу.',
+            focus: { x: 0.299, y: 0.116, width: 0.513, height: 0.821, label: 'У цій сітці малюй карту тайлами з Gallery.' },
+            explanation: 'Set tilemap to у Scene відкриває цей редактор через мініатюру. Знімок показує порожню карту 16×16; власний розмір задаси наступним кроком.',
+          },
           title: 'Відкрий редактор карти',
           instruction:
             'Створи проєкт «Лабіринт». У Scene додай set tilemap to та натисни на мініатюру карти, щоб відкрити редактор tilemap.',
@@ -105,6 +147,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-14-step-02',
+          visual: {
+            kind: 'editor', assetId: 'editor:tilemap-editor',
+            alt: 'Унизу ліворуч редактора tilemap розміщені поля ширини та висоти; на знімку обидва дорівнюють 16.',
+            focus: { x: 0.022, y: 0.936, width: 0.085, height: 0.028, label: 'Заміни ширину на 30, а висоту на 12 тайлів.' },
+            explanation: 'Числа внизу задають розмір карти у тайлах. Підлогу й перегородки обери з Gallery. У блоковому зразку далі є рамка та три перегородки з проходами; це один можливий лабіринт.',
+          },
           title: 'Збільш світ',
           instruction:
             'Задай карті розмір 30×12 тайлів. Заповни підлогу одним тайлом, а межі й кілька перегородок намалюй іншим.',
@@ -112,15 +160,27 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-14-step-03',
+          visual: {
+            kind: 'editor', assetId: 'editor:tilemap-editor',
+            alt: 'Ліворуч у редакторі tilemap є кнопка Draw walls із цеглинами; угорі праворуч увімкнено Show walls.',
+            focus: { x: 0.090, y: 0.393, width: 0.034, height: 0.055, label: 'Обери Draw walls і познач межі та перегородки.' },
+            explanation: 'Draw walls малює непрохідні клітинки, а Show walls лише показує їхню позначку. Візерунок тайла сам по собі не створює стіну. Залиши проходи без позначки wall та натисни Done.',
+          },
           title: 'Познач стіни',
           instruction:
             'У редакторі tilemap увімкни інструмент стін і проведи ним по межах та перегородках. Збережи карту.',
-          expected: 'На мініатюрі карти стінові клітинки мають спеціальну позначку, а підлога лишається прохідною.',
+          expected: 'У редакторі з увімкненим Show walls стінові клітинки мають позначку, а підлога лишається прохідною.',
           hint:
             'Спершу вибери інструмент із цегляною стіною, а тоді клацай потрібні клітинки; сам малюнок тайла ще не робить його стіною.',
         },
         {
           id: 'lesson-14-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-14-step-04',
+            alt: 'On start задає tilemap 30×12, створює mySprite Player, керування 90 на 90 та ставить героя на tile col 1 row 5.',
+            focus: { x: 0.028, y: 0.37, width: 0.972, height: 0.553, label: 'Створи Player і постав його на прохідну клітинку.' },
+            explanation: 'Координати тайлів рахуються від нуля. (1, 5) — прохідна клітинка біля лівого краю прикладу. В мініатюрі збережено стінову рамку й три перегородки з проходами; перевір їх у редакторі карти.',
+          },
           title: 'Додай мандрівника',
           instruction:
             'Створи Player, додай керування 90 на 90 і постав героя на прохідний тайл біля лівого краю.',
@@ -128,12 +188,28 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-14-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-14-step-05',
+            alt: 'Після карти, Player, керування 90 на 90 та розміщення на тайлі додано camera follow sprite mySprite.',
+            focus: { x: 0.028, y: 0.775, width: 0.596, height: 0.158, label: 'Прикріпи камеру до mySprite.' },
+            explanation: 'Карта 30×12 тайлів по 16 пікселів має розмір 480×192 пікселі й більша за екран. Camera follow sprite утримує героя в полі зору під час подорожі.',
+          },
           title: 'Увімкни камеру',
           instruction: 'Додай scene camera follow sprite mySprite та проведи героя далеко праворуч.',
           expected: 'Коли герой наближається до краю екрана, карта прокручується, а герой лишається у полі зору.',
         },
         {
           id: 'lesson-14-step-06',
+          visual: {
+            kind: 'guide', title: 'Перевір стіни, проходи й камеру',
+            items: [
+              'Restart → герой починає на підлозі біля лівого краю, а не всередині стіни.',
+              'Притисни героя до кожної зовнішньої межі: жодна клітинка не випускає його з карти.',
+              'Пройди всі три проходи між перегородками; підлога має пропускати героя, а стіни — зупиняти.',
+              'Дійди до правого краю й повернися: камера прокручує карту, герой залишається видимим.',
+              'Якщо є помилка, відкрий tilemap, увімкни Show walls, виправ клітинки інструментом Draw walls, натисни Done та повтори маршрут.',
+            ],
+          },
           title: 'Пройди лабіринт',
           instruction:
             'Перезапусти гру, досліди всі проходи та виправ у tilemap будь-яку клітинку, де герой може вийти за межі.',
@@ -174,6 +250,12 @@ export const campaign04: Campaign = {
       steps: [
         {
           id: 'lesson-15-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-01',
+            alt: 'On start задає tilemap зі стіновою рамкою, створює Player, керування 90 на 90, позицію col 1 row 5 і camera follow.',
+            focus: { x: 0.028, y: 0.134, width: 0.972, height: 0.799, label: 'Підготуй карту, рух героя та камеру.' },
+            explanation: 'Це новий проєкт: зразок має карту 16×12 з прохідною травою та непрохідною рамкою. Малюнок, швидкість 90 і стартовий тайл (1, 5) — приклади.',
+          },
           title: 'Підготуй світ',
           instruction:
             'Створи невелику tilemap із прохідною підлогою та стінами. Додай керованого Player і ввімкни camera follow.',
@@ -181,6 +263,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-15-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-02',
+            alt: 'On start ініціалізує enemies порожнім масивом, налаштовує світ і містить repeat 4 times із порожнім тілом.',
+            focus: { x: 0.028, y: 0.094, width: 0.63, height: 0.859, label: 'Підготуй порожній enemies та цикл із чотирма повторами.' },
+            explanation: 'Порожній масив ще не містить ворогів. Цикл поки що нічого не створює; його тіло заповниш наступним кроком.',
+          },
           title: 'Створи масив ворогів',
           instruction:
             'У Arrays створи порожній масив і назви його enemies. У on start додай repeat 4 times.',
@@ -188,6 +276,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-15-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-03',
+            alt: 'Repeat 4 times створює enemy типу Enemy, ставить його на випадковий тайл трави та додає enemy в кінець enemies.',
+            focus: { x: 0.028, y: 0.532, width: 0.958, height: 0.429, label: 'Створи, розмісти й додай кожного ворога до масиву.' },
+            explanation: 'Обирай у place on random tile той самий тайл трави, яким заповнена підлога. Змінна enemy тримає щойно створений спрайт; add value to end зберігає його в enemies.',
+          },
           title: 'Засели карту',
           instruction:
             'Усередині repeat створи спрайт Enemy, розмісти його на випадковому тайлі підлоги та додай в кінець масиву enemies.',
@@ -197,22 +291,40 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-15-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-04',
+            alt: 'For enemy of enemies перевіряє pick random 0 to 1 = 0: тоді vx 35 і bounce ON, інакше follow mySprite зі швидкістю 25.',
+            focus: { x: 0.026, y: 0.593, width: 0.974, height: 0.383, label: 'Признач кожному ворогу випадкову схему руху.' },
+            explanation: 'For element проходить усі чотири спрайти після створення. Для кожного окремо обирається патруль або переслідування; випадково всі четверо можуть отримати ту саму схему.',
+          },
           title: 'Роздай схеми руху',
           instruction:
             'Пройди циклом for element of enemies. Якщо випадкове 0 або 1 дорівнює 0 — задай ворогу vx 35 і bounce on wall; інакше — follow Player зі швидкістю 25.',
-          expected: 'Частина ворогів патрулює горизонтально, а частина повільно переслідує героя.',
+          expected: 'Кожен ворог патрулює горизонтально або повільно переслідує героя; випадковий вибір може дати всім однакову поведінку.',
         },
         {
           id: 'lesson-15-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-05',
+            alt: 'A створює Projectile. В overlap Projectile з Enemy enemyIndex отримує find index of otherSprite; якщо індекс ≥ 0, remove value at видаляє запис, потім знищуються обидва спрайти.',
+            focus: { x: 0.668, y: 0, width: 0.332, height: 0.388, label: 'Видали влученого ворога з масиву та прибери обидва спрайти.' },
+            explanation: 'У зразку постріл летить праворуч: vx 100, vy 0. Find index of повертає позицію ворога або -1. Перевірка ≥ 0 захищає масив. Remove value at видаляє запис за індексом; його значення тут не потрібне. Destroy окремо прибирає спрайти з гри.',
+          },
           title: 'Прибирай переможених',
           instruction:
-            'Додай постріл кнопкою A. В overlap Projectile з Enemy задай enemyIndex як index of otherSprite in enemies. Якщо enemyIndex ≥ 0, застосуй до enemies блок get and remove value at enemyIndex. Потім знищ sprite і otherSprite.',
+            'Додай постріл кнопкою A. В overlap Projectile з Enemy задай enemyIndex як find index of otherSprite in enemies. Якщо enemyIndex ≥ 0, застосуй до enemies блок remove value at enemyIndex. Потім знищ sprite і otherSprite.',
           expected: 'Після влучання ворог зникає, а довжина масиву зменшується на один.',
           hint:
-            'Спочатку знайди позицію потрібного ворога блоком index of. Блок get and remove value at приймає цю позицію, а не сам спрайт.',
+            'Спочатку знайди позицію потрібного ворога блоком find index of. Блок remove value at приймає цю позицію, а не сам спрайт; постав його всередину перевірки enemyIndex ≥ 0.',
         },
         {
           id: 'lesson-15-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-15-step-06',
+            alt: 'Окрема подія B pressed показує splash із length of enemies; постріли, видалення й рух ворогів збережено.',
+            focus: { x: 0.786, y: 0, width: 0.214, height: 0.1, label: 'Кнопкою B перевіряй поточну довжину enemies.' },
+            explanation: 'До влучань масив містить 4 спрайти. Кожен знищений ворог видаляється з enemies, тому після двох влучань B покаже 2. Закрий повідомлення, щоб продовжити гру.',
+          },
           title: 'Покажи кількість',
           instruction:
             'У події B pressed покажи length of enemies. Переможи двох ворогів і знову натисни B.',
@@ -253,13 +365,25 @@ export const campaign04: Campaign = {
       steps: [
         {
           id: 'lesson-16-step-01',
+          visual: {
+            kind: 'editor', assetId: 'editor:tilemap-editor',
+            alt: 'Редактор tilemap із полями розміру, палітрою Gallery та інструментом Draw walls для землі й платформ.',
+            focus: { x: 0.022, y: 0.936, width: 0.085, height: 0.028, label: 'Задай карту 30×8 тайлів і намалюй свій рівень.' },
+            explanation: 'Знімок показує інструмент, а не готовий рівень. Познач землю й три платформи як wall. Старт, місце кристала, лаву й двері зроби окремими прохідними тайлами над землею. У наступному зразку: старт (2, 6), кристал (13, 2), двері (27, 6); лава над землею у стовпцях 9–10 і 22–24.',
+          },
           title: 'Намалюй рівень',
           instruction:
-            'Створи проєкт «Загублений кристал» і tilemap 30×8. Намалюй землю, три платформи, старт, лаву, місце кристала та двері.',
+            'Створи проєкт «Загублений кристал» і tilemap 30×8. Намалюй землю й три платформи та познач їх інструментом Draw walls. Окремими прохідними тайлами познач старт, лаву, місце кристала та двері.',
           expected: 'На карті є безперервна земля, маршрут по платформах, небезпечна лава й двері праворуч.',
         },
         {
           id: 'lesson-16-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-16-step-02',
+            alt: 'On start задає tilemap 30×8, створює Player на стартовому тайлі, ay 350, move vx 100 vy 0 і camera follow.',
+            focus: { x: 0.028, y: 0.275, width: 0.972, height: 0.668, label: 'Задай гравітацію 350 і тільки горизонтальне керування 100.' },
+            explanation: 'Стартовий світлий тайл є в одному місці (2, 6), тому place on random tile завжди ставить героя туди. Ay 350 тягне вниз; стінова земля та платформи його зупиняють. Vy 0 у керуванні вимикає вертикальні кнопки.',
+          },
           title: 'Увімкни фізику',
           instruction:
             'Створи Player на старті, задай ay 350, додай горизонтальне керування 100 і ввімкни camera follow.',
@@ -267,6 +391,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-16-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-16-step-03',
+            alt: 'У події A pressed умова is mySprite hitting wall Bottom дозволяє встановити vy -160 лише на опорі.',
+            focus: { x: 0.532, y: 0, width: 0.468, height: 0.527, label: 'Змінюй vy лише коли герой торкається стіни знизу.' },
+            explanation: 'Bottom перевіряє контакт із непрохідним тайлом під ногами. Під час польоту умова хибна, тому повторне натискання A не дає другого стрибка.',
+          },
           title: 'Додай чесний стрибок',
           instruction:
             'У A pressed перевір, чи Player торкається тайла знизу. Лише тоді задай vy -160.',
@@ -276,6 +406,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-16-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-16-step-04',
+            alt: 'Crystal типу Food стоїть на тайлі з ромбом. Overlap Player з Food додає score 1 і знищує otherSprite.',
+            focus: { x: 0.008, y: 0, width: 0.992, height: 0.956, label: 'Створи кристал і прибирай саме Food після дотику.' },
+            explanation: 'Тайл із ромбом у прикладі є лише в (13, 2), над другою платформою. Малюнок кристала — окремий Food. У події sprite — герой, otherSprite — кристал; знищується тільки кристал.',
+          },
           title: 'Сховай кристал',
           instruction:
             'Створи кристал Food і постав його на позначений тайл. В overlap Player з Food додай score 1 та знищ кристал.',
@@ -283,6 +419,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-16-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-16-step-05',
+            alt: 'На початку life 3. Overlap Player з тайлом лави запускає fire 500 ms, змінює life на -1 та ставить sprite на стартовий тайл.',
+            focus: { x: 0.008, y: 0, width: 0.992, height: 0.538, label: 'Додай три життя та повернення на старт після лави.' },
+            explanation: 'Лава — прохідний тайл над суцільною землею: герой може торкнутися його. У події використано sprite, який увійшов у лаву. Стартовий тайл є один і не є лавою; 500 ms — приклад короткого ефекту.',
+          },
           title: 'Зроби лаву небезпечною',
           instruction:
             'Додай on Player overlaps lava tile: покажи короткий ефект, забери життя й поверни героя на стартовий тайл. На початку задай 3 життя.',
@@ -290,6 +432,12 @@ export const campaign04: Campaign = {
         },
         {
           id: 'lesson-16-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-16-step-06',
+            alt: 'Overlap Player з тайлом дверей перевіряє score = 1: game over WIN, інакше sprite каже «Спершу знайди кристал!».',
+            focus: { x: 0, y: 0.656, width: 0.343, height: 0.344, label: 'Дозволь перемогу у дверях лише з одним зібраним кристалом.' },
+            explanation: 'Двері — прохідний тайл у (27, 6), тому overlap може спрацювати. Кристал дає єдине очко. Без нього виконується else з підказкою; фізика, стрибок, збирання й лава залишаються у програмі.',
+          },
           title: 'Відкрий фініш',
           instruction:
             'Додай on Player overlaps door tile. Якщо score = 1 — game over WIN, інакше скажи «Спершу знайди кристал!».',

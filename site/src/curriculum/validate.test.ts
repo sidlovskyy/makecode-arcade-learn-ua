@@ -3,6 +3,7 @@ import { curriculum, lessons } from './index';
 import { campaign01 } from './campaign-01';
 import { campaign02 } from './campaign-02';
 import { campaign03 } from './campaign-03';
+import { campaign04 } from './campaign-04';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -115,6 +116,24 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('gives every world-builder step the approved block, editor and guide coverage', () => {
+    const steps = campaign04.lessons.flatMap((lesson) => lesson.steps);
+    expect(steps).toHaveLength(24);
+    expect(steps.filter((step) => !step.visual).map((step) => step.id)).toEqual([]);
+    const counts = { blocks: 0, editor: 0, guide: 0, python: 0, comparison: 0 };
+    for (const step of steps) if (step.visual) counts[step.visual.kind] += 1;
+    expect(counts).toEqual({ blocks: 17, editor: 6, guide: 1, python: 0, comparison: 0 });
+    expect(steps.filter((step) => step.visual?.kind === 'editor').map((step) => [step.id, step.visual?.kind === 'editor' && step.visual.assetId])).toEqual([
+      ['lesson-13-step-02', 'editor:animation-extension'],
+      ['lesson-13-step-03', 'editor:animation-frames'],
+      ['lesson-14-step-01', 'editor:tilemap-editor'],
+      ['lesson-14-step-02', 'editor:tilemap-editor'],
+      ['lesson-14-step-03', 'editor:tilemap-editor'],
+      ['lesson-16-step-01', 'editor:tilemap-editor'],
+    ]);
+    expect(steps.filter((step) => step.visual?.kind === 'guide').map((step) => step.id)).toEqual(['lesson-14-step-06']);
+  });
+
   it('gives every game-developer step a visual with the approved campaign kind coverage', () => {
     const steps = campaign03.lessons.flatMap((lesson) => lesson.steps);
     expect(steps).toHaveLength(24);
