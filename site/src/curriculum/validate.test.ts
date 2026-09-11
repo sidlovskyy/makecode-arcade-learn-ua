@@ -8,13 +8,20 @@ import { campaign05 } from './campaign-05';
 import { campaign06 } from './campaign-06';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
+import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
+import type { LessonVisualAssetRegistry } from '../lesson-visuals/types';
 
-function makeSteps(count = 5): LessonStep[] {
+function makeSteps(count = 5, lessonId = 'lesson-01'): LessonStep[] {
   return Array.from({ length: count }, (_, index) => ({
-    id: `step-${index + 1}`,
+    id: `${lessonId}-step-${index + 1}`,
     title: `Крок ${index + 1}`,
     instruction: 'Виконай дію в редакторі.',
     expected: 'Зміна видима у симуляторі.',
+    visual: {
+      kind: 'guide',
+      title: 'Перевір результат',
+      items: ['Запусти гру й перевір зміну.'],
+    },
   }));
 }
 
@@ -30,7 +37,7 @@ function makeLesson(overrides: Partial<Lesson> = {}): Lesson {
     concepts: ['редактор', 'симулятор'],
     prerequisites: [],
     objective: 'Навчитися створювати, запускати й зберігати проєкт.',
-    steps: makeSteps(),
+    steps: makeSteps(5, overrides.id ?? 'lesson-01'),
     challenge: {
       title: 'Самостійний запуск',
       prompt: 'Запусти гру без підказки.',
@@ -118,6 +125,110 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('covers exactly 24 lessons and 145 unique steps with the complete visual inventory', () => {
+    const steps = lessons.flatMap((lesson) => lesson.steps);
+    expect(lessons).toHaveLength(24);
+    expect(steps).toHaveLength(145);
+    expect(steps.every((step) => step.visual)).toBe(true);
+    expect(new Set(steps.map((step) => step.id)).size).toBe(145);
+
+    const counts = { blocks: 0, comparison: 0, python: 0, editor: 0, guide: 0 };
+    const references: Array<{ id: string; kind: 'blocks' | 'editor' }> = [];
+    for (const { visual } of steps) {
+      if (!visual) continue;
+      counts[visual.kind] += 1;
+      if (visual.kind === 'blocks' || visual.kind === 'editor') {
+        references.push({ id: visual.assetId, kind: visual.kind });
+      } else if (visual.kind === 'comparison') {
+        references.push({ id: visual.blocks.assetId, kind: 'blocks' });
+      }
+    }
+    expect(counts).toEqual({ blocks: 88, comparison: 5, python: 13, editor: 18, guide: 21 });
+    expect(references).toHaveLength(111);
+    const blockReferences = references.filter(({ kind }) => kind === 'blocks');
+    expect(blockReferences).toHaveLength(93);
+    expect(new Set(blockReferences.map(({ id }) => id)).size).toBe(93);
+    expect(references.filter(({ kind }) => kind === 'editor')).toHaveLength(18);
+
+    const assets: LessonVisualAssetRegistry = lessonVisualAssets;
+    for (const { id, kind } of references) expect(assets[id]?.kind, id).toBe(kind);
+    expect(Object.keys(assets)).toHaveLength(99);
+    expect(Object.values(assets).filter(({ kind }) => kind === 'blocks')).toHaveLength(93);
+    expect(Object.values(assets).filter(({ kind }) => kind === 'editor')).toHaveLength(6);
+    expect([...new Set(references.map(({ id }) => id))].sort()).toEqual(Object.keys(assets).sort());
+    expect(validateCurriculum(curriculum)).toEqual([]);
+  });
+
+  it.each([undefined, null])('rejects a missing visual (%s)', (visual) => {
+    const broken = structuredClone(validCampaign);
+    broken.lessons[0]!.steps[0]!.visual = visual as unknown as LessonStep['visual'];
+    expect(validateCurriculum([broken])).toEqual(['lesson-01-step-1 visual is required']);
+  });
+
+  it.each([
+    ['invalid', 'visual must be an object'],
+    [{ kind: 'guide', title: ' ', items: ['Перевір гру.'] }, 'guide title is required'],
+    [{ kind: 'python', label: 'Код', code: ' ', explanation: 'Запусти код.' }, 'code is required'],
+    [{ kind: 'unrecognized' }, 'visual kind is invalid'],
+    [{ kind: 'comparison' }, 'blocks must be an object'],
+    [{ kind: 'comparison' }, 'python must be an object'],
+    [{ kind: 'guide' }, 'guide items must not be empty'],
+    [{ kind: 'editor', alt: 'Редактор', explanation: 'Зміни гру.', assetId: 'editor:blocks-workspace' }, 'focus must be an object'],
+  ])('rejects an invalid descriptor %j', (visual, diagnostic) => {
+    const broken = structuredClone(validCampaign);
+    broken.lessons[0]!.steps[0]!.visual = visual as unknown as LessonStep['visual'];
+    expect(validateCurriculum([broken])).toContain(`lesson-01-step-1 ${diagnostic}`);
+  });
+
+  it('rejects a malformed step and still validates subsequent steps', () => {
+    const broken = structuredClone(validCampaign);
+    broken.lessons[0]!.steps[0] = null as unknown as LessonStep;
+    broken.lessons[0]!.steps[1]!.visual = undefined as unknown as LessonStep['visual'];
+    expect(validateCurriculum([broken])).toEqual([
+      'lesson-01 step 0 must be an object',
+      'lesson-01-step-2 visual is required',
+    ]);
+  });
+
+  it.each([
+    ['blocks:unknown', 'assetId "blocks:unknown" is not registered'],
+    ['editor:blocks-workspace', 'assetId "editor:blocks-workspace" must reference a blocks asset'],
+  ])('rejects an unresolved or mismatched block asset %s', (assetId, diagnostic) => {
+    const broken = structuredClone(validCampaign);
+    broken.lessons[0]!.steps[0]!.visual = {
+      kind: 'blocks', assetId, alt: 'Блоки гри.', explanation: 'Додай блок.',
+      focus: { x: 0, y: 0, width: 1, height: 1, label: 'Додай зараз' },
+    };
+    expect(validateCurriculum([broken])).toEqual([`lesson-01-step-1 ${diagnostic}`]);
+  });
+
+  it.each(['same lesson', 'different lesson', 'different campaign'])('rejects duplicate step IDs in the %s', (location) => {
+    const campaigns = [structuredClone(validCampaign)];
+    if (location === 'different campaign') {
+      campaigns.push({ ...structuredClone(validCampaign), id: 'next', lessons: [makeLesson({ id: 'lesson-03', slug: 'tretii-urok' })] });
+    }
+    const duplicate = location === 'same lesson' ? campaigns[0]!.lessons[0]!.steps[1]!
+      : location === 'different lesson' ? campaigns[0]!.lessons[1]!.steps[0]!
+      : campaigns[1]!.lessons[0]!.steps[0]!;
+    duplicate.id = 'lesson-01-step-1';
+    expect(validateCurriculum(campaigns)).toEqual(['duplicate step id: lesson-01-step-1']);
+  });
+
+  it('reports visual and duplicate errors in campaign, lesson, then step order', () => {
+    const first = structuredClone(validCampaign);
+    first.lessons[0]!.steps[1]!.visual = undefined as unknown as LessonStep['visual'];
+    first.lessons[1]!.steps[0]!.visual = { kind: 'guide', title: '', items: ['Перевір гру.'] };
+    const second = { ...structuredClone(validCampaign), id: 'next', lessons: [makeLesson({ id: 'lesson-03', slug: 'tretii-urok' })] };
+    second.lessons[0]!.steps[0]!.id = 'lesson-01-step-1';
+    second.lessons[0]!.steps[0]!.visual = undefined as unknown as LessonStep['visual'];
+    expect(validateCurriculum([first, second])).toEqual([
+      'lesson-01-step-2 visual is required',
+      'lesson-02-step-1 guide title is required',
+      'duplicate step id: lesson-01-step-1',
+      'lesson-01-step-1 visual is required',
+    ]);
+  });
+
   it('completes the final campaign as Blocks to Python without changing progress IDs', () => {
     expect(campaign06.lessons.map(({ slug, title }) => [slug, title])).toEqual([
       ['vid-blokiv-do-python', 'Від блоків до Python'],

@@ -14,3 +14,12 @@ export const blockCatalog = validateCatalog([
   ...campaign05,
   ...campaign06,
 ]);
+
+// Authoring-only manifest: the six catalogs remain the source of truth.
+export function createBlockVisualManifest(catalog = blockCatalog) {
+  return validateCatalog(catalog).map(({ id }) => ({
+    id: `blocks:${id}`,
+    kind: 'blocks',
+    file: `src/assets/lesson-visuals/blocks/${id}.svg`,
+  })).sort((left, right) => left.id.localeCompare(right.id));
+}

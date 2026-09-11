@@ -1,4 +1,6 @@
 import type { Campaign, Lesson } from './types';
+import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
+import { validateLessonVisual } from '../lesson-visuals/validate';
 
 const OFFICIAL_MAKECODE_ORIGIN = 'https://arcade.makecode.com';
 
@@ -39,6 +41,7 @@ export function validateCurriculum(campaigns: Campaign[]): string[] {
   const entries: LessonEntry[] = [];
   const lessonIds = new Set<string>();
   const lessonSlugs = new Set<string>();
+  const stepIds = new Set<string>();
 
   if (!Array.isArray(campaigns)) {
     return ['curriculum must be an array'];
@@ -117,6 +120,20 @@ export function validateCurriculum(campaigns: Campaign[]): string[] {
       if (!lessonIds.has(prerequisite)) {
         errors.push(`${lessonId} has unknown prerequisite: ${prerequisite}`);
       }
+    }
+
+    const steps = Array.isArray(lesson.steps) ? lesson.steps : [];
+    for (const [stepIndex, step] of steps.entries()) {
+      if (!isRecord(step)) {
+        errors.push(`${lessonId} step ${stepIndex} must be an object`);
+        continue;
+      }
+      if (stepIds.has(step.id)) {
+        errors.push(`duplicate step id: ${step.id}`);
+      } else {
+        stepIds.add(step.id);
+      }
+      errors.push(...validateLessonVisual(step.id, step.visual, lessonVisualAssets));
     }
   }
 

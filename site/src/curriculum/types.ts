@@ -9,7 +9,7 @@ export interface LessonStep {
   instruction: string;
   expected: string;
   hint?: string;
-  visual?: LessonStepVisual;
+  visual: LessonStepVisual;
 }
 
 export interface LessonChallenge {

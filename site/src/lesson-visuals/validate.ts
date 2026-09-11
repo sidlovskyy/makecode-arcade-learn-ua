@@ -1,16 +1,16 @@
-import type {
-  LessonStepVisual,
-  LessonVisualAssetRegistry,
-  NormalizedRect,
-} from './types';
+import type { LessonVisualAssetRegistry } from './types';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 function validateRequiredString(
   stepId: string,
   field: string,
-  value: string,
+  value: unknown,
   errors: string[],
 ): void {
-  if (!value.trim()) {
+  if (typeof value !== 'string' || !value.trim()) {
     errors.push(`${stepId} ${field} is required`);
   }
 }
@@ -18,16 +18,21 @@ function validateRequiredString(
 function validateFocus(
   stepId: string,
   field: string,
-  focus: NormalizedRect,
+  focus: unknown,
   errors: string[],
 ): void {
+  if (!isRecord(focus)) {
+    errors.push(`${stepId} ${field} must be an object`);
+    return;
+  }
   validateRequiredString(stepId, `${field}.label`, focus.label, errors);
 
-  const coordinates = [focus.x, focus.y, focus.width, focus.height];
+  const { x, y, width, height } = focus;
   const fitsNormalizedBounds =
-    coordinates.every((value) => Number.isFinite(value) && value >= 0 && value <= 1) &&
-    focus.x + focus.width <= 1 &&
-    focus.y + focus.height <= 1;
+    typeof x === 'number' && typeof y === 'number' &&
+    typeof width === 'number' && typeof height === 'number' &&
+    [x, y, width, height].every((value) => Number.isFinite(value) && value >= 0 && value <= 1) &&
+    x + width <= 1 && y + height <= 1;
 
   if (!fitsNormalizedBounds) {
     errors.push(`${stepId} ${field} must fit within normalized coordinates 0..1`);
@@ -37,17 +42,17 @@ function validateFocus(
 function validateAsset(
   stepId: string,
   field: string,
-  assetId: string,
+  assetId: unknown,
   expectedKind: 'blocks' | 'editor',
   assets: LessonVisualAssetRegistry,
   errors: string[],
 ): void {
   validateRequiredString(stepId, field, assetId, errors);
-  if (!assetId.trim()) {
+  if (typeof assetId !== 'string' || !assetId.trim()) {
     return;
   }
 
-  const asset = assets[assetId];
+  const asset = Object.hasOwn(assets, assetId) ? assets[assetId] : undefined;
   if (!asset) {
     errors.push(`${stepId} ${field} "${assetId}" is not registered`);
   } else if (asset.kind !== expectedKind) {
@@ -57,10 +62,12 @@ function validateAsset(
 
 export function validateLessonVisual(
   stepId: string,
-  visual: LessonStepVisual,
+  visual: unknown,
   assets: LessonVisualAssetRegistry,
 ): string[] {
   const errors: string[] = [];
+  if (visual === undefined || visual === null) return [`${stepId} visual is required`];
+  if (!isRecord(visual)) return [`${stepId} visual must be an object`];
 
   switch (visual.kind) {
     case 'blocks':
@@ -77,20 +84,32 @@ export function validateLessonVisual(
       break;
     case 'comparison':
       validateRequiredString(stepId, 'explanation', visual.explanation, errors);
-      validateRequiredString(stepId, 'blocks.alt', visual.blocks.alt, errors);
-      validateAsset(stepId, 'blocks.assetId', visual.blocks.assetId, 'blocks', assets, errors);
-      validateFocus(stepId, 'blocks.focus', visual.blocks.focus, errors);
-      validateRequiredString(stepId, 'python.label', visual.python.label, errors);
-      validateRequiredString(stepId, 'python.code', visual.python.code, errors);
+      if (isRecord(visual.blocks)) {
+        validateRequiredString(stepId, 'blocks.alt', visual.blocks.alt, errors);
+        validateAsset(stepId, 'blocks.assetId', visual.blocks.assetId, 'blocks', assets, errors);
+        validateFocus(stepId, 'blocks.focus', visual.blocks.focus, errors);
+      } else {
+        errors.push(`${stepId} blocks must be an object`);
+      }
+      if (isRecord(visual.python)) {
+        validateRequiredString(stepId, 'python.label', visual.python.label, errors);
+        validateRequiredString(stepId, 'python.code', visual.python.code, errors);
+      } else {
+        errors.push(`${stepId} python must be an object`);
+      }
       break;
     case 'guide':
       validateRequiredString(stepId, 'guide title', visual.title, errors);
-      if (visual.items.length === 0) {
+      if (!Array.isArray(visual.items) || visual.items.length === 0) {
         errors.push(`${stepId} guide items must not be empty`);
+      } else {
+        visual.items.forEach((item, index) => {
+          validateRequiredString(stepId, `guide item ${index + 1}`, item, errors);
+        });
       }
-      visual.items.forEach((item, index) => {
-        validateRequiredString(stepId, `guide item ${index + 1}`, item, errors);
-      });
+      break;
+    default:
+      errors.push(`${stepId} visual kind is invalid`);
       break;
   }
 

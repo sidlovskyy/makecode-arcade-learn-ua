@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run test && npm run build",
+    "check": "npm run typecheck && npm run test && npm run visuals:test && npm run visuals:check && npm run build",
     "visuals:setup": "playwright install chromium",
     "visuals:test": "node --test tools/visuals/*.test.mjs",
     "visuals:render": "node tools/render-block-visuals.mjs",
