@@ -1,3 +1,5 @@
+import type { LessonStepVisual } from '../lesson-visuals/types';
+
 export type Difficulty = 'starter' | 'explorer' | 'builder' | 'master';
 export type CampaignColor = 'mint' | 'yellow' | 'pink' | 'purple' | 'blue' | 'orange';
 
@@ -7,6 +9,7 @@ export interface LessonStep {
   instruction: string;
   expected: string;
   hint?: string;
+  visual?: LessonStepVisual;
 }
 
 export interface LessonChallenge {
