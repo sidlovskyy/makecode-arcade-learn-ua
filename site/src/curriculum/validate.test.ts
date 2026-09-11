@@ -66,6 +66,21 @@ function brokenCampaign(lessonOverrides: Partial<Lesson> = {}): Campaign {
 }
 
 describe('validateCurriculum', () => {
+  it('returns a deterministic error for a non-array outer input', () => {
+    const malformed = 'not-a-curriculum' as unknown as Campaign[];
+
+    expect(validateCurriculum(malformed)).toEqual(['curriculum must be an array']);
+  });
+
+  it('returns a deterministic error for a null lesson entry', () => {
+    const malformed = structuredClone(validCampaign);
+    (malformed.lessons as unknown as Array<Lesson | null>)[1] = null;
+
+    expect(validateCurriculum([malformed])).toContain(
+      'campaign 0 lesson 1 must be an object',
+    );
+  });
+
   it('accepts a complete two-mission curriculum', () => {
     expect(validateCurriculum([validCampaign])).toEqual([]);
   });
@@ -146,6 +161,36 @@ describe('validateCurriculum', () => {
     );
     expect(validateCurriculum([noExplanation])).toContain(
       'lesson-01 quiz explanation is required',
+    );
+  });
+
+  it('rejects a negative quiz index', () => {
+    const broken = brokenCampaign({
+      quiz: {
+        question: 'Де запускається гра?',
+        options: ['У симуляторі', 'У кошику', 'У пошті'],
+        correctIndex: -1,
+        explanation: 'Симулятор одразу показує результат програми.',
+      },
+    });
+
+    expect(validateCurriculum([broken])).toContain(
+      'lesson-01 quiz correctIndex must point to an existing option',
+    );
+  });
+
+  it('rejects a non-integer quiz index', () => {
+    const broken = brokenCampaign({
+      quiz: {
+        question: 'Де запускається гра?',
+        options: ['У симуляторі', 'У кошику', 'У пошті'],
+        correctIndex: 1.5,
+        explanation: 'Симулятор одразу показує результат програми.',
+      },
+    });
+
+    expect(validateCurriculum([broken])).toContain(
+      'lesson-01 quiz correctIndex must point to an existing option',
     );
   });
 

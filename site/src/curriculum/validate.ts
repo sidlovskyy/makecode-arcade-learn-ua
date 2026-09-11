@@ -10,6 +10,10 @@ function hasText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function isOfficialMakeCodeUrl(value: unknown): value is string {
   if (!hasText(value)) {
     return false;
@@ -36,10 +40,30 @@ export function validateCurriculum(campaigns: Campaign[]): string[] {
   const lessonIds = new Set<string>();
   const lessonSlugs = new Set<string>();
 
-  for (const campaign of campaigns) {
-    const campaignLessons = Array.isArray(campaign?.lessons) ? campaign.lessons : [];
+  if (!Array.isArray(campaigns)) {
+    return ['curriculum must be an array'];
+  }
 
-    for (const lesson of campaignLessons) {
+  for (let campaignIndex = 0; campaignIndex < campaigns.length; campaignIndex += 1) {
+    const campaignValue = campaigns[campaignIndex];
+    if (!isRecord(campaignValue)) {
+      errors.push(`campaign ${campaignIndex} must be an object`);
+      continue;
+    }
+
+    const lessonsValue = campaignValue.lessons;
+    if (!Array.isArray(lessonsValue)) {
+      continue;
+    }
+
+    for (let lessonIndex = 0; lessonIndex < lessonsValue.length; lessonIndex += 1) {
+      const lessonValue = lessonsValue[lessonIndex];
+      if (!isRecord(lessonValue)) {
+        errors.push(`campaign ${campaignIndex} lesson ${lessonIndex} must be an object`);
+        continue;
+      }
+
+      const lesson = lessonValue as unknown as Lesson;
       entries.push({ lesson });
 
       if (lessonIds.has(lesson.id)) {
