@@ -29,12 +29,32 @@ import asset26 from '../assets/lesson-visuals/blocks/lesson-08-step-02.svg';
 import asset27 from '../assets/lesson-visuals/blocks/lesson-08-step-03.svg';
 import asset28 from '../assets/lesson-visuals/blocks/lesson-08-step-04.svg';
 import asset29 from '../assets/lesson-visuals/blocks/lesson-08-step-05.svg';
-import asset30 from '../assets/lesson-visuals/editor/animation-extension.webp';
-import asset31 from '../assets/lesson-visuals/editor/animation-frames.webp';
-import asset32 from '../assets/lesson-visuals/editor/arcade-home.webp';
-import asset33 from '../assets/lesson-visuals/editor/blocks-workspace.webp';
-import asset34 from '../assets/lesson-visuals/editor/sprite-image-editor.webp';
-import asset35 from '../assets/lesson-visuals/editor/tilemap-editor.webp';
+import asset30 from '../assets/lesson-visuals/blocks/lesson-09-step-01.svg';
+import asset31 from '../assets/lesson-visuals/blocks/lesson-09-step-02.svg';
+import asset32 from '../assets/lesson-visuals/blocks/lesson-09-step-03.svg';
+import asset33 from '../assets/lesson-visuals/blocks/lesson-09-step-04.svg';
+import asset34 from '../assets/lesson-visuals/blocks/lesson-09-step-05.svg';
+import asset35 from '../assets/lesson-visuals/blocks/lesson-10-step-01.svg';
+import asset36 from '../assets/lesson-visuals/blocks/lesson-10-step-02.svg';
+import asset37 from '../assets/lesson-visuals/blocks/lesson-10-step-03.svg';
+import asset38 from '../assets/lesson-visuals/blocks/lesson-10-step-04.svg';
+import asset39 from '../assets/lesson-visuals/blocks/lesson-10-step-05.svg';
+import asset40 from '../assets/lesson-visuals/blocks/lesson-11-step-01.svg';
+import asset41 from '../assets/lesson-visuals/blocks/lesson-11-step-02.svg';
+import asset42 from '../assets/lesson-visuals/blocks/lesson-11-step-03.svg';
+import asset43 from '../assets/lesson-visuals/blocks/lesson-11-step-04.svg';
+import asset44 from '../assets/lesson-visuals/blocks/lesson-11-step-06.svg';
+import asset45 from '../assets/lesson-visuals/blocks/lesson-12-step-01.svg';
+import asset46 from '../assets/lesson-visuals/blocks/lesson-12-step-02.svg';
+import asset47 from '../assets/lesson-visuals/blocks/lesson-12-step-03.svg';
+import asset48 from '../assets/lesson-visuals/blocks/lesson-12-step-04.svg';
+import asset49 from '../assets/lesson-visuals/blocks/lesson-12-step-05.svg';
+import asset50 from '../assets/lesson-visuals/editor/animation-extension.webp';
+import asset51 from '../assets/lesson-visuals/editor/animation-frames.webp';
+import asset52 from '../assets/lesson-visuals/editor/arcade-home.webp';
+import asset53 from '../assets/lesson-visuals/editor/blocks-workspace.webp';
+import asset54 from '../assets/lesson-visuals/editor/sprite-image-editor.webp';
+import asset55 from '../assets/lesson-visuals/editor/tilemap-editor.webp';
 
 export const lessonVisualAssets = {
   'blocks:lesson-01-step-04': { kind: 'blocks', src: asset0 },
@@ -67,12 +87,32 @@ export const lessonVisualAssets = {
   'blocks:lesson-08-step-03': { kind: 'blocks', src: asset27 },
   'blocks:lesson-08-step-04': { kind: 'blocks', src: asset28 },
   'blocks:lesson-08-step-05': { kind: 'blocks', src: asset29 },
-  'editor:animation-extension': { kind: 'editor', src: asset30 },
-  'editor:animation-frames': { kind: 'editor', src: asset31 },
-  'editor:arcade-home': { kind: 'editor', src: asset32 },
-  'editor:blocks-workspace': { kind: 'editor', src: asset33 },
-  'editor:sprite-image-editor': { kind: 'editor', src: asset34 },
-  'editor:tilemap-editor': { kind: 'editor', src: asset35 },
+  'blocks:lesson-09-step-01': { kind: 'blocks', src: asset30 },
+  'blocks:lesson-09-step-02': { kind: 'blocks', src: asset31 },
+  'blocks:lesson-09-step-03': { kind: 'blocks', src: asset32 },
+  'blocks:lesson-09-step-04': { kind: 'blocks', src: asset33 },
+  'blocks:lesson-09-step-05': { kind: 'blocks', src: asset34 },
+  'blocks:lesson-10-step-01': { kind: 'blocks', src: asset35 },
+  'blocks:lesson-10-step-02': { kind: 'blocks', src: asset36 },
+  'blocks:lesson-10-step-03': { kind: 'blocks', src: asset37 },
+  'blocks:lesson-10-step-04': { kind: 'blocks', src: asset38 },
+  'blocks:lesson-10-step-05': { kind: 'blocks', src: asset39 },
+  'blocks:lesson-11-step-01': { kind: 'blocks', src: asset40 },
+  'blocks:lesson-11-step-02': { kind: 'blocks', src: asset41 },
+  'blocks:lesson-11-step-03': { kind: 'blocks', src: asset42 },
+  'blocks:lesson-11-step-04': { kind: 'blocks', src: asset43 },
+  'blocks:lesson-11-step-06': { kind: 'blocks', src: asset44 },
+  'blocks:lesson-12-step-01': { kind: 'blocks', src: asset45 },
+  'blocks:lesson-12-step-02': { kind: 'blocks', src: asset46 },
+  'blocks:lesson-12-step-03': { kind: 'blocks', src: asset47 },
+  'blocks:lesson-12-step-04': { kind: 'blocks', src: asset48 },
+  'blocks:lesson-12-step-05': { kind: 'blocks', src: asset49 },
+  'editor:animation-extension': { kind: 'editor', src: asset50 },
+  'editor:animation-frames': { kind: 'editor', src: asset51 },
+  'editor:arcade-home': { kind: 'editor', src: asset52 },
+  'editor:blocks-workspace': { kind: 'editor', src: asset53 },
+  'editor:sprite-image-editor': { kind: 'editor', src: asset54 },
+  'editor:tilemap-editor': { kind: 'editor', src: asset55 },
 } as const;
 
 export type LessonVisualAssetId = keyof typeof lessonVisualAssets;

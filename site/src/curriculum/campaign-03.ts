@@ -22,6 +22,12 @@ export const campaign03: Campaign = {
       steps: [
         {
           id: 'lesson-09-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-09-step-01',
+            alt: 'On start створює корабель mySprite типу Player у позиції 80, 110 та керування vx 100, vy 0.',
+            focus: { x: 0.028, y: 0.198, width: 0.972, height: 0.703, label: 'Постав корабель унизу та задай лише горизонтальний рух.' },
+            explanation: 'Позиція (80, 110) і малюнок — приклад. У move mySprite значення vy 0 вимикає вертикальне керування, vx 100 задає швидкість ліворуч і праворуч.',
+          },
           title: 'Підготуй корабель',
           instruction:
             'Створи проєкт «Лазерний полігон», намалюй корабель Player, постав його внизу й додай лише горизонтальне керування 100.',
@@ -29,6 +35,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-09-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-09-step-02',
+            alt: 'Окрема подія A pressed створює projectile from mySprite із vx 0 та vy -100.',
+            focus: { x: 0.421, y: 0, width: 0.579, height: 0.612, label: 'Додай створення лазера всередину окремої події A.' },
+            explanation: 'create projectile from sprite бере поточну позицію корабля й автоматично надає снаряду kind Projectile. Від’ємне vy -100 спрямовує його вгору; промінь у зразку має розмір 1×4 пікселі.',
+          },
           title: 'Вистріли лазером',
           instruction:
             'У події A pressed створи projectile from mySprite зі швидкістю vx 0 та vy -100. Намалюй вузький яскравий промінь.',
@@ -38,6 +50,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-09-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-09-step-03',
+            alt: 'У on start додано enemy типу Enemy у позиції 80, 30, vx 35 і bounce on wall ON; подія A залишається окремо.',
+            focus: { x: 0.011, y: 0.464, width: 0.353, height: 0.483, label: 'Створи мішень і налаштуй її рух та відскок.' },
+            explanation: 'Мішень починає у верхній частині екрана: (80, 30) — приклад. Швидкість vx 35 веде її вправо, а bounce on wall ON змінює напрямок біля меж екрана.',
+          },
           title: 'Створи мішень',
           instruction:
             'Додай спрайт Enemy, постав його у верхній частині екрана та задай vx 35 і bounce on wall ON.',
@@ -45,6 +63,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-09-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-09-step-04',
+            alt: 'Overlap Projectile з Enemy знищує sprite з fire, otherSprite з disintegrate та додає 1 очко.',
+            focus: { x: 0, y: 0.681, width: 0.52, height: 0.319, label: 'У події влучання прибери обидва її спрайти й додай очко.' },
+            explanation: 'sprite — снаряд Projectile, otherSprite — мішень Enemy. У зразку ефекти fire і disintegrate тривають 500 ms; різні ефекти допомагають розрізнити знищення об’єктів.',
+          },
           title: 'Оброби влучання',
           instruction:
             'Додай overlap Projectile з Enemy. Усередині знищ sprite і otherSprite з різними ефектами та додай 1 очко.',
@@ -52,6 +76,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-09-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-09-step-05',
+            alt: 'Наприкінці overlap створюється новий enemy типу Enemy з випадковим y 15–50, vx 35 та bounce on wall ON.',
+            focus: { x: 0.011, y: 0.742, width: 0.353, height: 0.233, label: 'Після очка створи нову мішень і поверни їй рух.' },
+            explanation: 'Нова мішень записується в ту саму змінну enemy. Її x спочатку дорівнює типовому центру екрана, а y обирається від 15 до 50. Попередні події й початкові блоки залишаються у програмі.',
+          },
           title: 'Поверни мішень',
           instruction:
             'Наприкінці події влучання створи новий Enemy, задай йому випадковий y від 15 до 50, швидкість vx 35 і відскок від стін.',
@@ -59,6 +89,15 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-09-step-06',
+          visual: {
+            kind: 'guide', title: 'Десять пострілів: влучання та промахи',
+            items: [
+              'Restart → корабель унизу, одна рухома мішень угорі; A випускає лазер угору.',
+              'Зроби десять пострілів і порахуй влучання: кожне прибирає обидва спрайти, додає 1 очко й створює нову мішень.',
+              'Кілька разів промахнися: лазер вилітає за верх екрана. Снаряди з projectile from sprite мають автоматичне прибирання за межами екрана.',
+              'Переконайся, що мішень відскакує від боків, а корабель залишається цілим після влучання лазера. Небезпечний kind Hazard додається лише в самостійному виклику.',
+            ],
+          },
           title: 'Перевір прибирання',
           instruction:
             'Зроби десять пострілів: кілька разів влуч, а кільком снарядам дозволь вилетіти за верх екрана.',
@@ -98,13 +137,25 @@ export const campaign03: Campaign = {
       steps: [
         {
           id: 'lesson-10-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-10-step-01',
+            alt: 'У on start змінній energy задано 5, а life — 6.',
+            focus: { x: 0.066, y: 0.269, width: 0.934, height: 0.597, label: 'Почни з п’яти одиниць енергії та шести життів.' },
+            explanation: 'energy зберігає кількість спроб. Шість життів дозволять завершити всі п’ять спроб навіть тоді, коли кожна забере одне життя.',
+          },
           title: 'Заведи запас енергії',
           instruction:
-            'Створи проєкт «Космічний вибір». Додай змінну energy і в on start задай їй 5, а life — 3.',
-          expected: 'На старті змінна energy дорівнює 5, а показник життя — 3.',
+            'Створи проєкт «Космічний вибір». Додай змінну energy і в on start задай їй 5, а life — 6.',
+          expected: 'На старті змінна energy дорівнює 5, а показник життя — 6.',
         },
         {
           id: 'lesson-10-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-10-step-02',
+            alt: 'On start задає energy 5 та life 6; окрема подія A задає roll випадкове число 1–3.',
+            focus: { x: 0.401, y: 0, width: 0.599, height: 0.731, label: 'У події A записуй випадкове число у roll.' },
+            explanation: 'Кожне натискання A записує у roll одне з чисел 1, 2 або 3; межі pick random включені. Стартове нульове значення змінної не потребує окремого блока.',
+          },
           title: 'Кидай енергокубик',
           instruction:
             'Створи змінну roll. У події A pressed задай roll випадкове число від 1 до 3.',
@@ -112,6 +163,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-10-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-10-step-03',
+            alt: 'Після pick random у події A стоїть if roll = 1: score +2, else: life -1.',
+            focus: { x: 0.423, y: 0.27, width: 0.471, height: 0.664, label: 'Порівняй roll з 1 та заповни обидві гілки.' },
+            explanation: 'Лише roll = 1 дає два очки; числа 2 й 3 ведуть у else та забирають одне життя. За одне натискання виконується тільки одна гілка.',
+          },
           title: 'Постав умову',
           instruction:
             'Після вибору roll додай if roll = 1: тоді збільш score на 2, інакше зменш life на 1.',
@@ -121,12 +178,24 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-10-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-10-step-04',
+            alt: 'Після if/else у події A стоять change energy by -1 і splash energy.',
+            focus: { x: 0.423, y: 0.717, width: 0.357, height: 0.231, label: 'Після обох можливих результатів витрачай енергію й показуй залишок.' },
+            explanation: 'Ці дві команди лежать після if/else, тому виконуються за будь-якого roll. У зразку splash показує числове значення energy; закрий повідомлення перед наступною спробою.',
+          },
           title: 'Витрачай енергію',
           instruction: 'Після кожної спроби зміни energy на -1 і покажи її значення командою splash або say.',
           expected: 'Після натискань A видно значення 4, 3, 2, 1 і 0.',
         },
         {
           id: 'lesson-10-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-10-step-05',
+            alt: 'Подія A має зовнішню умову energy > 0 навколо вибору, нагороди, витрати та splash; else показує Енергія скінчилася.',
+            focus: { x: 0.392, y: 0, width: 0.608, height: 1, label: 'Огорни всі команди спроби перевіркою energy > 0.' },
+            explanation: 'Внутрішня умова roll = 1 обирає результат. Зовнішня energy > 0 дозволяє лише п’ять спроб; далі показується «Енергія скінчилася», без зміни roll, очок, життів чи енергії.',
+          },
           title: 'Заборони зайву спробу',
           instruction:
             'Огорни весь код події A умовою if energy > 0. У гілці else покажи «Енергія скінчилася».',
@@ -134,6 +203,16 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-10-step-06',
+          visual: {
+            kind: 'guide', title: 'Три запуски енергокубика',
+            items: [
+              'Для кожного з трьох запусків почни з Restart: energy 5, life 6. Запиши номер гри та результат кожної спроби.',
+              'Натисни A п’ять разів, щоразу закриваючи splash. Залишок енергії має пройти 4 → 3 → 2 → 1 → 0.',
+              'Перевір обидві гілки: roll 1 додає 2 очки, roll 2 або 3 забирає 1 життя. Якщо одна гілка не трапилася, повтори гру.',
+              'Шосте натискання показує «Енергія скінчилася»; очки й життя не змінюються. Навіть після п’яти невдалих спроб лишається 1 життя.',
+              'Запиши підсумковий рахунок усіх трьох ігор. Випадковість допускає і різні, і однакові результати.',
+            ],
+          },
           title: 'Перевір випадковість',
           instruction:
             'Зіграй три рази й запиши підсумковий рахунок кожної спроби. Порівняй результати.',
@@ -173,6 +252,12 @@ export const campaign03: Campaign = {
       steps: [
         {
           id: 'lesson-11-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-11-step-01',
+            alt: 'On start створює mySprite Player у позиції 10, 60 з керуванням vx 0 та vy 90.',
+            focus: { x: 0.028, y: 0.198, width: 0.972, height: 0.703, label: 'Постав пілота ліворуч і ввімкни вертикальне керування.' },
+            explanation: 'Позиція (10, 60) — приклад біля лівого краю. У move mySprite число 0 вимикає горизонтальне керування, а 90 задає швидкість угору й униз.',
+          },
           title: 'Створи пілота',
           instruction:
             'Створи проєкт «Метеоритний дощ», додай корабель Player біля лівого краю та вертикальне керування зі швидкістю 90.',
@@ -180,6 +265,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-11-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-11-step-02',
+            alt: 'У on start після корабля repeat 8 times створює star типу Decoration й задає випадкові x 2–157 та y 2–117.',
+            focus: { x: 0.018, y: 0.481, width: 0.982, height: 0.464, label: 'Повтори створення та випадкове розміщення зірки вісім разів.' },
+            explanation: 'Створи власний kind Decoration. У зразку зірка має 3×3 пікселі, а межі випадкової позиції тримають її на екрані. Кожне повторення створює новий спрайт; зірки іноді можуть накладатися.',
+          },
           title: 'Намалюй зоряне тло',
           instruction:
             'У on start додай repeat 8 times. Усередині створи маленький спрайт нового kind Decoration у випадковій позиції.',
@@ -187,6 +278,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-11-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-11-step-03',
+            alt: 'Окрема on game update every 900 ms створює meteor Enemy при x 160, випадковому y 8–112, vx -60 та auto destroy ON.',
+            focus: { x: 0.584, y: 0, width: 0.416, height: 0.666, label: 'Створи часову подію окремо від on start і repeat.' },
+            explanation: 'Кожні 900 ms з’являється новий метеорит. У зразку x 160 — правий край, y обирається між 8 і 112. Від’ємне vx -60 рухає його ліворуч, auto destroy ON прибирає за екраном.',
+          },
           title: 'Запускай метеорити',
           instruction:
             'Додай game on update every 900 ms. Усередині створи Enemy біля правого краю з випадковим y, задай vx -60 і AutoDestroy ON.',
@@ -196,6 +293,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-11-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-11-step-04',
+            alt: 'On start задає life 3; окремий overlap Player з Enemy змінює life на -1 і знищує otherSprite.',
+            focus: { x: 0, y: 0.566, width: 0.452, height: 0.434, label: 'Додай три життя на старті та окрему подію зіткнення.' },
+            explanation: 'У цій парі sprite — корабель, otherSprite — метеорит. Прибирай otherSprite, щоб той самий метеорит не забирав життя знову. Часова подія з інтервалом 900 ms залишається окремою.',
+          },
           title: 'Додай зіткнення',
           instruction:
             'Задай life 3. В overlap Player з Enemy забери 1 життя та знищ метеорит otherSprite.',
@@ -203,6 +306,15 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-11-step-05',
+          visual: {
+            kind: 'guide', title: 'Журнал метеоритного дощу',
+            items: [
+              'Restart → три життя, пілот ліворуч і декоративні зірки. Метеорити з’являються справа через 900 ms.',
+              'Рухайся вгору та вниз протягом 15 секунд, ухиляючись. На 5-й, 10-й і 15-й секундах запиши: чи з’являються нові метеорити, чи реагує корабель, скільки життів лишилося.',
+              'Якщо життя скінчилися раніше, почни новий запуск і спробуй ухилятися довше. Зіткнення має знищувати саме метеорит.',
+              'Познач будь-яку паузу в керуванні. Перевір, що on game update every 900 ms — окрема секція, а repeat 8 times завершується під час старту.',
+            ],
+          },
           title: 'Перевір чутливість',
           instruction:
             'Безперервно рухай корабель 15 секунд, поки створюються метеорити. Спробуй ухилятися без пауз у керуванні.',
@@ -210,6 +322,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-11-step-06',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-11-step-06',
+            alt: 'Повна програма зберігає зірки, корабель і зіткнення; інтервал створення метеоритів змінено на 500 ms.',
+            focus: { x: 0.584, y: 0, width: 0.416, height: 0.407, label: 'Змінюй число в заголовку часової події.' },
+            explanation: 'Зразок показує залишені 500 ms після порівняння з 1500 ms. За 500 ms метеорити з’являються утричі частіше, ніж за 1500 ms; їхня швидкість vx -60 не змінюється. Залиш власний керований ритм.',
+          },
           title: 'Зміни ритм',
           instruction:
             'Порівняй інтервали 1500 ms і 500 ms. Залиш значення, з яким гра складна, але керована.',
@@ -250,6 +368,12 @@ export const campaign03: Campaign = {
       steps: [
         {
           id: 'lesson-12-step-01',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-12-step-01',
+            alt: 'On start створює mySprite Player унизу, керування 100 і 0, stay in screen ON, score 0 та life 3.',
+            focus: { x: 0.028, y: 0.124, width: 0.972, height: 0.814, label: 'Підготуй корабель, межі руху, рахунок і життя в on start.' },
+            explanation: 'У зразку корабель починає в (80, 110) й рухається горизонтально зі швидкістю 100. stay in screen ON утримує його на екрані; кожен Restart повертає score 0 і life 3.',
+          },
           title: 'Підготуй захисника',
           instruction:
             'Створи проєкт «Космічний захисник». Додай корабель Player унизу, горизонтальне керування, stay in screen, score 0 і life 3.',
@@ -257,6 +381,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-12-step-02',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-12-step-02',
+            alt: 'Окрема подія A pressed створює projectile from mySprite із vx 0 та vy -120; початкові блоки збережені.',
+            focus: { x: 0.421, y: 0, width: 0.579, height: 0.384, label: 'Створюй лазер із корабля у події A.' },
+            explanation: 'mySprite — корабель Player. Створений снаряд автоматично має kind Projectile та летить угору зі швидкістю vy -120. Нове натискання створює новий лазер.',
+          },
           title: 'Озброй корабель',
           instruction:
             'У події A pressed створи Projectile from Player зі швидкістю vx 0 та vy -120.',
@@ -264,6 +394,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-12-step-03',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-12-step-03',
+            alt: 'On start задає wave 1; окрема подія кожні 1000 ms створює enemy Enemy при випадковому x 8–152, y 0 та vy 20 + wave × 10.',
+            focus: { x: 0.465, y: 0, width: 0.535, height: 0.411, label: 'У часовій події задай випадкову позицію та формулу швидкості.' },
+            explanation: 'Позиція ворога змінюється для кожного створення. При wave 1 формула дає 30. Подія A, on start і on game update every 1000 ms залишаються окремими секціями.',
+          },
           title: 'Створи першу хвилю',
           instruction:
             'Заведи змінну wave = 1. Кожні 1000 ms створюй Enemy у випадковому x зверху зі швидкістю vy, що дорівнює 20 + wave × 10.',
@@ -273,6 +409,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-12-step-04',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-12-step-04',
+            alt: 'Overlap Projectile з Enemy знищує обидва спрайти, додає 1 очко та при score = 5 задає wave 2 і splash Хвиля 2!.',
+            focus: { x: 0, y: 0.535, width: 0.343, height: 0.465, label: 'Перевіряй п’яте очко після нарахування у події влучання.' },
+            explanation: 'Умова score = 5 спрацьовує після п’ятого влучання. Нові вороги отримують vy 40, бо wave вже 2; швидкість раніше створених ворогів не перераховується. Закрий splash, щоб продовжити гру.',
+          },
           title: 'Рахуй влучання',
           instruction:
             'В overlap Projectile з Enemy знищ обидва спрайти й додай 1 очко. Якщо score = 5, задай wave = 2 та покажи «Хвиля 2!».',
@@ -280,6 +422,12 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-12-step-05',
+          visual: {
+            kind: 'blocks', assetId: 'blocks:lesson-12-step-05',
+            alt: 'До повної програми додано overlap Player з Enemy: life -1 і destroy otherSprite; окрема подія влучання лазера збережена.',
+            focus: { x: 0.363, y: 0.535, width: 0.326, height: 0.205, label: 'Додай окрему пару Player–Enemy для втрати життя.' },
+            explanation: 'otherSprite тут — ворог, якого треба прибрати. Player залишається. За стандартною поведінкою Arcade life 0 завершує гру поразкою; умову перемоги за 12 очок додаси в наступному кроці.',
+          },
           title: 'Додай ризик',
           instruction:
             'В overlap Player з Enemy забери 1 життя й знищ ворога. Перевір, що нуль життів завершує гру поразкою.',
@@ -287,6 +435,15 @@ export const campaign03: Campaign = {
         },
         {
           id: 'lesson-12-step-06',
+          visual: {
+            kind: 'guide', title: 'Три перевірки космічної оборони',
+            items: [
+              'У події overlap Projectile–Enemy після change score by 1 додай ще одну окрему if score = 12 → game over WIN. Вона має бути поряд з if score = 5, а не всередині неї.',
+              'Запуск 1 — поразка: Restart, score 0 і life 3. Дозволь трьом ворогам торкнутися корабля; кожен зникає, а третє зіткнення завершує гру поразкою.',
+              'Запуск 2 — друга хвиля: Restart, влуч п’ять разів. Побач «Хвиля 2!», закрий повідомлення й порівняй швидкість нових ворогів: 40 замість 30.',
+              'Запуск 3 — перемога: Restart і дійди до 12 очок, зберігаючи життя. Гра має завершитися перемогою. Після нового Restart знову wave 1, score 0 і life 3.',
+            ],
+          },
           title: 'Заверши оборону',
           instruction:
             'Після нарахування очка додай окрему умову: якщо score = 12, заверши гру перемогою. Пройди гру від початку до кінця.',

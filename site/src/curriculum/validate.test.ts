@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { curriculum, lessons } from './index';
 import { campaign01 } from './campaign-01';
 import { campaign02 } from './campaign-02';
+import { campaign03 } from './campaign-03';
 import type { Campaign, Lesson, LessonStep } from './types';
 import { validateCurriculum } from './validate';
 
@@ -114,6 +115,20 @@ const expectedCampaignLessonIds = [
 ];
 
 describe('validateCurriculum', () => {
+  it('gives every game-developer step a visual with the approved campaign kind coverage', () => {
+    const steps = campaign03.lessons.flatMap((lesson) => lesson.steps);
+    expect(steps).toHaveLength(24);
+    expect(steps.filter((step) => !step.visual).map((step) => step.id)).toEqual([]);
+    const counts = { blocks: 0, editor: 0, guide: 0, python: 0, comparison: 0 };
+    for (const step of steps) {
+      if (step.visual) counts[step.visual.kind] += 1;
+    }
+    expect(counts).toEqual({ blocks: 20, editor: 0, guide: 4, python: 0, comparison: 0 });
+    expect(steps.filter((step) => step.visual?.kind === 'guide').map((step) => step.id)).toEqual([
+      'lesson-09-step-06', 'lesson-10-step-06', 'lesson-11-step-05', 'lesson-12-step-06',
+    ]);
+  });
+
   it('gives every explorer step a visual with the approved campaign kind coverage', () => {
     const steps = campaign02.lessons.flatMap((lesson) => lesson.steps);
     expect(steps).toHaveLength(24);
