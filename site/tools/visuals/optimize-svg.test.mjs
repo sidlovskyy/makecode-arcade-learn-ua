@@ -66,3 +66,18 @@ test('used fonts are resolved at the SVG image viewport rather than the authorin
   const optimized = await optimizeRendererSvg(page, svg, 'viewport-step');
   assert.match(optimized, /@font-face\s*\{[^}]*font-family:\s*NarrowBlockFont/);
 });
+
+test('large renderer documents optimize offline without data URL navigation limits', async () => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40"><style>/*${'x'.repeat(1_700_000)}*/ rect { fill: green; }</style><rect width="160" height="40"/></svg>`;
+  const before = await imagePixels(svg);
+  let optimized;
+  try {
+    optimized = await optimizeRendererSvg(page, svg, 'large-step');
+  } catch (error) {
+    assert.fail(error.message.split(' at data:')[0]);
+  }
+  assert.ok(Buffer.byteLength(optimized) < 1000);
+  const after = await imagePixels(optimized);
+  assert.deepEqual(after.info, before.info);
+  assert.deepEqual(after.data, before.data);
+});

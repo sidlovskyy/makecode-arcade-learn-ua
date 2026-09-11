@@ -5,11 +5,22 @@ import { validateSvg } from './render-blocks-lib.mjs';
 // The caller supplies an offline page separate from the MakeCode renderer.
 export async function optimizeRendererSvg(page, svg, id) {
   const { width, height } = validateSvg(svg, id);
+  const documentUrl = 'https://lesson-visuals.invalid/renderer.svg';
+  const routeDocument = async (route) => {
+    if (route.request().url() === documentUrl && route.request().isNavigationRequest()) {
+      await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
+    } else {
+      await route.abort();
+    }
+  };
   try {
     // Media queries inside an SVG image use its intrinsic viewport, which can
     // differ from the authoring page and select a different embedded font.
     await page.setViewportSize({ width: Math.ceil(width), height: Math.ceil(height) });
-    await page.goto(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+    // Large official programs exceed Chromium's data-URL navigation limit.
+    // An intercepted SVG response preserves document/CSS semantics with no network.
+    await page.route('**/*', routeDocument);
+    await page.goto(documentUrl);
     const optimized = await page.evaluate(() => {
       const root = document.documentElement;
       const elements = [root, ...root.querySelectorAll('*')];
@@ -61,5 +72,7 @@ export async function optimizeRendererSvg(page, svg, id) {
     return optimized;
   } catch (error) {
     throw new Error(`${id}: SVG optimization failed: ${error.message}`, { cause: error });
+  } finally {
+    await page.unroute('**/*', routeDocument);
   }
 }
