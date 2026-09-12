@@ -1,5 +1,20 @@
-import { test, expect } from 'playwright/test';
+import { test, expect, type Locator } from 'playwright/test';
 import { lessons } from '../src/curriculum';
+
+async function waitForPanToSettle(region: Locator) {
+  // Native keyboard panning animates even with reduced motion. Wait before
+  // changing axes or checking that subsequent caption scrolling is isolated.
+  await region.evaluate(el => new Promise<void>(resolve => {
+    let previous = '', stableSince = performance.now();
+    function sample(now: number) {
+      const position = `${el.scrollLeft}:${el.scrollTop}`;
+      if (position !== previous) { previous = position; stableSince = now; }
+      if (now - stableSince >= 200) resolve();
+      else requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  }));
+}
 
 for (const [id, index] of [['lesson-16', 3], ['lesson-17', 3], ['lesson-19', 1], ['lesson-19', 2]] as const) {
   test(`${id} step ${index + 1}: long lightbox captions leave usable native image space`, async ({ page }, testInfo) => {
@@ -37,24 +52,14 @@ for (const [id, index] of [['lesson-16', 3], ['lesson-17', 3], ['lesson-19', 1],
     await image.evaluate(el => { el.scrollLeft = 0; el.scrollTop = 0; });
     await image.press('ArrowRight');
     await expect.poll(() => image.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+    await waitForPanToSettle(image);
     const canPanVertically = await image.evaluate(el => el.scrollHeight > el.clientHeight);
     if (page.viewportSize()!.width === 320) expect(canPanVertically).toBe(true);
     if (canPanVertically) {
       await image.press('ArrowDown');
       await expect.poll(() => image.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
     }
-    // Native keyboard panning animates even with reduced motion. Observe its
-    // completion before checking that subsequent caption scrolling is isolated.
-    await image.evaluate(el => new Promise<void>(resolve => {
-      let previous = '', stableSince = performance.now();
-      function sample(now: number) {
-        const position = `${el.scrollLeft}:${el.scrollTop}`;
-        if (position !== previous) { previous = position; stableSince = now; }
-        if (now - stableSince >= 200) resolve();
-        else requestAnimationFrame(sample);
-      }
-      requestAnimationFrame(sample);
-    }));
+    await waitForPanToSettle(image);
     expect(await caption.boundingBox()).toEqual(captionBefore);
     expect(await caption.evaluate(el => el.scrollLeft)).toBe(0);
     await page.keyboard.press('Tab'); await expect(caption).toBeFocused();
