@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app/App';
 import { curriculum } from '../curriculum';
 import { createDefaultProgress, type ProgressState } from '../progress/schema';
@@ -20,6 +20,7 @@ const campaignTitles = [
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   localStorage.clear();
   window.history.replaceState(null, '', '#/');
 });
@@ -149,15 +150,61 @@ describe('CourseMap', () => {
       <CourseMap campaigns={curriculum} progress={createDefaultProgress()} />,
     );
 
+    const search = screen.getByRole('searchbox', { name: 'Пошук місій' });
     const difficulty = screen.getByRole('combobox', { name: 'Складність' });
+    await user.type(search, 'спрайт');
     await user.selectOptions(difficulty, 'master');
 
-    expect(screen.getAllByRole('link', { name: /^Місія \d+:/ })).toHaveLength(8);
+    expect(screen.getAllByRole('link', { name: /^Місія \d+:/ })).toHaveLength(1);
 
     await user.click(screen.getByRole('button', { name: 'Скинути фільтри' }));
 
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
     expect(difficulty).toHaveValue('all');
     expect(screen.getAllByRole('link', { name: /^Місія \d+:/ })).toHaveLength(24);
+  });
+
+  it('announces zero and restored results and keeps focus after showing all missions', async () => {
+    const user = userEvent.setup();
+    render(
+      <CourseMap campaigns={curriculum} progress={createDefaultProgress()} />,
+    );
+    const search = screen.getByRole('searchbox', { name: 'Пошук місій' });
+
+    await user.type(search, 'zzzz');
+
+    const resultStatus = screen.getByRole('status');
+    expect(resultStatus).toHaveAttribute('aria-live', 'polite');
+    expect(resultStatus).toHaveAttribute('aria-atomic', 'true');
+    expect(resultStatus).toHaveTextContent('Знайдено місій: 0');
+
+    const showAll = screen.getByRole('button', { name: 'Показати всі місії' });
+    showAll.focus();
+    await user.keyboard('{Enter}');
+
+    expect(search).toHaveFocus();
+    expect(resultStatus).toHaveTextContent('Знайдено місій: 24');
+    expect(screen.getAllByRole('link', { name: /^Місія \d+:/ })).toHaveLength(24);
+  });
+
+  it('exposes each lesson card summary, difficulty, duration, and XP', () => {
+    const { container } = render(
+      <CourseMap campaigns={curriculum} progress={createDefaultProgress()} />,
+    );
+
+    const firstLesson = screen.getByRole('link', {
+      name: 'Місія 1: Знайомство з Arcade. Не розпочато',
+    });
+    expect(firstLesson).toHaveAccessibleDescription(
+      'Оглянь редактор і запусти свій перший проєкт. Старт 20 хв 100 XP',
+    );
+
+    const metadataGroups = container.querySelectorAll('.lesson-card__meta');
+    expect(metadataGroups).toHaveLength(24);
+    for (const metadata of metadataGroups) {
+      expect(metadata).not.toHaveAttribute('aria-hidden');
+    }
   });
 
   it('keeps the final advanced lesson clickable with clean progress', () => {
@@ -266,7 +313,15 @@ describe('ProgressSummary', () => {
     })).toHaveAttribute('href', '#/lesson/mii-pershyi-sprait');
   });
 
-  it('offers the course map after every mission is complete', () => {
+  it.each([
+    ['normally', false, 'smooth'],
+    ['without animation when reduced motion is requested', true, 'auto'],
+  ] as const)('reveals and focuses the course map %s after every mission is complete', async (
+    _caseName,
+    reducedMotion,
+    expectedBehavior,
+  ) => {
+    window.history.replaceState(null, '', '#/');
     const completedLessons = Object.fromEntries(
       curriculum.flatMap((campaign) => campaign.lessons).map((lesson) => [
         lesson.id,
@@ -284,13 +339,27 @@ describe('ProgressSummary', () => {
       lastLessonSlug: 'moia-vlasna-hra',
     };
 
-    render(<ProgressSummary campaigns={curriculum} progress={progress} />);
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: reducedMotion }));
+    const user = userEvent.setup();
+    render(
+      <>
+        <ProgressSummary campaigns={curriculum} progress={progress} />
+        <CourseMap campaigns={curriculum} progress={progress} />
+      </>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Квест пройдено!' })).toBeInTheDocument();
     expect(screen.getByText('100%')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Переглянути місії/ })).toHaveAttribute(
-      'href',
-      '#/',
-    );
+    await user.click(screen.getByRole('button', { name: /Переглянути місії/ }));
+
+    const mapHeading = screen.getByRole('heading', { name: 'Обери наступну місію' });
+    expect(mapHeading).toHaveFocus();
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: expectedBehavior,
+      block: 'start',
+    });
+    expect(window.location.hash).toBe('#/');
   });
 });

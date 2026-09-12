@@ -11,7 +11,10 @@ export { PROGRESS_KEY } from './schema';
 export interface ProgressLoadResult {
   progress: ProgressState;
   available: boolean;
+  outcome: ProgressLoadOutcome;
 }
+
+export type ProgressLoadOutcome = 'empty' | 'loaded' | 'reset' | 'unavailable';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -64,6 +67,7 @@ export function loadProgress(storage: Storage): ProgressLoadResult {
     return {
       progress: createDefaultProgress(),
       available: false,
+      outcome: 'unavailable',
     };
   }
 
@@ -71,20 +75,31 @@ export function loadProgress(storage: Storage): ProgressLoadResult {
     return {
       progress: createDefaultProgress(),
       available: true,
+      outcome: 'empty',
     };
   }
 
   try {
     const parsed: unknown = JSON.parse(serialized);
 
+    if (isProgressState(parsed)) {
+      return {
+        progress: parsed,
+        available: true,
+        outcome: 'loaded',
+      };
+    }
+
     return {
-      progress: isProgressState(parsed) ? parsed : createDefaultProgress(),
+      progress: createDefaultProgress(),
       available: true,
+      outcome: 'reset',
     };
   } catch {
     return {
       progress: createDefaultProgress(),
       available: true,
+      outcome: 'reset',
     };
   }
 }

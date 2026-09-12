@@ -7,7 +7,11 @@ import {
   setLastLesson,
   type ProgressState,
 } from './schema';
-import { loadProgress, saveProgress } from './storage';
+import {
+  loadProgress,
+  saveProgress,
+  type ProgressLoadOutcome,
+} from './storage';
 
 export interface ProgressActions {
   markStepDone(lessonId: string, stepId: string): void;
@@ -19,11 +23,13 @@ export interface ProgressActions {
 export interface ProgressStore extends ProgressActions {
   progress: ProgressState;
   storageAvailable: boolean;
+  loadOutcome: ProgressLoadOutcome;
 }
 
 interface ProgressSnapshot {
   progress: ProgressState;
   storageAvailable: boolean;
+  loadOutcome: ProgressLoadOutcome;
 }
 
 interface InitialProgress extends ProgressSnapshot {
@@ -51,6 +57,7 @@ function initializeProgress(storage: Storage | undefined): InitialProgress {
     return {
       progress: createDefaultProgress(),
       storageAvailable: false,
+      loadOutcome: 'unavailable',
       storage: null,
     };
   }
@@ -60,6 +67,7 @@ function initializeProgress(storage: Storage | undefined): InitialProgress {
   return {
     progress: loaded.progress,
     storageAvailable: loaded.available,
+    loadOutcome: loaded.outcome,
     storage: resolvedStorage,
   };
 }
@@ -72,6 +80,7 @@ export function useProgress(storage?: Storage): ProgressStore {
   const [snapshot, setSnapshot] = useState<ProgressSnapshot>(() => ({
     progress: initial.progress,
     storageAvailable: initial.storageAvailable,
+    loadOutcome: initial.loadOutcome,
   }));
 
   const updateProgress = useCallback((update: ProgressUpdate) => {
@@ -83,7 +92,11 @@ export function useProgress(storage?: Storage): ProgressStore {
     const storageAvailable = storageAvailableRef.current && saved;
     storageAvailableRef.current = storageAvailable;
 
-    setSnapshot({ progress, storageAvailable });
+    setSnapshot((current) => ({
+      progress,
+      storageAvailable,
+      loadOutcome: current.loadOutcome,
+    }));
   }, []);
 
   const markStepDone = useCallback(
@@ -119,6 +132,7 @@ export function useProgress(storage?: Storage): ProgressStore {
   return {
     progress: snapshot.progress,
     storageAvailable: snapshot.storageAvailable,
+    loadOutcome: snapshot.loadOutcome,
     markStepDone,
     markQuizPassed,
     finishLesson,

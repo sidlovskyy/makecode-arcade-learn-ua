@@ -49,6 +49,8 @@ export function LessonCard({
 }: LessonCardProps) {
   const status = getLessonStatus(lessonProgress, isRemembered);
   const statusLabel = statusLabels[status];
+  const summaryId = `${lesson.id}-summary`;
+  const metadataId = `${lesson.id}-metadata`;
 
   return (
     <li className="lesson-card-item">
@@ -58,6 +60,7 @@ export function LessonCard({
         data-status={status}
         href={lessonHref(lesson.slug)}
         aria-label={`Місія ${lesson.order}: ${lesson.title}. ${statusLabel}`}
+        aria-describedby={`${summaryId} ${metadataId}`}
       >
         <span className="lesson-card__topline">
           <span className="lesson-number" aria-hidden="true">
@@ -71,12 +74,14 @@ export function LessonCard({
 
         <span className="lesson-card__body">
           <strong className="lesson-card__title">{lesson.title}</strong>
-          <span className="lesson-card__summary">{lesson.summary}</span>
+          <span className="lesson-card__summary" id={summaryId}>{lesson.summary}</span>
         </span>
 
-        <span className="lesson-card__meta" aria-hidden="true">
+        <span className="lesson-card__meta" id={metadataId}>
           <span>{difficultyLabels[lesson.difficulty]}</span>
+          {' '}
           <span>{lesson.durationMinutes} хв</span>
+          {' '}
           <span>{lesson.xp} XP</span>
         </span>
 

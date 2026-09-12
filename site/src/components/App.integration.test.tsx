@@ -2,6 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app/App';
+import { curriculum } from '../curriculum';
 
 async function reachFirstLessonFinish(user: ReturnType<typeof userEvent.setup>) {
   for (let step = 0; step < 5; step += 1) {
@@ -107,6 +108,111 @@ describe('App progress feedback', () => {
     render(<App />);
     expect(screen.getByText('Крок 4 із 6')).toBeVisible();
     expect(JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!).lessons[id].completedStepIds).toEqual([`${id}-step-01`, `${id}-step-02`, `${id}-step-03`]);
+  });
+
+  it.each([
+    ['malformed JSON', '{broken'],
+    [
+      'an unsupported version',
+      JSON.stringify({ version: 99, lessons: {}, totalXp: 0 }),
+    ],
+  ])('explains recovery from %s and saves new progress', async (_caseName, serialized) => {
+    window.localStorage.setItem('kodkvest.progress.v1', serialized);
+    window.history.replaceState(null, '', '#/');
+    const user = userEvent.setup();
+    render(<App />);
+
+    const recoveryNotice = screen.getByRole('status', {
+      name: 'Збережений прогрес не відновлено',
+    });
+    expect(recoveryNotice).toHaveTextContent(
+      'Курс починається спочатку. Новий прогрес зберігатиметься у цьому браузері.',
+    );
+
+    await user.click(screen.getByRole('link', { name: /Почати квест/ }));
+    await user.click(screen.getByRole('button', { name: 'Крок готовий — далі' }));
+
+    expect(JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!)).toMatchObject({
+      version: 1,
+      lessons: {
+        'lesson-01': {
+          completedStepIds: ['lesson-01-step-01'],
+        },
+      },
+    });
+  });
+
+  it('does not show a recovery notice on a true first visit', () => {
+    window.history.replaceState(null, '', '#/');
+
+    render(<App />);
+
+    expect(
+      screen.queryByRole('status', { name: 'Збережений прогрес не відновлено' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('switches from recovery copy to unavailable-storage copy if a new save fails', async () => {
+    window.localStorage.setItem('kodkvest.progress.v1', '{broken');
+    window.history.replaceState(null, '', '#/');
+    const user = userEvent.setup();
+    render(<App />);
+    expect(screen.getByText('Збережений прогрес не відновлено')).toBeVisible();
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Blocked', 'SecurityError');
+    });
+    await user.click(screen.getByRole('link', { name: /Почати квест/ }));
+
+    expect(await screen.findByText('Прогрес не зберігається')).toBeVisible();
+    expect(screen.queryByText('Збережений прогрес не відновлено')).not.toBeInTheDocument();
+  });
+
+  it('keeps unfinished lesson 10 as resume after reviewing completed lesson 1', async () => {
+    const firstLesson = curriculum[0]!.lessons[0]!;
+    const stored = {
+      version: 1,
+      lessons: {
+        [firstLesson.id]: {
+          completedStepIds: firstLesson.steps.map((step) => step.id),
+          quizPassed: true,
+          completed: true,
+        },
+        'lesson-10': {
+          completedStepIds: ['lesson-10-step-01'],
+          quizPassed: false,
+          completed: false,
+        },
+      },
+      totalXp: 100,
+      lastLessonSlug: 'rishennia-hry',
+    };
+    window.localStorage.setItem('kodkvest.progress.v1', JSON.stringify(stored));
+    window.history.replaceState(null, '', '#/');
+    const user = userEvent.setup();
+    render(<App />);
+
+    const initialResume = screen.getByRole('link', { name: /Продовжити/ });
+    expect(initialResume).toHaveAttribute('href', '#/lesson/rishennia-hry');
+
+    await user.click(initialResume);
+    expect(await screen.findByText('Крок 2 із 6')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'До мапи курсу' }));
+    await user.click(await screen.findByRole('link', {
+      name: 'Місія 1: Знайомство з Arcade. Завершено',
+    }));
+    expect(await screen.findByRole('heading', {
+      name: 'Знайомство з Arcade',
+      level: 1,
+    })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'До мапи курсу' }));
+
+    const resumeAfterReview = await screen.findByRole('link', { name: /Продовжити/ });
+    expect(resumeAfterReview).toHaveAttribute('href', '#/lesson/rishennia-hry');
+    await user.click(resumeAfterReview);
+
+    expect(await screen.findByText('Крок 2 із 6')).toBeVisible();
+    expect(JSON.parse(window.localStorage.getItem('kodkvest.progress.v1')!)).toEqual(stored);
   });
 
   it('awards 100 XP for lesson 1, marks it complete, and restores that total', async () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AchievementToast } from '../components/AchievementToast';
 import { AppHeader } from '../components/AppHeader';
 import { CourseMap } from '../components/CourseMap';
@@ -67,8 +67,9 @@ function HomeRoute({ progress }: { progress: ProgressState }) {
 export function App() {
   const [route, setRoute] = useState<AppRoute>(readRoute);
   const [completionResult, setCompletionResult] = useState<CompletionResult>();
+  const hasRenderedInitialRoute = useRef(false);
   const progressStore = useProgress();
-  const { progress, storageAvailable } = progressStore;
+  const { loadOutcome, progress, storageAvailable } = progressStore;
 
   useEffect(() => {
     const handleHashChange = () => setRoute(readRoute());
@@ -76,6 +77,15 @@ export function App() {
 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  useEffect(() => {
+    if (!hasRenderedInitialRoute.current) {
+      hasRenderedInitialRoute.current = true;
+      return;
+    }
+
+    document.getElementById('main-content')?.focus();
+  }, [route]);
 
   const handleLessonCompleted = useCallback((lesson: Lesson) => {
     setCompletionResult({
@@ -96,7 +106,10 @@ export function App() {
   return (
     <div className="app-shell">
       <AppHeader totalXp={progress.totalXp} />
-      <StorageNotice storageAvailable={storageAvailable} />
+      <StorageNotice
+        storageAvailable={storageAvailable}
+        recoveryFailed={loadOutcome === 'reset'}
+      />
       {route.name === 'home' && <HomeRoute progress={progress} />}
       {route.name === 'lesson' && activeLesson && (
         <LessonScreen

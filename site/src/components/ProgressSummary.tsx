@@ -43,6 +43,22 @@ export function ProgressSummary({
   const hasStarted = completedCount > 0 || Boolean(progress.lastLessonSlug);
   const allComplete = lessons.length > 0 && completedCount === lessons.length;
 
+  function revealCourseMap() {
+    const mapHeading = document.getElementById('course-map-title');
+
+    if (!mapHeading) {
+      return;
+    }
+
+    mapHeading.focus({ preventScroll: true });
+    mapHeading.scrollIntoView({
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+      block: 'start',
+    });
+  }
+
   return (
     <aside className="progress-summary" aria-labelledby="progress-title">
       <div className="progress-summary__content">
@@ -89,10 +105,14 @@ export function ProgressSummary({
             <span className="sr-only">: {resumeLesson.title}</span>
           </a>
         ) : (
-          <a className="button button--primary progress-summary__action" href="#/">
+          <button
+            className="button button--primary progress-summary__action"
+            type="button"
+            onClick={revealCourseMap}
+          >
             Переглянути місії
             <span aria-hidden="true">→</span>
-          </a>
+          </button>
         )}
       </div>
 

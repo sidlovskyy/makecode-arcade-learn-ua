@@ -126,6 +126,7 @@ describe('progress storage', () => {
     expect(loadProgress(localStorage)).toEqual({
       progress: CLEAN_PROGRESS,
       available: true,
+      outcome: 'empty',
     });
   });
 
@@ -134,6 +135,7 @@ describe('progress storage', () => {
     expect(loadProgress(localStorage)).toEqual({
       progress: STORED_PROGRESS,
       available: true,
+      outcome: 'loaded',
     });
   });
 
@@ -143,6 +145,7 @@ describe('progress storage', () => {
     expect(loadProgress(localStorage)).toEqual({
       progress: CLEAN_PROGRESS,
       available: true,
+      outcome: 'reset',
     });
   });
 
@@ -155,6 +158,7 @@ describe('progress storage', () => {
     expect(loadProgress(localStorage)).toEqual({
       progress: CLEAN_PROGRESS,
       available: true,
+      outcome: 'reset',
     });
   });
 
@@ -191,6 +195,7 @@ describe('progress storage', () => {
     expect(loadProgress(localStorage)).toEqual({
       progress: CLEAN_PROGRESS,
       available: true,
+      outcome: 'reset',
     });
   });
 
@@ -204,6 +209,7 @@ describe('progress storage', () => {
     expect(loadProgress(blocked)).toEqual({
       progress: CLEAN_PROGRESS,
       available: false,
+      outcome: 'unavailable',
     });
   });
 

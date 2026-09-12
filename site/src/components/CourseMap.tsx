@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Campaign, Difficulty } from '../curriculum/types';
 import type { ProgressState } from '../progress/schema';
 import { CampaignCard } from './CampaignCard';
@@ -45,6 +45,7 @@ function matchesQuery(campaign: Campaign, query: string) {
 export function CourseMap({ campaigns, progress }: CourseMapProps) {
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState<DifficultyFilter>('all');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const visibleCampaigns = useMemo(
     () => campaigns
@@ -67,6 +68,7 @@ export function CourseMap({ campaigns, progress }: CourseMapProps) {
   function clearFilters() {
     setQuery('');
     setDifficulty('all');
+    searchInputRef.current?.focus();
   }
 
   return (
@@ -74,7 +76,7 @@ export function CourseMap({ campaigns, progress }: CourseMapProps) {
       <header className="section-heading">
         <div>
           <p className="eyebrow">Карта пригоди</p>
-          <h2 id="course-map-title">Обери наступну місію</h2>
+          <h2 id="course-map-title" tabIndex={-1}>Обери наступну місію</h2>
         </div>
         <p>
           Іди за маршрутом або відкривай будь-яку тему. Тут немає заблокованих рівнів.
@@ -87,6 +89,7 @@ export function CourseMap({ campaigns, progress }: CourseMapProps) {
           <span className="field__control">
             <span className="field__icon" aria-hidden="true">⌕</span>
             <input
+              ref={searchInputRef}
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -119,7 +122,12 @@ export function CourseMap({ campaigns, progress }: CourseMapProps) {
         </button>
       </div>
 
-      <p className="course-results">
+      <p
+        className="course-results"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {resultCount === 1 ? 'Знайдено 1 місію' : `Знайдено місій: ${resultCount}`}
       </p>
 

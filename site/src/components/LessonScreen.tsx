@@ -168,8 +168,10 @@ export function LessonScreen({
   const { finishLesson, markQuizPassed, markStepDone, rememberLesson } = actions;
 
   useEffect(() => {
-    rememberLesson(lesson.slug);
-  }, [lesson.slug, rememberLesson]);
+    if (!lessonProgress?.completed) {
+      rememberLesson(lesson.slug);
+    }
+  }, [lesson.slug, lessonProgress?.completed, rememberLesson]);
 
   const currentStep = lesson.steps[currentStepIndex]!;
   const hasCompletedLesson = Boolean(lessonProgress?.completed) || completionRequested;
