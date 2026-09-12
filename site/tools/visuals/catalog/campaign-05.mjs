@@ -46,14 +46,14 @@ const transition = final => `game.onUpdate(function () {
     if (state == 1 && info.score() == level + 1) {
         state = 2
         level += 1
-        game.splash("Рівень", level)
-        info.setScore(0)
         ${final ? `if (level > 3) {
             game.over(true)
         } else {
+            game.splash("Рівень", level)
+            info.setScore(0)
             state = 1
             loadLevel()
-        }` : 'loadLevel()\n        state = 1'}
+        }` : 'game.splash("Рівень", level)\n        info.setScore(0)\n        loadLevel()\n        state = 1'}
     }
 })`;
 
@@ -95,7 +95,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSp
     tiles.placeOnTile(chaser, tiles.getTileLocation(7, 5))
 })`;
 
-const prototype = step => `${step >= 2 ? 'namespace SpriteKind {\n    export const Bonus = SpriteKind.create()\n}\nlet shield = false\nshield = false\n' : ''}${step >= 4 ? 'game.splash("Збери 8")\n' : ''}let mySprite = sprites.create(${hero}, SpriteKind.Player)
+const prototype = step => `${step >= 2 ? 'namespace SpriteKind {\n    export const Bonus = SpriteKind.create()\n}\nlet shield = false\nshield = false\n' : ''}${step >= 3 ? 'let winning = false\nwinning = false\n' : ''}${step >= 4 ? 'game.splash("Збери 8")\n' : ''}let mySprite = sprites.create(${hero}, SpriteKind.Player)
 controller.moveSprite(mySprite, 90, 90)
 mySprite.setStayInScreen(true)
 mySprite.setPosition(20, 100)
@@ -106,15 +106,15 @@ food.setPosition(80, 60)
 let enemy = sprites.create(${enemyImage}, SpriteKind.Enemy)
 enemy.setPosition(130, 30)
 enemy.follow(mySprite, 25)
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Food, function (sprite, otherSprite) {
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Food, function (sprite, otherSprite) {${step >= 3 ? '\n    if (!(winning)) {' : ''}
     otherSprite.setPosition(randint(10, 150), randint(10, 110))
     info.changeScoreBy(1)${step >= 4 ? '\n    sprite.startEffect(effects.confetti, 500)' : ''}${step >= 3 ? '\n    music.play(music.tonePlayable(988, 100), music.PlaybackMode.InBackground)' : ''}
-    if (info.score() >= 8) {${step >= 3 ? '\n        music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.UntilDone)' : ''}
+    if (info.score() >= 8) {${step >= 3 ? '\n        winning = true\n        music.play(music.melodyPlayable(music.baDing), music.PlaybackMode.UntilDone)' : ''}
         game.over(true)
-    }
+    }${step >= 3 ? '\n    }' : ''}
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    ${step >= 2 ? 'if (!(shield)) {\n        ' : ''}sprite.setPosition(20, 100)
+    ${step >= 2 ? `if (!(shield)${step >= 3 ? ' && !(winning)' : ''}) {\n        ` : ''}sprite.setPosition(20, 100)
     otherSprite.setPosition(130, 30)${step >= 4 ? '\n    scene.cameraShake(4, 500)' : ''}${step >= 3 ? '\n    music.play(music.tonePlayable(131, 200), music.PlaybackMode.InBackground)' : ''}
     info.changeLifeBy(-1)${step >= 2 ? '\n    }' : ''}
 })${step >= 2 ? `

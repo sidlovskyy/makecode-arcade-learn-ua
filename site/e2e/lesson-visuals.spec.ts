@@ -54,6 +54,100 @@ async function expectPhaseFocus(page: Page, selector: string) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 }
 
+for (const id of ['lesson-17', 'lesson-18', 'lesson-19', 'lesson-20']) {
+  test(`C05-003/C05-006/C05-007: ${id} first-time and completed review preserve destination and step identity`, async ({ page }) => {
+    const lesson = lessons.find(lesson => lesson.id === id)!;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const activeVisible = async () => {
+      if (page.viewportSize()!.width !== 390) return;
+      await expect.poll(() => page.locator('.step-list').evaluate(list => {
+        const chip = list.querySelector('[aria-current="step"]')!.getBoundingClientRect();
+        const bounds = list.getBoundingClientRect();
+        return chip.left >= bounds.left - 1 && chip.right <= bounds.right + 1;
+      })).toBe(true);
+    };
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < 6; i++) {
+      await page.locator('.lesson-step-actions .button--primary').scrollIntoViewIfNeeded();
+      await continueStep(page);
+      await expectPhaseFocus(page, i === 5 ? '#challenge-title' : '#practical-step-title');
+      if (i < 5) await activeVisible();
+    }
+    await page.getByRole('button', { name: /Випробування виконано/ }).click();
+    await expectPhaseFocus(page, '#quiz-title');
+    await page.getByRole('radio', { name: lesson.quiz.options[lesson.quiz.correctIndex] }).check();
+    await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+    await page.getByRole('button', { name: /Завершити місію/ }).click();
+    await expectPhaseFocus(page, '#completion-title');
+    await page.locator('.step-list button').nth(4).click();
+    await expectPhaseFocus(page, '#practical-step-title'); await activeVisible();
+    await page.getByRole('button', { name: 'Наступний крок' }).click();
+    await expectPhaseFocus(page, '#practical-step-title'); await activeVisible();
+    for (let i = 0; i < 6; i++) {
+      const chip = page.locator('.step-list button').nth(i);
+      await expect(chip).toHaveAccessibleName(/Виконано/);
+      await expect(chip.locator('.step-list__marker')).toHaveText(String(i + 1));
+      expect((await chip.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+    await page.getByRole('button', { name: 'Назад', exact: true }).click();
+    await expectPhaseFocus(page, '#practical-step-title'); await activeVisible();
+    await page.getByRole('button', { name: 'До підсумку місії' }).click();
+    await expectPhaseFocus(page, '#completion-title');
+    await expectNoOverflow(page);
+  });
+}
+
+test('C05-010: lesson 19 renders seven checks with a separate retest action', async ({ page }) => {
+  await page.goto('/#/lesson/vid-prototypu-do-hry');
+  for (let i = 0; i < 5; i++) await continueStep(page);
+  await expect(page.locator('.visual-guide li')).toHaveCount(7);
+  for (const text of await page.locator('.visual-guide li').allTextContents()) expect(text).not.toMatch(/^\d+\./);
+  await expect(page.locator('.visual-guide > p')).toContainText('Запиши неточність');
+});
+
+for (const [id, index] of [['lesson-17', 3], ['lesson-19', 1], ['lesson-20', 1], ['lesson-20', 4]] as const) {
+  test(`C05 native additions: ${id} step ${index + 1} has complete precise regions inline and enlarged`, async ({ page }) => {
+    const lesson = lessons.find(lesson => lesson.id === id)!;
+    const step = lesson.steps[index];
+    const visual = step.visual;
+    if (visual.kind !== 'blocks') throw Error('Expected blocks');
+    const regions = [visual.focus, ...(visual.additionalFocus ?? [])];
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < index; i++) await continueStep(page);
+    await expect(page.locator('.visual-callout span')).toHaveText(regions.map(region => region.label));
+    await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
+    await expect(page.locator('.visual-lightbox__scroll .visual-focus')).toHaveCount(regions.length);
+    await page.keyboard.press('Escape'); await expectNoOverflow(page);
+    const svg = await readFile(new URL(`../src/assets/lesson-visuals/blocks/${step.id}.svg`, import.meta.url), 'utf8');
+    await page.goto(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+    const result = await page.evaluate(({ id, index, regions }) => {
+      const root = document.querySelector('svg')!, inv = root.getScreenCTM()!.inverse();
+      const bounds = (e: Element) => { const r = e.getBoundingClientRect(), a = new DOMPoint(r.left, r.top).matrixTransform(inv), b = new DOMPoint(r.right, r.bottom).matrixTransform(inv); return { left: a.x, top: a.y, right: b.x, bottom: b.y }; };
+      const boxes = regions.map(f => ({ left: f.x * root.viewBox.baseVal.width, top: f.y * root.viewBox.baseVal.height, right: (f.x + f.width) * root.viewBox.baseVal.width, bottom: (f.y + f.height) * root.viewBox.baseVal.height }));
+      const overlaps = root.querySelectorAll('g.spritesoverlap');
+      const sets = root.querySelectorAll('g.pxt-on-start g.variables_set');
+      const path = (e: Element) => e.querySelector(':scope > path.blocklyPath')!;
+      let needed: Element[], old: Element[];
+      if (id === 'lesson-17') {
+        needed = [root.querySelector('g.function_call')!, root.querySelectorAll('g.keyonevent')[1], overlaps[0]];
+        old = [path(root.querySelector('g.game_control_sprite')!)];
+      } else if (id === 'lesson-19') {
+        needed = [overlaps[2], overlaps[1].querySelector('g.controls_if')!, path(sets[0]), sets[sets.length - 1]];
+        old = [path(root.querySelector('g.game_control_sprite')!)];
+      } else if (index === 1) {
+        needed = [sets[sets.length - 2], root.querySelector('g.keyonevent')!];
+        old = [path(root.querySelector('g.game_control_sprite')!), path(root.querySelector('g.hudSetLife')!)];
+      } else {
+        const conditions = overlaps[0].querySelectorAll('g.controls_if');
+        needed = [conditions[2], overlaps[1]]; old = [path(conditions[0]), path(conditions[1])];
+      }
+      return { included: needed.map(bounds).every(b => boxes.some(a => a.left <= b.left + 1 && a.top <= b.top + 1 && a.right >= b.right - 1 && a.bottom >= b.bottom - 1)),
+        excluded: old.map(bounds).every(b => boxes.every(a => Math.min(a.right, b.right) - Math.max(a.left, b.left) <= 1 || Math.min(a.bottom, b.bottom - 8) - Math.max(a.top, b.top) <= 1)) };
+    }, { id, index, regions });
+    expect(result).toEqual({ included: true, excluded: true });
+  });
+}
+
 for (const [id, stepIndex] of [['lesson-13', 1], ['lesson-13', 2], ['lesson-14', 0], ['lesson-15', 4], ['lesson-15', 5], ['lesson-16', 0], ['lesson-16', 2]] as const) {
   test(`C04-001: ${id} step ${stepIndex + 1} initially reveals its target and preserves manual panning`, async ({ page }) => {
     const lesson = lessons.find(lesson => lesson.id === id)!;

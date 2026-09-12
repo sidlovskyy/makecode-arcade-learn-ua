@@ -42,6 +42,7 @@ export interface GuideStepVisual {
   kind: 'guide';
   title: string;
   items: [string, ...string[]];
+  note?: string;
 }
 
 export type LessonStepVisual =
