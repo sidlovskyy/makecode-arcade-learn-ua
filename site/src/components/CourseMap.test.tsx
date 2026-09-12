@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -18,9 +19,23 @@ const campaignTitles = [
   'Майстер коду',
 ];
 
+const originalScrollIntoViewDescriptor = Object.getOwnPropertyDescriptor(
+  Element.prototype,
+  'scrollIntoView',
+);
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  if (originalScrollIntoViewDescriptor) {
+    Object.defineProperty(
+      Element.prototype,
+      'scrollIntoView',
+      originalScrollIntoViewDescriptor,
+    );
+  } else {
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
+  }
   localStorage.clear();
   window.history.replaceState(null, '', '#/');
 });
@@ -64,6 +79,38 @@ describe('home chrome', () => {
     });
 
     expect(screen.getByRole('heading', { name: /Від першого пікселя/ })).toBeInTheDocument();
+  });
+
+  it('keeps the skip link first on an initial StrictMode render', async () => {
+    window.history.replaceState(null, '', '#/');
+    const user = userEvent.setup();
+
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+
+    expect(document.body).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole('link', { name: 'Перейти до вмісту' })).toHaveFocus();
+  });
+
+  it('focuses the destination main after a StrictMode route change', () => {
+    window.history.replaceState(null, '', '#/');
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    screen.getByRole('link', { name: 'Перейти до вмісту' }).focus();
+
+    act(() => {
+      window.history.replaceState(null, '', '#/lesson/mii-pershyi-sprait');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+
+    expect(screen.getByRole('main')).toHaveFocus();
   });
 });
 

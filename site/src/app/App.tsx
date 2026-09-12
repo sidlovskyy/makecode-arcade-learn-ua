@@ -67,7 +67,7 @@ function HomeRoute({ progress }: { progress: ProgressState }) {
 export function App() {
   const [route, setRoute] = useState<AppRoute>(readRoute);
   const [completionResult, setCompletionResult] = useState<CompletionResult>();
-  const hasRenderedInitialRoute = useRef(false);
+  const previousRoute = useRef(route);
   const progressStore = useProgress();
   const { loadOutcome, progress, storageAvailable } = progressStore;
 
@@ -79,11 +79,11 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!hasRenderedInitialRoute.current) {
-      hasRenderedInitialRoute.current = true;
+    if (previousRoute.current === route) {
       return;
     }
 
+    previousRoute.current = route;
     document.getElementById('main-content')?.focus();
   }, [route]);
 
