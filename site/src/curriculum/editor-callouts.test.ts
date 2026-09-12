@@ -12,7 +12,6 @@ it.each([
   ['lesson-02-step-06', 'Restart button', 77, 479, 40, 41],
   ['lesson-13-step-03', 'Duplicate Current Frame', 1309, 491, 48, 33],
   ['lesson-14-step-02', 'tilemap width field', 31, 842, 40, 30],
-  ['lesson-16-step-01', 'tilemap width field', 31, 842, 40, 30],
 ] as const)('%s highlights only the %s control', (id, _control, x, y, width, height) => {
   const visual = lessons.flatMap((lesson) => lesson.steps).find((step) => step.id === id)!.visual;
   expect(visual.kind).toBe('editor');
@@ -25,4 +24,21 @@ it.each([
   // A tiny rectangle inside the control must not satisfy the single-target check.
   expect(focus.width * 1440).toBeGreaterThan(width * 0.8);
   expect(focus.height * 900).toBeGreaterThan(height * 0.8);
+});
+
+it('C04-006: lesson 16 highlights the completed starter map rather than only its width field', () => {
+  const visual = lessons.find(({ id }) => id === 'lesson-16')!.steps[0]!.visual;
+  if (visual.kind !== 'editor') throw new Error('Expected completed-map editor capture');
+  expect(visual.focus.width).toBeGreaterThan(0.5);
+  expect(visual.focus.height).toBeGreaterThan(0.2);
+  expect(visual.alt).toMatch(/30×8.*три платформи/);
+});
+
+it.each(['lesson-14', 'lesson-16'])('C04-006: %s map outline matches the captured 30×8 canvas including both boundaries', (id) => {
+  const visual = lessons.find(lesson => lesson.id === id)!.steps[0]!.visual;
+  if (visual.kind !== 'editor') throw new Error('Expected map editor');
+  expect(visual.focus.x * 1440).toBeCloseTo(185, 0);
+  expect(visual.focus.y * 900).toBeCloseTo(310, 0);
+  expect(visual.focus.width * 1440).toBeCloseTo(1230, 0);
+  expect(visual.focus.height * 900).toBeCloseTo(328, 0);
 });

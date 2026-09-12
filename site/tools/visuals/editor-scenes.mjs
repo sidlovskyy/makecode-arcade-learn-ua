@@ -1,3 +1,5 @@
+import { starterMap } from './catalog/campaign-04.mjs';
+
 const url = 'https://arcade.makecode.com/?lang=en';
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 
@@ -72,9 +74,18 @@ const definitions = [
     await page.getByRole('textbox', { name: 'Interval Between Frames (ms)', exact: true }).waitFor();
   }],
   ['tilemap-editor', async (page) => {
-    await assetEditor(page, 'Tilemap');
+    await project(page);
+    await button(page, 'Convert code to JavaScript').click();
+    // Feed the catalog's exact map to the official editor and open its native
+    // tilemap field editor through the gutter icon for the completed-map capture.
+    const expression = starterMap.assets['tilemap.g.ts'].match(/return (tiles\.createTilemap[\s\S]*?)\n        return null/)[1];
+    await page.locator('.monaco-editor textarea').focus();
+    await page.keyboard.press('ControlOrMeta+KeyA');
+    await page.keyboard.insertText(`tiles.setCurrentTilemap(${expression})`);
+    // Monaco continuously refreshes this gutter glyph while typechecking.
+    await page.locator('.ms-Icon--Nav2DMapView').click({ force: true });
+    await page.getByRole('textbox', { name: 'Image Width', exact: true }).waitFor();
     await button(page, 'Draw walls').waitFor();
-    await button(page, 'Tile tileGrass2').waitFor();
     await page.getByText('Show walls', { exact: true }).waitFor();
   }],
 ];

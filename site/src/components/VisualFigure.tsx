@@ -8,28 +8,30 @@ interface VisualFigureProps {
   kind: 'blocks' | 'editor';
   alt: string;
   focus: NormalizedRect;
+  additionalFocus?: NormalizedRect[];
   explanation?: string;
   eager?: boolean;
   action?: 'verify';
 }
 
-export function VisualFigure({ assetId, kind, alt, focus, explanation, eager = false, action }: VisualFigureProps) {
+export function VisualFigure({ assetId, kind, alt, focus, additionalFocus = [], explanation, eager = false, action }: VisualFigureProps) {
   const [failedAsset, setFailedAsset] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const captionId = useId();
   const registry: LessonVisualAssetRegistry = lessonVisualAssets;
   const asset = Object.hasOwn(registry, assetId) ? registry[assetId] : undefined;
   const available = asset?.kind === kind && failedAsset !== assetId;
+  const regions = [focus, ...additionalFocus];
 
   function content(enlarged = false) {
     return <>
       {available ? (
         <div className={`visual-image visual-image--${kind}${enlarged ? ' visual-image--enlarged' : ''}`}>
           <img src={asset!.src} alt={alt} decoding="async" loading={enlarged || (eager && kind === 'blocks') ? 'eager' : 'lazy'} onError={() => setFailedAsset(assetId)} />
-          <span className="visual-focus" aria-hidden="true" style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%`, width: `${focus.width * 100}%`, height: `${focus.height * 100}%` }} />
+          {regions.map((region, index) => <span key={index} className="visual-focus" aria-hidden="true" style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%` }} />)}
         </div>
       ) : <p className="visual-fallback">{alt}</p>}
-      <p className="visual-callout"><strong>{action === 'verify' ? 'Перевір зараз' : kind === 'editor' ? 'Зроби зараз' : 'Додай зараз'}</strong><span>{focus.label}</span></p>
+      {regions.map((region, index) => <p key={index} className="visual-callout"><strong>{action === 'verify' ? 'Перевір зараз' : kind === 'editor' ? 'Зроби зараз' : 'Додай зараз'}</strong><span>{region.label}</span></p>)}
     </>;
   }
 

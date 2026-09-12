@@ -20,6 +20,37 @@ const source = 'if score > 0:\n    game.splash("<b>Привіт</b>")\n';
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe('StepVisual', () => {
+  it.each([false, true])('C04-004: isolates background and restores its previous inert state (%s)', async (previous) => {
+    const user = userEvent.setup();
+    const { container } = render(<StepVisual visual={blocks} />);
+    const sibling = document.createElement('aside');
+    if (previous) sibling.setAttribute('inert', '');
+    document.body.append(sibling);
+    const opener = screen.getByRole('button', { name: 'Відкрити крупніше' });
+    await user.click(opener);
+    expect(container).toHaveAttribute('inert');
+    expect(sibling).toHaveAttribute('inert');
+    expect(screen.getByRole('dialog').closest('.visual-lightbox-backdrop')).not.toHaveAttribute('inert');
+    await user.keyboard('{Escape}');
+    expect(container).not.toHaveAttribute('inert');
+    expect(sibling.hasAttribute('inert')).toBe(previous);
+    expect(opener).toHaveFocus();
+    sibling.remove();
+  });
+
+  it('C04-005/C04-007: separated additions each get their own outline and readable callout', async () => {
+    const extra = { x: 0.8, y: 0.1, width: 0.1, height: 0.2, label: 'Додай окрему подію' };
+    const user = userEvent.setup();
+    const visual = { ...blocks, additionalFocus: [extra] };
+    const { container } = render(<StepVisual visual={visual} />);
+    expect(container.querySelectorAll('.visual-focus')).toHaveLength(2);
+    expect(screen.getByText(extra.label)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.querySelectorAll('.visual-focus')).toHaveLength(2);
+    expect(within(dialog).getByText(extra.label)).toBeVisible();
+  });
+
   it.each([blocks, editor])('C01-003: $kind uses an appropriate action in the figure and enlargement', async (visual) => {
     const user = userEvent.setup();
     render(<StepVisual visual={visual} />);

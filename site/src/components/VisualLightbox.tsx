@@ -31,6 +31,9 @@ export function VisualLightbox({ children, onClose }: { children: ReactNode; onC
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
+    const background = [...document.body.children].filter(element => !element.contains(dialogRef.current))
+      .map(element => ({ element, inert: element.getAttribute('inert') }));
+    background.forEach(({ element }) => element.setAttribute('inert', ''));
     document.body.style.overflow = 'hidden';
     closeRef.current?.focus();
     function keepFocus(event: FocusEvent) {
@@ -57,6 +60,10 @@ export function VisualLightbox({ children, onClose }: { children: ReactNode; onC
       document.removeEventListener('keydown', handleKey);
       document.removeEventListener('focusin', keepFocus);
       document.body.style.overflow = previousOverflow;
+      background.forEach(({ element, inert }) => {
+        if (inert === null) element.removeAttribute('inert');
+        else element.setAttribute('inert', inert);
+      });
       if (previousFocus?.isConnected) previousFocus.focus();
     };
   }, []);

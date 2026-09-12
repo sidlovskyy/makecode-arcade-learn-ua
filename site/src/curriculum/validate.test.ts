@@ -11,6 +11,44 @@ import { validateCurriculum } from './validate';
 import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
 import type { LessonVisualAssetRegistry } from '../lesson-visuals/types';
 
+it('C04-002: stopWalking is another function after both existing definitions', () => {
+  const prompt = campaign04.lessons[0]!.challenge.prompt;
+  expect(prompt).toMatch(/Додай (ще одну )?функцію stopWalking/);
+  expect(prompt).not.toMatch(/другу функцію/);
+});
+
+it('C04-003: lesson 14 opens the current Arcade editor', () => {
+  expect(campaign04.lessons[1]!.makeCodeUrl).toBe('https://arcade.makecode.com/');
+});
+
+it('C04-006: shared lesson-14 captions identify the completed map as an editor example', () => {
+  const visuals = campaign04.lessons[1]!.steps.slice(0, 2).map(step => step.visual);
+  for (const visual of visuals) {
+    if (visual.kind !== 'editor') throw new Error('Expected tilemap editor');
+    expect(`${visual.alt} ${visual.explanation}`).not.toMatch(/порожн.*карт|порожньою сіткою|обидва дорівнюють 16/);
+    expect(visual.explanation).toContain('30×8');
+  }
+});
+
+it('C04-006: the visible starter plan specifies reachable platform and marker coordinates before customization', () => {
+  const step = campaign04.lessons[3]!.steps[0]!;
+  const text = `${step.instruction} ${step.visual.kind === 'editor' ? step.visual.explanation : ''}`;
+  for (const coordinate of ['30×8', '5–8', '11–14', '18–21', '(2, 6)', '(13, 2)', '(27, 6)', '9–10', '22–24']) expect(text).toContain(coordinate);
+  expect(text).toMatch(/від 0/);
+  expect(text).toMatch(/рядок 7/);
+  expect(text).toMatch(/0 і 29/);
+  expect(text).toMatch(/спочатку|Спочатку/);
+  expect(text).toMatch(/переставля/);
+});
+
+it('C04-008: the platform obstacle teaches bounded reversal and explicit vertical placement', () => {
+  const { prompt, hint } = campaign04.lessons[3]!.challenge;
+  expect(`${prompt} ${hint}`).toMatch(/8×8/);
+  for (const value of ['x 96', 'x 128', 'y 76', 'vx 20', 'ay 0', 'on game update']) expect(`${prompt} ${hint}`).toContain(value);
+  expect(hint).toMatch(/x ≤ 96.*vx 20.*x ≥ 128.*vx -20/);
+  expect(hint).not.toMatch(/bounce on wall/);
+});
+
 function campaign03Step(id: string): LessonStep {
   const step = campaign03.lessons.flatMap((lesson) => lesson.steps).find((step) => step.id === id);
   if (!step) throw new Error(`Missing campaign-03 step: ${id}`);

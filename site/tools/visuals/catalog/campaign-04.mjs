@@ -114,6 +114,26 @@ const level = tilemap(30, 8, (x, y) => {
   if (x === 27 && y === 6) return [5, false];
   return [0, false];
 }, [stone, start, crystalSite, lava, door]);
+export const starterMap = { code: level, assets: mapAssets.get('level30x8') };
+// Authoring/play fixture for the optional, explicitly bounded first-platform patrol.
+export const platformChallenge = `let enemy = sprites.create(${foe}, SpriteKind.Enemy)
+enemy.setPosition(104, 76)
+enemy.vx = 20
+enemy.vy = 0
+enemy.ay = 0
+game.onUpdate(function () {
+    if (enemy.x <= 96) {
+        enemy.x = 96
+        enemy.vx = 20
+    } else if (enemy.x >= 128) {
+        enemy.x = 128
+        enemy.vx = -20
+    }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
+    info.changeLifeBy(-1)
+    tiles.placeOnRandomTile(sprite, ${start})
+})`;
 const physics = `${level}
 let mySprite = sprites.create(${hero}, SpriteKind.Player)
 tiles.placeOnRandomTile(mySprite, ${start})

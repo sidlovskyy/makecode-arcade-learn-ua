@@ -54,6 +54,72 @@ async function expectPhaseFocus(page: Page, selector: string) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 }
 
+for (const [id, stepIndex] of [['lesson-13', 1], ['lesson-13', 2], ['lesson-14', 0], ['lesson-15', 4], ['lesson-15', 5], ['lesson-16', 0], ['lesson-16', 2]] as const) {
+  test(`C04-001: ${id} step ${stepIndex + 1} initially reveals its target and preserves manual panning`, async ({ page }) => {
+    const lesson = lessons.find(lesson => lesson.id === id)!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.click();
+    const region = page.locator('.visual-lightbox__scroll');
+    await region.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+    await expect.poll(() => region.evaluate(element => {
+      const target = element.querySelector('.visual-focus')!.getBoundingClientRect();
+      const viewport = element.getBoundingClientRect();
+      const width = Math.min(target.right, viewport.left + element.clientWidth) - Math.max(target.left, viewport.left);
+      const height = Math.min(target.bottom, viewport.top + element.clientHeight) - Math.max(target.top, viewport.top);
+      return width >= Math.min(target.width, element.clientWidth) - 3 && height >= Math.min(target.height, element.clientHeight) - 3;
+    })).toBe(true);
+    await region.focus();
+    const before = await region.evaluate(element => ({ x: element.scrollLeft, canPan: element.scrollWidth > element.clientWidth }));
+    if (before.canPan) {
+      await page.keyboard.press(before.x > 0 ? 'ArrowLeft' : 'ArrowRight');
+      await expect.poll(() => region.evaluate(element => element.scrollLeft)).not.toBe(before.x);
+      await page.waitForTimeout(300); // Let native keyboard smooth scrolling finish before the independent manual-pan check.
+      await region.evaluate(element => { element.scrollLeft = 0; });
+      await page.waitForTimeout(200);
+      expect(await region.evaluate(element => element.scrollLeft)).toBe(0);
+    }
+    await page.keyboard.press('Escape');
+    await expect(opener).toBeFocused();
+  });
+}
+
+test('C04-003/C04-004: current editor link disappears from the accessibility tree while enlarged', async ({ page, context }) => {
+  await page.goto(`/#/lesson/${lessons.find(lesson => lesson.id === 'lesson-14')!.slug}`);
+  const editor = page.getByRole('link', { name: /Відкрити MakeCode/ });
+  await expect(editor).toHaveAttribute('href', 'https://arcade.makecode.com/');
+  const client = await context.newCDPSession(page);
+  const backgroundLinks = async () => (await client.send('Accessibility.getFullAXTree')).nodes.filter(node => !node.ignored && node.role?.value === 'link');
+  const before = await backgroundLinks();
+  expect(before.length).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
+  expect(await backgroundLinks()).toEqual([]);
+  await page.keyboard.press('Escape');
+  expect((await backgroundLinks()).length).toBe(before.length);
+});
+
+for (const [id, stepIndex] of [['lesson-15', 1], ['lesson-16', 3], ['lesson-16', 4]] as const) {
+  test(`C04-005/C04-007: ${id} step ${stepIndex + 1} exposes both separated additions for enlarged reading`, async ({ page }, testInfo) => {
+    await page.goto(`/#/lesson/${lessons.find(lesson => lesson.id === id)!.slug}`);
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    await expect(page.locator('.visual-focus')).toHaveCount(2);
+    await page.locator('.practical-step').screenshot({ path: testInfo.outputPath('separate-additions.png') });
+    await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
+    const region = page.locator('.visual-lightbox__scroll');
+    await region.locator('img').evaluate((image: HTMLImageElement) => image.decode());
+    await expect(region.locator('.visual-focus')).toHaveCount(2);
+    await expect(region.locator('.visual-callout')).toHaveCount(2);
+    for (let i = 0; i < 2; i++) {
+      // Manual pan to read each separate native addition at intrinsic size.
+      await region.locator('.visual-focus').nth(i).evaluate(element => element.scrollIntoView({ block: 'start', inline: 'start' }));
+      await region.screenshot({ path: testInfo.outputPath(`addition-${i + 1}.png`) });
+    }
+    await expectNoOverflow(page);
+    await page.keyboard.press('Escape');
+  });
+}
+
 for (const [id, stepIndex] of [['lesson-10', 4], ['lesson-11', 5], ['lesson-12', 4]] as const) {
   test(`C03-006/C03-010/C03-012: ${id} focus matches the regenerated native edit geometry`, async ({ page }) => {
     const visual = lessons.find((lesson) => lesson.id === id)!.steps[stepIndex].visual;
@@ -422,8 +488,9 @@ for (const lesson of lessons) {
             return rect.width > 0 && rect.height > 0 && rect.left >= parent.left - 1 && rect.right <= parent.right + 1
               && Math.abs(rect.width / rect.height - element.naturalWidth / element.naturalHeight) < 0.03;
           })).toBe(true);
-          await expect(visual.locator('.visual-focus')).toHaveCount(1);
-          await expect(visual.locator('.visual-callout')).toContainText(imageDescriptor.focus.label);
+          const additional = 'additionalFocus' in imageDescriptor ? imageDescriptor.additionalFocus ?? [] : [];
+          await expect(visual.locator('.visual-focus')).toHaveCount(1 + additional.length);
+          await expect(visual.locator('.visual-callout span')).toHaveText([imageDescriptor.focus.label, ...additional.map(region => region.label)]);
         }
         if (descriptor.kind === 'python' || descriptor.kind === 'comparison') {
           const python = descriptor.kind === 'comparison' ? descriptor.python : descriptor;
@@ -446,6 +513,16 @@ for (const lesson of lessons) {
       });
     }
     await expect(page.locator('.challenge-panel')).toBeVisible();
+    if (lesson.id === 'lesson-13') {
+      await expect(page.locator('.challenge-panel')).toContainText('Додай ще одну функцію stopWalking');
+      await expect(page.locator('.challenge-panel')).not.toContainText('другу функцію');
+    }
+    if (lesson.id === 'lesson-16') {
+      await page.getByRole('button', { name: 'Показати підказку до випробування' }).click();
+      await expect(page.locator('.challenge-panel')).toContainText('x ≤ 96 — задай x 96 і vx 20');
+      await expect(page.locator('.challenge-panel')).toContainText('x ≥ 128 — задай x 128 і vx -20');
+      await page.locator('.challenge-panel').screenshot({ path: testInfo.outputPath('bounded-patrol-challenge.png') });
+    }
     expect((await readProgress(page)).lessons[lesson.id].completedStepIds).toEqual(lesson.steps.map((step) => step.id));
     expect((await readProgress(page)).totalXp).toBe(0);
   });

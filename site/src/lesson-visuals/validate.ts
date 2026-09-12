@@ -69,6 +69,12 @@ export function validateLessonVisual(
   if (visual === undefined || visual === null) return [`${stepId} visual is required`];
   if (!isRecord(visual)) return [`${stepId} visual must be an object`];
 
+  const image = visual.kind === 'comparison' ? visual.blocks : visual;
+  if (isRecord(image) && image.additionalFocus !== undefined) {
+    if (!Array.isArray(image.additionalFocus)) errors.push(`${stepId} additionalFocus must be an array`);
+    else image.additionalFocus.forEach((focus, index) => validateFocus(stepId, `additionalFocus[${index}]`, focus, errors));
+  }
+
   switch (visual.kind) {
     case 'blocks':
     case 'editor':

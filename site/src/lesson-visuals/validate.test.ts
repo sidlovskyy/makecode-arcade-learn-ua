@@ -15,6 +15,10 @@ const blockVisual: LessonStepVisual = {
   focus: { x: 0.08, y: 0.42, width: 0.84, height: 0.38, label: 'Додай зараз' },
 };
 
+it.each([{}, [{ x: 0.9, y: 0, width: 0.2, height: 1, label: 'Подія' }], [{ x: 0, y: 0, width: 1, height: 1, label: '' }]])('C04-007: rejects malformed additional focus regions (%j)', (additionalFocus) => {
+  expect(validateLessonVisual('lesson-16-step-04', { ...blockVisual, additionalFocus }, assets).length).toBeGreaterThan(0);
+});
+
 const comparisonVisual = {
   kind: 'comparison',
   explanation: 'Блок і код Python виконують ту саму дію.',
