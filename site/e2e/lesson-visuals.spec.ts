@@ -99,8 +99,14 @@ for (const index of [1, 2, 4, 5]) {
     const preview = page.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' });
     await preview.locator('img').evaluate((img: HTMLImageElement) => img.decode());
     await expect.poll(() => preview.locator('img').evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.naturalWidth)).toBe(1);
-    await preview.focus(); await page.keyboard.press('ArrowRight');
-    expect(await preview.evaluate(e => e.scrollWidth >= e.clientWidth)).toBe(true);
+    if (page.viewportSize()!.width === 390) {
+      await expect.poll(() => preview.evaluate(e => e.scrollWidth - e.clientWidth)).toBeGreaterThan(0);
+      const initialScrollLeft = await preview.evaluate(e => e.scrollLeft);
+      await preview.focus();
+      await expect(preview).toBeFocused();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(() => preview.evaluate(e => e.scrollLeft)).toBeGreaterThan(initialScrollLeft);
+    }
     await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
     await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
     await page.keyboard.press('Escape'); await expectNoOverflow(page);
