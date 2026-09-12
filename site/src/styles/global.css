@@ -49,7 +49,8 @@
 .visual-image--enlarged img { max-width: none; }
 .visual-image--enlarged.visual-image--blocks { width: max-content; min-width: max(100%, 855px); }
 .visual-image--enlarged.visual-image--blocks img { width: 100%; }
-.visual-lightbox .visual-callout, .visual-lightbox__scroll > p { overflow-wrap: anywhere; }
+.visual-lightbox__caption { flex-shrink: 0; min-width: 0; overflow-wrap: anywhere; }
+.visual-lightbox__caption > :last-child { margin-bottom: 0; }
 @media (max-width: 760px) {
   .visual-comparison { grid-template-columns: minmax(0, 1fr); }
   .visual-toolbar { flex-wrap: wrap; }
@@ -64,6 +65,12 @@
 html {
   min-width: 320px;
   scroll-behavior: smooth;
+}
+
+/* Keyboard focus must finish scrolling before a step replaces its button.
+   Otherwise a pending smooth focus scroll can override the new heading reveal. */
+html:has(.lesson-main) {
+  scroll-behavior: auto;
 }
 
 body {

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-export function VisualLightbox({ children, onClose }: { children: ReactNode; onClose(): void }) {
+export function VisualLightbox({ children, caption, onClose }: { children: ReactNode; caption: ReactNode; onClose(): void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,6 +78,7 @@ export function VisualLightbox({ children, onClose }: { children: ReactNode; onC
         <div ref={scrollRef} className="visual-lightbox__scroll" tabIndex={0} role="region" aria-label="Збільшене зображення; прокручуй, щоб розглянути деталі">
           {children}
         </div>
+        <div className="visual-lightbox__caption">{caption}</div>
       </div>
     </div>, document.body,
   );

@@ -54,6 +54,80 @@ async function expectPhaseFocus(page: Page, selector: string) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 }
 
+async function waitForSettledLessonScroll(page: Page) {
+  // Observe the full keyboard-focus scroll animation, not its transient first
+  // frame. Require 200ms of stable scroll/layout after at least 750ms.
+  await page.evaluate(() => new Promise<void>(resolve => {
+    const start = performance.now();
+    let unchangedSince = start;
+    let previous = '';
+    function sample(now: number) {
+      const rect = document.querySelector('.lesson-workspace h2')!.getBoundingClientRect();
+      const state = `${window.scrollY}:${rect.y}:${rect.height}`;
+      if (state !== previous) { unchangedSince = now; previous = state; }
+      if (now - start >= 750 && now - unchangedSince >= 200) resolve();
+      else requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  }));
+}
+
+for (const review of [false, true]) {
+  test(`C01 follow-up: keyboard ${review ? 'completed review' : 'first pass'} keeps the focused heading visible after scrolling settles`, async ({ page }) => {
+    const lesson = lessons[0];
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    if (review) {
+      await page.evaluate(({ key, lesson }) => localStorage.setItem(key, JSON.stringify({
+        version: 1, totalXp: 100, lastLessonSlug: lesson.slug,
+        lessons: { [lesson.id]: { completedStepIds: lesson.steps.map(step => step.id), completed: true, quizPassed: true } },
+      })), { key: progressKey, lesson });
+      await page.reload();
+      await page.locator('.step-list button').first().click();
+    }
+    for (let i = 1; i < 6; i++) {
+      await page.locator('.lesson-step-actions .button--primary').focus();
+      await page.keyboard.press('Enter');
+      await waitForSettledLessonScroll(page);
+      await expectPhaseFocus(page, '#practical-step-title');
+      await expect(page.locator('#practical-step-title')).toHaveText(lesson.steps[i].title);
+    }
+    await page.getByRole('button', { name: 'Назад', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await waitForSettledLessonScroll(page);
+    await expectPhaseFocus(page, '#practical-step-title');
+  });
+}
+
+for (const stepIndex of [1, 5]) {
+  test(`C01 follow-up: step ${stepIndex + 1} enlarged captions stay visible while the image pans`, async ({ page }) => {
+    await page.goto('/#/lesson/znaiomstvo-z-arcade');
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.click();
+    const dialog = page.getByRole('dialog');
+    const region = dialog.getByRole('region', { name: /Збільшене зображення/ });
+    await region.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+    const visual = lessons[0].steps[stepIndex].visual;
+    if (visual.kind !== 'editor') throw new Error('Expected editor visual');
+    async function expectReadableCaptions() {
+      const bounds = (await dialog.boundingBox())!;
+      for (const text of [visual.focus.label, visual.explanation]) {
+        const box = (await dialog.getByText(text, { exact: true }).boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(bounds.x);
+        expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width);
+        expect(box.y).toBeGreaterThanOrEqual(bounds.y);
+        expect(box.y + box.height).toBeLessThanOrEqual(bounds.y + bounds.height);
+      }
+    }
+    await expectReadableCaptions();
+    await region.evaluate(el => { el.scrollLeft = el.scrollWidth; el.scrollTop = el.scrollHeight; });
+    await expectReadableCaptions();
+    await page.keyboard.press('Escape');
+    await expect(opener).toBeFocused();
+    await expectNoOverflow(page);
+  });
+}
+
 for (const id of ['lesson-21', 'lesson-22', 'lesson-23', 'lesson-24']) {
   test(`C06-001/C06-005/C06-009: ${id} keyboard progression and reloaded review retain focus and visible identity`, async ({ page }) => {
     const lesson = lessons.find(lesson => lesson.id === id)!;
@@ -295,7 +369,7 @@ for (const [id, stepIndex] of [['lesson-15', 1], ['lesson-16', 3], ['lesson-16',
     const region = page.locator('.visual-lightbox__scroll');
     await region.locator('img').evaluate((image: HTMLImageElement) => image.decode());
     await expect(region.locator('.visual-focus')).toHaveCount(2);
-    await expect(region.locator('.visual-callout')).toHaveCount(2);
+    await expect(page.getByRole('dialog').locator('.visual-callout')).toHaveCount(2);
     for (let i = 0; i < 2; i++) {
       // Manual pan to read each separate native addition at intrinsic size.
       await region.locator('.visual-focus').nth(i).evaluate(element => element.scrollIntoView({ block: 'start', inline: 'start' }));
@@ -623,7 +697,12 @@ for (const [lessonIndex, stepIndex] of [[0, 1], [0, 5], [1, 2], [1, 4], [1, 5], 
     })).toBe(true);
     await region.screenshot({ path: testInfo.outputPath(`${lesson.steps[stepIndex].id}-focused-lightbox.png`) });
     if (lessonIndex === 3) expect(await region.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
-    if (lessonIndex === 0 || (lessonIndex === 1 && stepIndex === 2)) expect(await region.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    // Captions no longer add to image scrollHeight; on a tall tablet the
+    // entire editor image fits. Require movement only when it must pan.
+    if ((lessonIndex === 0 || (lessonIndex === 1 && stepIndex === 2))
+      && await region.evaluate(el => el.scrollHeight > el.clientHeight)) {
+      expect(await region.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    }
     await region.focus();
     const before = await region.evaluate(el => ({ x: el.scrollLeft, y: el.scrollTop }));
     await page.keyboard.press(before.x > 0 ? 'ArrowLeft' : 'ArrowRight');

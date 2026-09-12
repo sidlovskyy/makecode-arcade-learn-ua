@@ -21,6 +21,19 @@ const source = 'if score > 0:\n    game.splash("<b>Привіт</b>")\n';
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe('StepVisual', () => {
+  it('C01 follow-up: enlarged action and explanation remain outside the image panning region', async () => {
+    const user = userEvent.setup();
+    render(<StepVisual visual={editor} />);
+    await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
+    const dialog = screen.getByRole('dialog');
+    const region = within(dialog).getByRole('region', { name: /Збільшене зображення/ });
+    expect(within(region).getByRole('img')).toBeVisible();
+    expect(within(region).queryByText(editor.focus.label)).not.toBeInTheDocument();
+    expect(within(region).queryByText(editor.explanation)).not.toBeInTheDocument();
+    expect(within(dialog).getByText(editor.focus.label)).toBeVisible();
+    expect(within(dialog).getByText(editor.explanation)).toBeVisible();
+  });
+
   it('C06-002: comparisons offer a keyboard-scrollable focused native preview and the full image', () => {
     const visual = campaign06.lessons[0]!.steps[1]!.visual;
     render(<StepVisual visual={visual} />);
