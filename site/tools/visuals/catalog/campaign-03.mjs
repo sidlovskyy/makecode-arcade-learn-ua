@@ -43,7 +43,8 @@ const star = `img\`
 \``;
 const horizontalShip = `let mySprite = sprites.create(${ship}, SpriteKind.Player)
 mySprite.setPosition(80, 110)
-controller.moveSprite(mySprite, 100, 0)`;
+controller.moveSprite(mySprite, 100, 0)
+mySprite.setStayInScreen(true)`;
 const shoot = (speed) => `controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     let projectile = sprites.createProjectileFromSprite(${laser}, mySprite, 0, ${speed})
 })`;
@@ -65,7 +66,7 @@ const replaceTarget = `sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy
     enemy.vx = 35
     enemy.setBounceOnWall(true)
 })`;
-const energyStart = `let energy = 5\ninfo.setLife(6)`;
+const energyStart = `let energy = 5\ninfo.setLife(6)\ninfo.setScore(0)`;
 const roll = `roll = randint(1, 3)`;
 const decide = `${roll}
 if (roll == 1) {
@@ -83,7 +84,8 @@ ${body.split('\n').map((line) => `    ${line}`).join('\n')}
 })`;
 const pilot = `let mySprite = sprites.create(${ship}, SpriteKind.Player)
 mySprite.setPosition(10, 60)
-controller.moveSprite(mySprite, 0, 90)`;
+controller.moveSprite(mySprite, 0, 90)
+mySprite.setStayInScreen(true)`;
 const decoration = `namespace SpriteKind {
     export const Decoration = SpriteKind.create()
 }
@@ -103,23 +105,26 @@ const hitPlayer = `sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, functi
     otherSprite.destroy()
 })`;
 const defender = `${horizontalShip}
-mySprite.setStayInScreen(true)
 info.setScore(0)
 info.setLife(3)`;
 const waves = `game.onUpdateInterval(1000, function () {
     let enemy = sprites.create(${enemy}, SpriteKind.Enemy)
     enemy.setPosition(randint(8, 152), 0)
     enemy.vy = 20 + wave * 10
+    enemy.setFlag(SpriteFlag.AutoDestroy, true)
 })`;
 const shooter = `${defender}\nlet wave = 1\n${shoot(-120)}\n${waves}`;
-const scoreWave = `sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, otherSprite) {
+const scoreWave = (withWin = false) => `sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, otherSprite) {
     sprite.destroy()
     otherSprite.destroy()
     info.changeScoreBy(1)
     if (info.score() == 5) {
         wave = 2
         game.splash("Хвиля 2!")
-    }
+    }${withWin ? `
+    if (info.score() == 12) {
+        game.over(true)
+    }` : ''}
 })`;
 
 export default [
@@ -141,6 +146,6 @@ export default [
   ['lesson-12-step-01', defender],
   ['lesson-12-step-02', `${defender}\n${shoot(-120)}`],
   ['lesson-12-step-03', shooter],
-  ['lesson-12-step-04', `${shooter}\n${scoreWave}`],
-  ['lesson-12-step-05', `${shooter}\n${scoreWave}\n${hitPlayer}`],
+  ['lesson-12-step-04', `${shooter}\n${scoreWave()}`],
+  ['lesson-12-step-05', `${shooter}\n${scoreWave(true)}\n${hitPlayer}`],
 ].map(([id, code]) => ({ id, code, options: { snippetMode: false } }));

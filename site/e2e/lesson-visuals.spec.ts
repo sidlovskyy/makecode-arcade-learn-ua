@@ -1,6 +1,7 @@
 import { test as base, expect, type Page } from 'playwright/test';
 import { lessons } from '../src/curriculum';
 import type { ProgressState } from '../src/progress/schema';
+import { readFile } from 'node:fs/promises';
 
 const origin = 'http://127.0.0.1:4173';
 const progressKey = 'kodkvest.progress.v1';
@@ -51,6 +52,118 @@ async function expectPhaseFocus(page: Page, selector: string) {
   const box = await heading.boundingBox();
   expect(box!.y).toBeGreaterThanOrEqual(0);
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+}
+
+for (const [id, stepIndex] of [['lesson-10', 4], ['lesson-11', 5], ['lesson-12', 4]] as const) {
+  test(`C03-006/C03-010/C03-012: ${id} focus matches the regenerated native edit geometry`, async ({ page }) => {
+    const visual = lessons.find((lesson) => lesson.id === id)!.steps[stepIndex].visual;
+    if (visual.kind !== 'blocks') throw new Error('Expected block descriptor');
+    const svg = await readFile(new URL(`../src/assets/lesson-visuals/blocks/${id}-step-0${stepIndex + 1}.svg`, import.meta.url), 'utf8');
+    await page.goto(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+    const geometry = await page.evaluate(({ id, focus }) => {
+      const root = document.querySelector('svg')!;
+      const inverse = root.getScreenCTM()!.inverse();
+      const bounds = (element: Element) => {
+        const rect = element.getBoundingClientRect();
+        const a = new DOMPoint(rect.left, rect.top).matrixTransform(inverse);
+        const b = new DOMPoint(rect.right, rect.bottom).matrixTransform(inverse);
+        return { left: a.x, top: a.y, right: b.x, bottom: b.y };
+      };
+      const box = { left: focus.x * root.viewBox.baseVal.width, top: focus.y * root.viewBox.baseVal.height,
+        right: (focus.x + focus.width) * root.viewBox.baseVal.width, bottom: (focus.y + focus.height) * root.viewBox.baseVal.height };
+      const contains = (element: Element) => {
+        const target = bounds(element);
+        return box.left <= target.left + 1 && box.top <= target.top + 1 && box.right >= target.right - 1 && box.bottom >= target.bottom - 1;
+      };
+      if (id === 'lesson-10') {
+        const wrapper = root.querySelector('g.controls_if > path.blocklyPath')!;
+        const body = bounds(wrapper);
+        return { contains: contains(wrapper), excludesShell: box.top >= body.top - 1 && box.bottom <= body.bottom + 1 };
+      }
+      if (id === 'lesson-11') {
+        const field = [...root.querySelectorAll('text')].find((text) => text.textContent === '500')!;
+        const firstChild = root.querySelector('g.gameinterval g.variables_set > path.blocklyPath')!;
+        return { contains: contains(field), excludesShell: box.bottom < bounds(firstChild).top };
+      }
+      const conditions = root.querySelectorAll('g.controls_if > path.blocklyPath');
+      const playerEvent = root.querySelectorAll('g.spritesoverlap > path.blocklyPath')[1];
+      if (!conditions[1] || !playerEvent) throw new Error(JSON.stringify({ id, conditions: conditions.length, overlaps: root.querySelectorAll('g.spritesoverlap').length, root: root.outerHTML.slice(0, 200) }));
+      return { contains: contains(conditions[1]) && contains(playerEvent), excludesShell: true };
+    }, { id, focus: visual.focus });
+    expect(geometry).toEqual({ contains: true, excludesShell: true });
+  });
+}
+
+for (const id of ['lesson-09', 'lesson-10']) {
+  test(`C03-002: ${id} active step remains fully visible on normal mobile continuation`, async ({ page }) => {
+    test.skip(page.viewportSize()!.width !== 390, 'compact mobile strip');
+    const lesson = lessons.find((lesson) => lesson.id === id)!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 1; i < 6; i++) {
+      await continueStep(page);
+      await expect.poll(() => page.locator('.step-list').evaluate((list) => {
+        const active = list.querySelector('[aria-current="step"]')!.getBoundingClientRect();
+        const bounds = list.getBoundingClientRect();
+        return active.left >= bounds.left - 1 && active.right <= bounds.right + 1;
+      })).toBe(true);
+    }
+  });
+}
+
+test('C03-004/C03-007: lesson 10 transitions preserve focus and quiz controls distinguish native selection', async ({ page }) => {
+  const lesson = lessons.find(({ id }) => id === 'lesson-10')!;
+  await page.goto(`/#/lesson/${lesson.slug}`);
+  for (let i = 0; i < 6; i++) {
+    await continueStep(page);
+    await expectPhaseFocus(page, i === 5 ? '#challenge-title' : '#practical-step-title');
+  }
+  await page.getByRole('button', { name: /Випробування виконано/ }).click();
+  await expectPhaseFocus(page, '#quiz-title');
+  const radios = page.getByRole('radio');
+  await expect(radios).toHaveCount(3);
+  await expect(page.locator('input[type="radio"]:checked')).toHaveCount(0);
+  expect(await radios.first().evaluate((radio) => getComputedStyle(radio).colorScheme)).toBe('light');
+  await page.locator('.quiz-option').first().click();
+  await expect(radios.first()).toBeChecked();
+  await expect(page.locator('input[type="radio"]:checked')).toHaveCount(1);
+  await radios.first().focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(radios.nth(1)).toBeChecked();
+  await expect(page.locator('input[type="radio"]:checked')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+  await page.getByRole('button', { name: /Завершити місію/ }).click();
+  await expectPhaseFocus(page, '#completion-title');
+  await page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button').nth(4).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+  await page.getByRole('button', { name: 'До підсумку місії' }).click();
+  await expectPhaseFocus(page, '#completion-title');
+});
+
+for (const [id, stepIndex] of [['lesson-11', 2], ['lesson-11', 5], ['lesson-12', 1], ['lesson-12', 2], ['lesson-12', 4]] as const) {
+  test(`C03-009: ${id} step ${stepIndex + 1} enlargement reveals the current change and retains manual control`, async ({ page }) => {
+    const lesson = lessons.find((lesson) => lesson.id === id)!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.click();
+    const region = page.locator('.visual-lightbox__scroll');
+    await region.locator('img').evaluate((image: HTMLImageElement) => image.decode());
+    await expect.poll(() => region.evaluate((element) => {
+      const focus = element.querySelector('.visual-focus')!.getBoundingClientRect();
+      const bounds = element.getBoundingClientRect();
+      return Math.min(focus.right, bounds.right) > Math.max(focus.left, bounds.left)
+        && Math.min(focus.bottom, bounds.bottom) > Math.max(focus.top, bounds.top);
+    })).toBe(true);
+    await region.focus();
+    const horizontal = await region.evaluate((element) => ({ before: element.scrollLeft, canPan: element.scrollWidth > element.clientWidth }));
+    if (horizontal.canPan) {
+      await page.keyboard.press(horizontal.before > 0 ? 'ArrowLeft' : 'ArrowRight');
+      await expect.poll(() => region.evaluate((element) => element.scrollLeft)).not.toBe(horizontal.before);
+    }
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
 }
 
 test('C01-004: actual step, Back, review and phase transitions reveal and focus their heading', async ({ page }) => {

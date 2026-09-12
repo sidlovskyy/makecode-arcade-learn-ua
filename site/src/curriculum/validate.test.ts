@@ -11,6 +11,76 @@ import { validateCurriculum } from './validate';
 import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
 import type { LessonVisualAssetRegistry } from '../lesson-visuals/types';
 
+function campaign03Step(id: string): LessonStep {
+  const step = campaign03.lessons.flatMap((lesson) => lesson.steps).find((step) => step.id === id);
+  if (!step) throw new Error(`Missing campaign-03 step: ${id}`);
+  return step;
+}
+
+it.each(['lesson-09', 'lesson-11'])('C03-001/C03-008: %s teaches screen bounds with its movement setup', (id) => {
+  const step = campaign03Step(`${id}-step-01`);
+  expect(step.instruction).toMatch(/stay in screen ON/);
+  expect(step.expected).toMatch(/екран/);
+  expect(step.visual.kind).toBe('blocks');
+  if (step.visual.kind !== 'blocks') throw new Error('Expected native movement model');
+  expect(step.visual.alt).toMatch(/stay in screen ON/);
+  expect(step.visual.explanation).toMatch(/stay in screen ON/);
+});
+
+it('C03-003: lesson 10 explains the score zero that learners must record', () => {
+  const step = campaign03Step('lesson-10-step-01');
+  expect(step.instruction).toMatch(/score.*0/);
+  expect(step.expected).toMatch(/0.*очок|рахунок.*0/);
+});
+
+it('C03-005: lesson 10 requires the modeled splash without an absent sprite receiver', () => {
+  const step = campaign03Step('lesson-10-step-04');
+  expect(step.instruction).toMatch(/splash energy/);
+  expect(step.instruction).not.toMatch(/\bsay\b/);
+});
+
+it('C03-006: the energy wrapper focus excludes the old A event hat and tail', () => {
+  const visual = campaign03Step('lesson-10-step-05').visual;
+  if (visual.kind !== 'blocks') throw new Error('Expected energy block model');
+  expect(visual.focus.y).toBeGreaterThan(0.07);
+  expect(visual.focus.y + visual.focus.height).toBeLessThan(0.98);
+  expect(visual.focus.height).toBeGreaterThan(0.75);
+});
+
+it('C03-010: interval edit focus isolates the header input from the meteor event body', () => {
+  const visual = campaign03Step('lesson-11-step-06').visual;
+  if (visual.kind !== 'blocks') throw new Error('Expected interval block model');
+  expect(visual.focus.height).toBeLessThan(0.1);
+  expect(visual.focus.width).toBeLessThan(0.12);
+});
+
+it('C03-011: lesson 12 explains cleanup of missed enemies without a score or life penalty', () => {
+  const step = campaign03Step('lesson-12-step-03');
+  expect(step.instruction).toMatch(/AutoDestroy ON/);
+  if (step.visual.kind !== 'blocks') throw new Error('Expected wave model');
+  expect(step.visual.explanation).toMatch(/без зміни.*очок.*житт/);
+});
+
+it('C03-012: the final block step constructs victory and defeat before the testing-only guide', () => {
+  const build = campaign03Step('lesson-12-step-05');
+  const verify = campaign03Step('lesson-12-step-06');
+  expect(build.visual.kind).toBe('blocks');
+  expect(build.instruction).toMatch(/score = 12/);
+  expect(build.instruction).toMatch(/WIN/);
+  expect(build.instruction).toMatch(/життя/);
+  expect(verify.visual.kind).toBe('guide');
+  if (verify.visual.kind !== 'guide') throw new Error('Expected final verification guide');
+  expect(verify.visual.items[0]).toMatch(/^Перевір/);
+  expect(verify.visual.items[0]).toMatch(/поряд.*не всередині/);
+  expect([verify.instruction, ...verify.visual.items].join(' ')).not.toMatch(/додай/);
+});
+
+it('C03-013: the wave challenge states that combat continues during visual effects', () => {
+  const prompt = campaign03.lessons.find(({ id }) => id === 'lesson-12')!.challenge.prompt;
+  expect(prompt).toMatch(/Бій триває під час ефекту/);
+  expect(prompt).not.toMatch(/потім продовж|після.*продовж/);
+});
+
 it('describes repeat overlap scoring before lesson 8 adds teleportation', () => {
   const step = campaign02.lessons[3]?.steps[2];
   expect(step).toBeDefined();
