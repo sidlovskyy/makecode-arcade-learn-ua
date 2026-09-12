@@ -78,7 +78,7 @@ export function VisualLightbox({ children, caption, onClose }: { children: React
         <div ref={scrollRef} className="visual-lightbox__scroll" tabIndex={0} role="region" aria-label="Збільшене зображення; прокручуй, щоб розглянути деталі">
           {children}
         </div>
-        <div className="visual-lightbox__caption">{caption}</div>
+        <div className="visual-lightbox__caption" tabIndex={0} role="region" aria-label="Пояснення до зображення">{caption}</div>
       </div>
     </div>, document.body,
   );

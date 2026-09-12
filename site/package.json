@@ -13,6 +13,7 @@
     "check": "npm run typecheck && npm run test && npm run visuals:test && npm run visuals:check && npm run build",
     "visuals:setup": "playwright install chromium",
     "visuals:test": "node --test tools/visuals/*.test.mjs",
+    "visuals:test:online": "node --test tools/visuals/campaign-06.online.mjs",
     "visuals:render": "node tools/render-block-visuals.mjs",
     "visuals:capture": "node tools/capture-editor-scenes.mjs",
     "visuals:registry": "node tools/generate-visual-registry.mjs",

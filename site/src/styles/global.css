@@ -49,7 +49,8 @@
 .visual-image--enlarged img { max-width: none; }
 .visual-image--enlarged.visual-image--blocks { width: max-content; min-width: max(100%, 855px); }
 .visual-image--enlarged.visual-image--blocks img { width: 100%; }
-.visual-lightbox__caption { flex-shrink: 0; min-width: 0; overflow-wrap: anywhere; }
+/* Bound long captions so native diagrams retain space on short viewports. */
+.visual-lightbox__caption { flex-shrink: 0; min-width: 0; max-height: 35dvh; overflow: auto; overscroll-behavior: contain; overflow-wrap: anywhere; }
 .visual-lightbox__caption > :last-child { margin-bottom: 0; }
 @media (max-width: 760px) {
   .visual-comparison { grid-template-columns: minmax(0, 1fr); }

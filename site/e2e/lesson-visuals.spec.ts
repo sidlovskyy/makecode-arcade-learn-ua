@@ -808,7 +808,11 @@ test('keyboard opens and closes the block lightbox and restores focus', async ({
   const close = dialog.getByRole('button', { name: 'Закрити', exact: true });
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('region', { name: 'Пояснення до зображення' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
   await expect(dialog.getByRole('region', { name: /Збільшене зображення/ })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('region', { name: 'Пояснення до зображення' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(close).toBeFocused();
   await expectNoOverflow(page);
