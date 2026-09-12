@@ -109,7 +109,7 @@ export const campaign02: Campaign = {
         title: 'Дві кнопки — два сигнали',
         prompt:
           'Зроби новий проєкт, де A показує слово «Так», B показує «Ні», а on start показує «Обери!» лише один раз.',
-        hint: 'Створи mySprite, а splash «Обери!» помісти в on start. Зроби окремі on A button pressed і on B button pressed, а усередині кожного постав відповідний mySprite say.',
+        hint: 'У on start створи mySprite і додай splash «Обери!». Зроби окремі on A button pressed і on B button pressed, а усередині кожного постав відповідний mySprite say.',
       },
       quiz: {
         question: 'Чим on start відрізняється від on A button pressed?',

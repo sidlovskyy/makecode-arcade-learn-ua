@@ -27,6 +27,8 @@ test('lesson 7 starts without overlap handlers and then reuses rather than destr
 
 test('lesson 7 checks the updated score before WIN', () => {
   const program = programs.get('lesson-07-step-04');
+  assert.match(program, /info\.changeScoreBy\(1\)/);
+  assert.match(program, /if \(info\.score\(\) == 5\)/);
   assert.ok(program.indexOf('info.changeScoreBy(1)') < program.indexOf('if (info.score() == 5)'));
   assert.ok(program.indexOf('if (info.score() == 5)') < program.indexOf('game.over(true)'));
 });

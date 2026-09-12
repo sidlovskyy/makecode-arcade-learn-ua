@@ -24,8 +24,7 @@ it('C02-003: lesson 5 challenge distinguishes button handlers from sprite captio
   expect(lesson).toBeDefined();
   if (!lesson) throw new Error('Expected lesson-05');
   const hint = lesson.challenge.hint ?? '';
-  expect(hint).toMatch(/створи mySprite/i);
-  expect(hint).toMatch(/splash.*on start/i);
+  expect(hint).toMatch(/^У on start створи mySprite і додай splash «Обери!»\./);
   expect(hint).toMatch(/on A button pressed/i);
   expect(hint).toMatch(/on B button pressed/i);
   expect(hint).toMatch(/усередин.*mySprite say/i);

@@ -198,7 +198,7 @@ test('campaign 2 corrected challenge, project boundary and condition guidance re
   await expectNoOverflow(page);
 });
 
-for (const stepIndex of [2, 3]) {
+for (const stepIndex of [2, 3, 4]) {
   test(`C02-007: lesson 8 step ${stepIndex + 1} enlargement initially reveals the active block`, async ({ page }) => {
     test.skip(page.viewportSize()!.width !== 390, 'mobile active-block reveal');
     const lesson = lessons.find(({ id }) => id === 'lesson-08')!;
@@ -214,21 +214,18 @@ for (const stepIndex of [2, 3]) {
       const viewport = element.getBoundingClientRect();
       return {
         leadingEdgeVisible: focus.left >= viewport.left - 3 && focus.left < viewport.right,
-        intersection: Math.max(0, Math.min(focus.right, viewport.right) - Math.max(focus.left, viewport.left)),
+        horizontalVisible: Math.min(focus.right, viewport.right) - Math.max(focus.left, viewport.left) > 0,
+        verticalVisible: Math.min(focus.bottom, viewport.bottom) - Math.max(focus.top, viewport.top) > 0,
       };
-    })).toEqual({ leadingEdgeVisible: true, intersection: expect.any(Number) });
-    expect(await region.evaluate((element) => {
-      const focus = element.querySelector('.visual-focus')!.getBoundingClientRect();
-      const viewport = element.getBoundingClientRect();
-      return Math.max(0, Math.min(focus.right, viewport.right) - Math.max(focus.left, viewport.left));
-    })).toBeGreaterThan(0);
+    })).toEqual({ leadingEdgeVisible: true, horizontalVisible: true, verticalVisible: true });
     const dimensions = await image.evaluate((element: HTMLImageElement) => ({
       renderedWidth: element.getBoundingClientRect().width,
       naturalWidth: element.naturalWidth,
     }));
     expect(dimensions.renderedWidth).toBeGreaterThanOrEqual(dimensions.naturalWidth - 1);
     const focusedScroll = await region.evaluate((element) => element.scrollLeft);
-    expect(focusedScroll).toBeGreaterThan(0);
+    if (stepIndex < 4) expect(focusedScroll).toBeGreaterThan(0);
+    else expect(focusedScroll).toBe(0);
     await region.evaluate((element) => { element.scrollLeft = 0; });
     expect(await region.evaluate((element) => element.scrollLeft)).toBe(0);
     await region.focus();
