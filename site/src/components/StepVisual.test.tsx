@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { campaign02 } from '../curriculum/campaign-02';
 import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
 import type { BlocksStepVisual, EditorStepVisual } from '../lesson-visuals/types';
 import { StepVisual } from './StepVisual';
@@ -27,6 +28,24 @@ describe('StepVisual', () => {
     await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
     expect(within(screen.getByRole('dialog')).getByText(badge)).toBeVisible();
     expect(within(screen.getByRole('dialog')).getByText(visual.focus.label)).toBeVisible();
+  });
+
+  it('C02-002: lesson 5 verification uses a verification action inline and enlarged', async () => {
+    const user = userEvent.setup();
+    const visual = campaign02.lessons.find(({ id }) => id === 'lesson-05')
+      ?.steps.find(({ id }) => id === 'lesson-05-step-06')?.visual;
+    expect(visual).toBeDefined();
+    if (!visual) throw new Error('Expected lesson-05-step-06 visual');
+    const { container } = render(<StepVisual visual={visual} />);
+    const figure = container.querySelector('.visual-figure');
+    expect(figure).not.toBeNull();
+    expect(within(figure as HTMLElement).getByText('Перевір зараз')).toBeVisible();
+    expect(within(figure as HTMLElement).queryByText('Додай зараз')).not.toBeInTheDocument();
+
+    await user.click(within(figure as HTMLElement).getByRole('button', { name: 'Відкрити крупніше' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Перевір зараз')).toBeVisible();
+    expect(within(dialog).queryByText('Додай зараз')).not.toBeInTheDocument();
   });
 
   it('shows committed blocks, text explanation and normalized focus', () => {

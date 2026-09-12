@@ -15,6 +15,7 @@ export interface BlocksStepVisual extends ExplainedVisual {
   assetId: string;
   alt: string;
   focus: NormalizedRect;
+  action?: 'verify';
 }
 
 export interface EditorStepVisual extends ExplainedVisual {

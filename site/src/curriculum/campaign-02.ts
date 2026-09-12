@@ -97,6 +97,7 @@ export const campaign02: Campaign = {
             alt: 'Повна програма має три незалежні стеки: A зі стрибком, B зі зміною тла та on start із роботом.',
             focus: { x: 0, y: 0, width: 1, height: 1, label: 'Перевір усі три окремі секції програми.' },
             explanation: 'Порядок секцій на полотні не задає порядок виконання. On start готує гру, а кожна подія Controller реагує лише на свою кнопку.',
+            action: 'verify',
           },
           title: 'Розклади блоки правильно',
           instruction:
@@ -108,7 +109,7 @@ export const campaign02: Campaign = {
         title: 'Дві кнопки — два сигнали',
         prompt:
           'Зроби новий проєкт, де A показує слово «Так», B показує «Ні», а on start показує «Обери!» лише один раз.',
-        hint: 'Для початкового повідомлення використай splash у on start, а для кнопок — дві події say.',
+        hint: 'Створи mySprite, а splash «Обери!» помісти в on start. Зроби окремі on A button pressed і on B button pressed, а усередині кожного постав відповідний mySprite say.',
       },
       quiz: {
         question: 'Чим on start відрізняється від on A button pressed?',
@@ -261,7 +262,7 @@ export const campaign02: Campaign = {
           },
           title: 'Підготуй арену',
           instruction:
-            'Створи героя Player з керуванням, один кристал Food і одну небезпеку Enemy. Розстав їх у різних кутах.',
+            'Створи новий проєкт «Рахунок, життя, час». Додай героя Player з керуванням, один кристал Food і одну небезпеку Enemy. Розстав їх у різних кутах.',
           expected: 'Герой може дістатися і кристала, і небезпеки.',
         },
         {
@@ -302,7 +303,7 @@ export const campaign02: Campaign = {
             'Після зміни рахунку встав if score = 5, а всередину — game over WIN.',
           expected: 'П’ятий зібраний кристал завершує гру перемогою.',
           hint:
-            'У ліву частину порівняння встав блок score з Info, а в праву введи 5. Умова має лежати після change score by 1.',
+            'У Logic візьми if і порівняння 0 = 0. Встав порівняння в місце умови: score з Info постав ліворуч, 5 праворуч. Блок game over WIN з Game встав усередину if після change score by 1.',
         },
         {
           id: 'lesson-07-step-05',
@@ -360,7 +361,7 @@ export const campaign02: Campaign = {
       slug: 'lovy-zirky',
       order: 8,
       title: 'Лови зірки',
-      summary: 'Збери гру про зірки, які щоразу з’являються в новому місці.',
+      summary: 'Збери гру про зірки, які з’являються у випадкових місцях.',
       durationMinutes: 35,
       difficulty: 'explorer',
       concepts: ['випадкова позиція', 'збирання', 'рахунок', 'час'],
@@ -415,7 +416,7 @@ export const campaign02: Campaign = {
           title: 'Телепортуй ціль',
           instruction:
             'Після зміни рахунку задай otherSprite позицію: x — pick random 8 to 152, y — pick random 8 to 112.',
-          expected: 'Після кожного дотику та сама зірка миттєво з’являється в іншому видимому місці.',
+          expected: 'Після кожного дотику та сама зірка миттєво з’являється у випадковому видимому місці; інколи позиція може повторитися або бути поруч із попередньою.',
           hint:
             'Використай один блок set otherSprite position. Усередину двох полів встав окремі блоки pick random.',
         },

@@ -19,6 +19,66 @@ it('describes repeat overlap scoring before lesson 8 adds teleportation', () => 
   expect(step.expected).toMatch(/подія може повторюватися/);
 });
 
+it('C02-003: lesson 5 challenge distinguishes button handlers from sprite captions', () => {
+  const lesson = campaign02.lessons.find(({ id }) => id === 'lesson-05');
+  expect(lesson).toBeDefined();
+  if (!lesson) throw new Error('Expected lesson-05');
+  const hint = lesson.challenge.hint ?? '';
+  expect(hint).toMatch(/створи mySprite/i);
+  expect(hint).toMatch(/splash.*on start/i);
+  expect(hint).toMatch(/on A button pressed/i);
+  expect(hint).toMatch(/on B button pressed/i);
+  expect(hint).toMatch(/усередин.*mySprite say/i);
+  expect(hint).not.toMatch(/події say/i);
+});
+
+it('C02-005: lesson 7 starts from its named fresh project', () => {
+  const step = campaign02.lessons.find(({ id }) => id === 'lesson-07')
+    ?.steps.find(({ id }) => id === 'lesson-07-step-01');
+  expect(step).toBeDefined();
+  if (!step) throw new Error('Expected lesson-07-step-01');
+  expect(step.instruction)
+    .toMatch(/^Створи новий проєкт «Рахунок, життя, час»\./);
+});
+
+it('C02-006: lesson 7 explains how to assemble the first condition', () => {
+  const step = campaign02.lessons.find(({ id }) => id === 'lesson-07')
+    ?.steps.find(({ id }) => id === 'lesson-07-step-04');
+  expect(step).toBeDefined();
+  if (!step) throw new Error('Expected lesson-07-step-04');
+  const hint = step.hint ?? '';
+  const orderedParts = [
+    'if',
+    '0 = 0',
+    'місце умови',
+    'score з Info',
+    'ліворуч',
+    '5 праворуч',
+    'game over WIN з Game',
+    'усередину if',
+    'після change score by 1',
+  ];
+  let cursor = -1;
+  for (const part of orderedParts) {
+    const next = hint.indexOf(part, cursor + 1);
+    expect(next, `Expected "${part}" after the preceding assembly direction`).toBeGreaterThan(cursor);
+    cursor = next;
+  }
+});
+
+it('C02-008: lesson 8 describes random placement without promising a different position', () => {
+  const lesson = campaign02.lessons.find(({ id }) => id === 'lesson-08');
+  const step = lesson?.steps.find(({ id }) => id === 'lesson-08-step-04');
+  expect(lesson).toBeDefined();
+  expect(step).toBeDefined();
+  if (!lesson || !step) throw new Error('Expected lesson-08 and lesson-08-step-04');
+  const expected = step.expected;
+  expect(lesson.summary).toMatch(/випадков/);
+  expect(expected).toMatch(/випадков/);
+  expect(expected).toMatch(/може повторитися|може бути поруч/);
+  expect(`${lesson.summary} ${expected}`).not.toMatch(/щоразу.*новому місці|іншому.*місці/);
+});
+
 function makeSteps(count = 5, lessonId = 'lesson-01'): LessonStep[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `${lessonId}-step-${index + 1}`,

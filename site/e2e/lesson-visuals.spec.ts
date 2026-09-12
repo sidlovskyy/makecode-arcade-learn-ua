@@ -114,6 +114,132 @@ test('C01-007: six completed mobile steps retain their visible numbers in review
   }
 });
 
+test('C02-001: campaign 2 completed mobile steps retain visible ordinals through review and reload', async ({ page }) => {
+  test.skip(page.viewportSize()!.width !== 390, 'compact mobile strip');
+  const lesson = lessons.find(({ id }) => id === 'lesson-05')!;
+  await page.goto(`/#/lesson/${lesson.slug}`);
+  for (let i = 0; i < lesson.steps.length; i++) await continueStep(page);
+  await page.getByRole('button', { name: /Випробування виконано/ }).click();
+  await page.getByRole('radio', { name: lesson.quiz.options[lesson.quiz.correctIndex] }).check();
+  await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+  await page.getByRole('button', { name: /Завершити місію/ }).click();
+  await expectPhaseFocus(page, '#completion-title');
+
+  const navigator = page.getByRole('navigation', { name: 'Кроки місії' });
+  const buttons = navigator.getByRole('button');
+  for (let i = 0; i < lesson.steps.length; i++) {
+    const button = buttons.nth(i);
+    await expect(button.locator('.step-list__marker')).toHaveText(String(i + 1));
+    expect((await button.locator('.step-list__marker').boundingBox())!.width).toBeGreaterThan(0);
+    expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  }
+
+  await buttons.nth(3).click();
+  await expect(page.getByRole('heading', { level: 2, name: lesson.steps[3].title })).toBeFocused();
+  await page.reload();
+  await expect(page.locator('#completion-title')).toBeVisible();
+  await page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button').nth(1).click();
+  await expect(page.getByRole('heading', { level: 2, name: lesson.steps[1].title })).toBeFocused();
+
+  const lesson6 = lessons.find(({ id }) => id === 'lesson-06')!;
+  await page.goto(`/#/lesson/${lesson6.slug}`);
+  for (let i = 0; i < 3; i++) await continueStep(page);
+  const lesson6Buttons = page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button');
+  for (let i = 0; i < 3; i++) {
+    await expect(lesson6Buttons.nth(i).locator('.step-list__marker')).toHaveText(String(i + 1));
+  }
+  await lesson6Buttons.nth(0).click();
+  await expect(page.getByRole('heading', { level: 2, name: lesson6.steps[0].title })).toBeFocused();
+});
+
+test('C02-004: lesson 6 transitions focus and reveal every new panel', async ({ page }) => {
+  const lesson = lessons.find(({ id }) => id === 'lesson-06')!;
+  await page.goto(`/#/lesson/${lesson.slug}`);
+  for (let i = 0; i < lesson.steps.length; i++) {
+    await page.locator('.lesson-step-actions .button--primary').scrollIntoViewIfNeeded();
+    await continueStep(page);
+    await expectPhaseFocus(page, i === lesson.steps.length - 1 ? '#challenge-title' : '#practical-step-title');
+  }
+  await page.getByRole('button', { name: /Випробування виконано/ }).click();
+  await expectPhaseFocus(page, '#quiz-title');
+  await page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button').nth(2).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+});
+
+test('campaign 2 corrected challenge, project boundary and condition guidance render on mobile', async ({ page }) => {
+  test.skip(page.viewportSize()!.width !== 390, 'mobile content confirmation');
+  const lesson5 = lessons.find(({ id }) => id === 'lesson-05')!;
+  await page.goto(`/#/lesson/${lesson5.slug}`);
+  for (let i = 0; i < lesson5.steps.length; i++) await continueStep(page);
+  await page.getByRole('button', { name: 'Показати підказку' }).click();
+  const challengeHint = page.locator('.challenge-panel .hint-disclosure__content');
+  await expect(challengeHint).toContainText('on A button pressed');
+  await expect(challengeHint).toContainText('on B button pressed');
+  await expect(challengeHint).toContainText('mySprite say');
+  await expectNoOverflow(page);
+
+  const lesson6 = lessons.find(({ id }) => id === 'lesson-06')!;
+  await page.goto(`/#/lesson/${lesson6.slug}`);
+  for (let i = 0; i < lesson6.steps.length; i++) await continueStep(page);
+  await page.getByRole('button', { name: /Випробування виконано/ }).click();
+  await page.getByRole('radio', { name: lesson6.quiz.options[lesson6.quiz.correctIndex] }).check();
+  await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+  await page.getByRole('button', { name: /Завершити місію/ }).click();
+  await page.getByRole('button', { name: /Повернутися до мапи/ }).click();
+  await page.getByRole('link', { name: /Місія 7: Рахунок, життя, час/ }).click();
+  await expect(page.locator('.practical-step__instruction')).toContainText('Створи новий проєкт «Рахунок, життя, час».');
+
+  for (let i = 0; i < 3; i++) await continueStep(page);
+  await page.getByRole('button', { name: 'Показати підказку до кроку' }).click();
+  await expect(page.locator('.hint-disclosure__content')).toContainText('0 = 0');
+  await expect(page.locator('.hint-disclosure__content')).toContainText('game over WIN з Game');
+  await expectNoOverflow(page);
+});
+
+for (const stepIndex of [2, 3]) {
+  test(`C02-007: lesson 8 step ${stepIndex + 1} enlargement initially reveals the active block`, async ({ page }) => {
+    test.skip(page.viewportSize()!.width !== 390, 'mobile active-block reveal');
+    const lesson = lessons.find(({ id }) => id === 'lesson-08')!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.click();
+    const region = page.locator('.visual-lightbox__scroll');
+    const image = region.locator('img');
+    await image.evaluate((element: HTMLImageElement) => element.decode());
+    await expect.poll(() => region.evaluate((element) => {
+      const focus = element.querySelector('.visual-focus')!.getBoundingClientRect();
+      const viewport = element.getBoundingClientRect();
+      return {
+        leadingEdgeVisible: focus.left >= viewport.left - 3 && focus.left < viewport.right,
+        intersection: Math.max(0, Math.min(focus.right, viewport.right) - Math.max(focus.left, viewport.left)),
+      };
+    })).toEqual({ leadingEdgeVisible: true, intersection: expect.any(Number) });
+    expect(await region.evaluate((element) => {
+      const focus = element.querySelector('.visual-focus')!.getBoundingClientRect();
+      const viewport = element.getBoundingClientRect();
+      return Math.max(0, Math.min(focus.right, viewport.right) - Math.max(focus.left, viewport.left));
+    })).toBeGreaterThan(0);
+    const dimensions = await image.evaluate((element: HTMLImageElement) => ({
+      renderedWidth: element.getBoundingClientRect().width,
+      naturalWidth: element.naturalWidth,
+    }));
+    expect(dimensions.renderedWidth).toBeGreaterThanOrEqual(dimensions.naturalWidth - 1);
+    const focusedScroll = await region.evaluate((element) => element.scrollLeft);
+    expect(focusedScroll).toBeGreaterThan(0);
+    await region.evaluate((element) => { element.scrollLeft = 0; });
+    expect(await region.evaluate((element) => element.scrollLeft)).toBe(0);
+    await region.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+}
+
 for (const [lessonIndex, stepIndex] of [[0, 1], [0, 5], [1, 2], [1, 4], [1, 5], [3, 4]]) {
   const lesson = lessons[lessonIndex];
   test(`C01-005: ${lesson.steps[stepIndex].id} enlargement initially reveals the exact target`, async ({ page }, testInfo) => {

@@ -10,9 +10,10 @@ interface VisualFigureProps {
   focus: NormalizedRect;
   explanation?: string;
   eager?: boolean;
+  action?: 'verify';
 }
 
-export function VisualFigure({ assetId, kind, alt, focus, explanation, eager = false }: VisualFigureProps) {
+export function VisualFigure({ assetId, kind, alt, focus, explanation, eager = false, action }: VisualFigureProps) {
   const [failedAsset, setFailedAsset] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const captionId = useId();
@@ -28,7 +29,7 @@ export function VisualFigure({ assetId, kind, alt, focus, explanation, eager = f
           <span className="visual-focus" aria-hidden="true" style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%`, width: `${focus.width * 100}%`, height: `${focus.height * 100}%` }} />
         </div>
       ) : <p className="visual-fallback">{alt}</p>}
-      <p className="visual-callout"><strong>{kind === 'editor' ? 'Зроби зараз' : 'Додай зараз'}</strong><span>{focus.label}</span></p>
+      <p className="visual-callout"><strong>{action === 'verify' ? 'Перевір зараз' : kind === 'editor' ? 'Зроби зараз' : 'Додай зараз'}</strong><span>{focus.label}</span></p>
     </>;
   }
 
