@@ -9,6 +9,7 @@ it.each([
   ['lesson-01-step-05', 'Stop button', 40, 480, 38, 39],
   ['lesson-02-step-03', 'Image Width field', 31, 842, 40, 30],
   ['lesson-02-step-05', 'white color swatch', 69, 328, 29, 30],
+  ['lesson-02-step-06', 'Restart button', 77, 479, 40, 41],
   ['lesson-13-step-03', 'Duplicate Current Frame', 1309, 491, 48, 33],
   ['lesson-14-step-02', 'tilemap width field', 31, 842, 40, 30],
   ['lesson-16-step-01', 'tilemap width field', 31, 842, 40, 30],

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { LessonStep } from '../curriculum/types';
 
 interface StepNavigatorProps {
@@ -13,6 +14,17 @@ export function StepNavigator({
   completedStepIds,
   onSelectStep,
 }: StepNavigatorProps) {
+  const listRef = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const list = listRef.current;
+    const active = list?.querySelector('[aria-current="step"]');
+    if (!list || !active) return;
+    const bounds = list.getBoundingClientRect();
+    const target = active.getBoundingClientRect();
+    if (target.left < bounds.left) list.scrollLeft += target.left - bounds.left;
+    else if (target.right > bounds.left + list.clientWidth) list.scrollLeft += target.right - bounds.left - list.clientWidth;
+  }, [currentIndex]);
+
   return (
     <nav className="step-navigator" aria-label="Кроки місії">
       <div className="step-navigator__heading">
@@ -20,7 +32,7 @@ export function StepNavigator({
         <strong>{completedStepIds.size} із {steps.length}</strong>
       </div>
 
-      <ol className="step-list">
+      <ol className="step-list" ref={listRef}>
         {steps.map((step, index) => {
           const isCurrent = index === currentIndex;
           const isCompleted = completedStepIds.has(step.id);
@@ -43,7 +55,7 @@ export function StepNavigator({
                 onClick={() => onSelectStep(index)}
               >
                 <span className="step-list__marker" aria-hidden="true">
-                  {isCompleted ? '✓' : index + 1}
+                  {index + 1}
                 </span>
                 <span className="step-list__label">{step.title}</span>
               </button>

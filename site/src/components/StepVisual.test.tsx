@@ -19,6 +19,16 @@ const source = 'if score > 0:\n    game.splash("<b>Привіт</b>")\n';
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe('StepVisual', () => {
+  it.each([blocks, editor])('C01-003: $kind uses an appropriate action in the figure and enlargement', async (visual) => {
+    const user = userEvent.setup();
+    render(<StepVisual visual={visual} />);
+    const badge = visual.kind === 'editor' ? 'Зроби зараз' : 'Додай зараз';
+    expect(screen.getByText(badge)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
+    expect(within(screen.getByRole('dialog')).getByText(badge)).toBeVisible();
+    expect(within(screen.getByRole('dialog')).getByText(visual.focus.label)).toBeVisible();
+  });
+
   it('shows committed blocks, text explanation and normalized focus', () => {
     const { container } = render(<StepVisual visual={blocks} eager />);
     expect(screen.getByRole('img', { name: blocks.alt })).toHaveAttribute('src', lessonVisualAssets['blocks:lesson-01-step-04'].src);

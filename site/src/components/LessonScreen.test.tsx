@@ -67,6 +67,27 @@ async function openQuiz(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('LessonScreen', () => {
+  it.each(lessons.slice(0, 4))('C01-001: $id launches the editor home and offers its copied fallback', (activeLesson) => {
+    const { container } = renderLesson({ activeLesson });
+    expect(screen.getByRole('link', { name: /Відкрити MakeCode/ })).toHaveAttribute('href', 'https://arcade.makecode.com/');
+    expect(container.querySelector('.makecode-address span')).toHaveTextContent('https://arcade.makecode.com/');
+    expect(container.querySelector('.makecode-address span')?.textContent).toBe('https://arcade.makecode.com/');
+  });
+
+  it('C01-002: renders the complete initial naming dialog sequence', () => {
+    const { container } = renderLesson();
+    expect(container.querySelector('.practical-step__instruction')).toHaveTextContent(/New Project.*Моя перша гра.*Create/);
+  });
+
+  it('C01-006: shows the corrected reward sentence only after explicit completion', async () => {
+    const user = userEvent.setup();
+    renderLesson({ progress: createProgress({ completedStepIds: lesson.steps.map(({ id }) => id), quizPassed: true }) });
+    const sentence = 'Ти виконав усі кроки, пройшов випробування й правильно відповів на мінітест.';
+    expect(screen.queryByText(sentence)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Завершити місію/ }));
+    expect(screen.getByText(sentence)).toBeVisible();
+  });
+
   beforeEach(() => {
     window.localStorage.clear();
     window.location.hash = '#/';

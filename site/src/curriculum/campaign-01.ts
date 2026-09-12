@@ -25,25 +25,25 @@ export const campaign01: Campaign = {
           id: 'lesson-01-step-01',
           title: 'Відкрий редактор',
           instruction:
-            'Натисни «Відкрити MakeCode», а в новій вкладці обери New Project. Дочекайся, поки з’явиться редактор.',
+            'Натисни «Відкрити MakeCode», а в новій вкладці обери New Project. Введи назву «Моя перша гра» й натисни Create. Дочекайся, поки з’явиться редактор.',
           expected: 'На екрані видно симулятор ліворуч, панель категорій посередині та робочу область праворуч.',
           visual: {
             kind: 'editor', assetId: 'editor:arcade-home',
             alt: 'Головна сторінка MakeCode Arcade: плитка New Project із плюсом у розділі My Projects.',
             focus: { x: 0.043, y: 0.524, width: 0.2, height: 0.22, label: 'Натисни New Project — плитку з великим плюсом.' },
-            explanation: 'Плитка New Project у розділі My Projects створює нову гру. Після введення назви відкриється редактор блоків.',
+            explanation: 'Плитка New Project у розділі My Projects відкриває вікно створення гри. Введи «Моя перша гра» й натисни Create, щоб відкрити редактор блоків.',
           },
         },
         {
           id: 'lesson-01-step-02',
           title: 'Дай проєкту ім’я',
           instruction:
-            'Натисни назву проєкту внизу редактора, введи «Моя перша гра» та підтвердь нову назву.',
+            'Перевір назву проєкту внизу редактора: «Моя перша гра». Якщо вона інша, натисни поле назви, введи «Моя перша гра» та підтвердь нову назву.',
           expected: 'У нижній частині редактора показано назву «Моя перша гра».',
           visual: {
             kind: 'editor', assetId: 'editor:blocks-workspace',
             alt: 'Редактор MakeCode Arcade з полем назви проєкту KodKvest на нижній панелі.',
-            focus: { x: 0.245, y: 0.934, width: 0.137, height: 0.049, label: 'Заміни назву в білому полі внизу на «Моя перша гра».' },
+            focus: { x: 0.245, y: 0.934, width: 0.137, height: 0.049, label: 'Перевір назву в білому полі внизу: «Моя перша гра».' },
             explanation: 'На зразку проєкт названо KodKvest. У твоєму проєкті це саме поле має показувати «Моя перша гра».',
           },
         },
@@ -120,7 +120,7 @@ export const campaign01: Campaign = {
           'Симулятор виконує твою програму просто в редакторі, тому зміни можна одразу побачити й перевірити.',
       },
       xp: 100,
-      makeCodeUrl: 'https://arcade.makecode.com/courses/csintro1/intro/makecode-orientation',
+      makeCodeUrl: 'https://arcade.makecode.com/',
     },
     {
       id: 'lesson-02',
@@ -151,12 +151,12 @@ export const campaign01: Campaign = {
           title: 'Створи гравця',
           instruction:
             'У категорії Sprites перетягни в on start блок set mySprite to sprite … of kind Player.',
-          expected: 'У симуляторі з’явився спрайт, а в робочій області — змінна mySprite типу Player.',
+          expected: 'У on start є блок створення: змінна mySprite зберігає спрайт із kind Player — категорією гравця. Героя ще не видно в симуляторі, бо його зображення прозоре.',
           visual: {
             kind: 'blocks', assetId: 'blocks:lesson-02-step-02',
-            alt: 'Усередині on start блок set mySprite to sprite створює зеленого героя типу Player.',
+            alt: 'Усередині on start блок set mySprite to sprite створює спрайт із прозорим зображенням 16×16 і kind Player.',
             focus: { x: 0.028, y: 0.328, width: 0.972, height: 0.508, label: 'Створи mySprite й залиш kind Player.' },
-            explanation: 'Змінна mySprite зберігає створеного гравця. Зображення тут — приклад; у наступних кроках ти намалюєш власного героя.',
+            explanation: 'Початкове зображення повністю прозоре, тому персонажа ще не видно. У наступних кроках ти намалюєш власного героя, і його пікселі з’являться в симуляторі.',
           },
         },
         {
@@ -231,7 +231,7 @@ export const campaign01: Campaign = {
           'Спрайт — це окремий об’єкт гри: герой, ворог, предмет або снаряд. Він має зображення, позицію та інші властивості.',
       },
       xp: 100,
-      makeCodeUrl: 'https://arcade.makecode.com/reference/sprites/create',
+      makeCodeUrl: 'https://arcade.makecode.com/',
     },
     {
       id: 'lesson-03',
@@ -262,7 +262,7 @@ export const campaign01: Campaign = {
           id: 'lesson-03-step-02',
           title: 'Додай керування',
           instruction:
-            'У Controller візьми блок move mySprite with buttons і постав його після створення героя. Залиш vx 100 та vy 100.',
+            'У Controller візьми блок move mySprite with buttons і постав його після створення героя. Натисни круглий «+» праворуч у блоці, щоб відкрити поля vx і vy. Залиш vx 100 та vy 100.',
           expected: 'Стрілки або клавіші WASD рухають героя в усіх чотирьох напрямках.',
           visual: {
             kind: 'blocks', assetId: 'blocks:lesson-03-step-02',
@@ -343,7 +343,7 @@ export const campaign01: Campaign = {
         explanation: 'В Arcade початок координат угорі ліворуч, тому x зростає вправо, а y — вниз.',
       },
       xp: 125,
-      makeCodeUrl: 'https://arcade.makecode.com/reference/controller/move-sprite',
+      makeCodeUrl: 'https://arcade.makecode.com/',
     },
     {
       id: 'lesson-04',
@@ -457,7 +457,7 @@ export const campaign01: Campaign = {
           'Подія overlap стежить за двома SpriteKind і запускає свій код у момент, коли їхні непрозорі пікселі перекриваються.',
       },
       xp: 150,
-      makeCodeUrl: 'https://arcade.makecode.com/reference/sprites/on-overlap',
+      makeCodeUrl: 'https://arcade.makecode.com/',
     },
   ],
 };

@@ -19,7 +19,7 @@ export function ChallengePanel({
         <p className="eyebrow">Самостійне випробування</p>
         <span className="lesson-stage-badge" aria-hidden="true">◆</span>
       </div>
-      <h2 id="challenge-title">{challenge.title}</h2>
+      <h2 id="challenge-title" tabIndex={-1}>{challenge.title}</h2>
       <p className="challenge-panel__prompt">{challenge.prompt}</p>
 
       {challenge.hint && (

@@ -37,6 +37,7 @@ const flagImage = `img\`
 \``;
 
 const createHero = `let mySprite = sprites.create(${heroImage}, SpriteKind.Player)`;
+const emptyImage = `img\`\n${Array(16).fill('    . . . . . . . . . . . . . . . .').join('\n')}\n\``;
 const controlledHero = `${createHero}\ncontroller.moveSprite(mySprite, 100, 100)`;
 const racer = `${createHero}\ncontroller.moveSprite(mySprite, 90, 90)\nmySprite.setStayInScreen(true)`;
 const start = `${racer}\nmySprite.setPosition(12, 60)`;
@@ -48,7 +49,7 @@ export default [
     code: `scene.setBackgroundColor(7)`,
     options: { snippetMode: false },
   },
-  { id: 'lesson-02-step-02', code: createHero, options: { snippetMode: false } },
+  { id: 'lesson-02-step-02', code: `let mySprite = sprites.create(${emptyImage}, SpriteKind.Player)`, options: { snippetMode: false } },
   { id: 'lesson-03-step-01', code: createHero, options: { snippetMode: false } },
   { id: 'lesson-03-step-02', code: controlledHero, options: { snippetMode: false } },
   // The experiment ends by restoring both speeds to 100.

@@ -28,7 +28,7 @@ export function VisualFigure({ assetId, kind, alt, focus, explanation, eager = f
           <span className="visual-focus" aria-hidden="true" style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%`, width: `${focus.width * 100}%`, height: `${focus.height * 100}%` }} />
         </div>
       ) : <p className="visual-fallback">{alt}</p>}
-      <p className="visual-callout"><strong>Додай зараз</strong><span>{focus.label}</span></p>
+      <p className="visual-callout"><strong>{kind === 'editor' ? 'Зроби зараз' : 'Додай зараз'}</strong><span>{focus.label}</span></p>
     </>;
   }
 

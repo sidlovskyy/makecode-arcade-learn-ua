@@ -39,7 +39,7 @@ export function Quiz({
         <p className="eyebrow">Фінальна перевірка</p>
         <span className="lesson-stage-badge" aria-hidden="true">?</span>
       </div>
-      <h2 id="quiz-title">Мінітест</h2>
+      <h2 id="quiz-title" tabIndex={-1}>Мінітест</h2>
 
       <form onSubmit={handleSubmit}>
         <fieldset disabled={isPassed}>

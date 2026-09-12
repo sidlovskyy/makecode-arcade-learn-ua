@@ -40,6 +40,7 @@
 .visual-lightbox { width: min(100%, 1500px); max-height: 95dvh; min-width: 0; display: flex; flex-direction: column; padding: 1rem; border-radius: var(--radius-md); background: var(--surface); color: var(--text); }
 .visual-lightbox > .visual-toolbar { flex-shrink: 0; }
 .visual-lightbox__scroll { overflow: auto; min-height: 0; padding: 0.4rem; overscroll-behavior: contain; }
+.lesson-workspace h2[tabindex='-1'] { scroll-margin-top: 1rem; }
 .visual-image--enlarged { max-width: none; margin-inline: 0; }
 .visual-image--enlarged img { max-width: none; }
 .visual-image--enlarged.visual-image--blocks { width: max-content; min-width: max(100%, 855px); }
@@ -2271,14 +2272,12 @@ svg {
     gap: 8px;
     padding: 8px 12px 12px;
     overscroll-behavior-inline: contain;
-    scroll-snap-type: inline proximity;
   }
 
   .step-list__item,
   .step-list__item + .step-list__item {
     flex: 0 0 auto;
     border-top: 0;
-    scroll-snap-align: start;
   }
 
   .step-list__item button {

@@ -56,7 +56,7 @@ function PracticalStep({
         <p className="eyebrow">Крок {stepNumber} із {stepCount}</p>
         {isCompleted && <span className="completed-label">✓ Виконано</span>}
       </div>
-      <h2 id="practical-step-title">{step.title}</h2>
+      <h2 id="practical-step-title" tabIndex={-1}>{step.title}</h2>
 
       {isReviewMode && onReturnToSummary && (
         <aside className="review-mode-notice" aria-label="Перегляд завершеної місії">
@@ -176,6 +176,19 @@ export function LessonScreen({
   const currentStep = lesson.steps[currentStepIndex]!;
   const hasCompletedLesson = Boolean(lessonProgress?.completed) || completionRequested;
   const showCompletionSummary = hasCompletedLesson && !isReviewingCompletedLesson;
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const displayedPhase = showCompletionSummary ? 'completion' : phase === 'steps' ? currentStep.id : phase;
+  const previousPhaseRef = useRef(displayedPhase);
+
+  useEffect(() => {
+    if (previousPhaseRef.current === displayedPhase) return;
+    previousPhaseRef.current = displayedPhase;
+    const heading = workspaceRef.current?.querySelector('h2');
+    heading?.focus({ preventScroll: true });
+    // An immediate reveal also respects reduced motion and does not compete
+    // with the navigator's independent horizontal scrolling.
+    heading?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
+  }, [displayedPhase]);
 
   function handleSelectStep(index: number) {
     const selectedStep = lesson.steps[index];
@@ -303,14 +316,14 @@ export function LessonScreen({
             </p>
           </aside>
 
-          <div className="lesson-workspace">
+          <div className="lesson-workspace" ref={workspaceRef}>
             {showCompletionSummary ? (
               <section className="lesson-card-surface completion-panel" aria-labelledby="completion-title">
                 <span className="completion-panel__burst" aria-hidden="true">✦</span>
                 <p className="eyebrow">Місію завершено</p>
-                <h2 id="completion-title">Супер! Нова навичка твоя.</h2>
+                <h2 id="completion-title" tabIndex={-1}>Супер! Нова навичка твоя.</h2>
                 <p>
-                  Ти виконав усі кроки, пройш випробування й правильно відповів на мінітест.
+                  Ти виконав усі кроки, пройшов випробування й правильно відповів на мінітест.
                 </p>
                 <strong className="completion-panel__xp">+{lesson.xp} XP</strong>
                 <button className="button button--primary" type="button" onClick={onHome}>

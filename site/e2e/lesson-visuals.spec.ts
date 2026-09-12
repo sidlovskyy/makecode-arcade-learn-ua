@@ -45,6 +45,109 @@ async function continueStep(page: Page) {
   await page.locator('.lesson-step-actions .button--primary').click();
 }
 
+async function expectPhaseFocus(page: Page, selector: string) {
+  const heading = page.locator(selector);
+  await expect(heading).toBeFocused();
+  const box = await heading.boundingBox();
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+}
+
+test('C01-004: actual step, Back, review and phase transitions reveal and focus their heading', async ({ page }) => {
+  await page.goto('/#/lesson/znaiomstvo-z-arcade');
+  await page.locator('.lesson-step-actions .button--primary').focus();
+  await page.keyboard.press('Enter');
+  await expectPhaseFocus(page, '#practical-step-title');
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+  for (let i = 0; i < 6; i++) {
+    await continueStep(page);
+    await expectPhaseFocus(page, i === 5 ? '#challenge-title' : '#practical-step-title');
+    if (i === 2) {
+      const hint = page.getByRole('button', { name: 'Показати підказку до кроку' });
+      await hint.click();
+      await expect(page.getByRole('button', { name: 'Сховати підказку до кроку' })).toBeFocused();
+    }
+  }
+  await page.getByRole('button', { name: /Випробування виконано/ }).click();
+  await expectPhaseFocus(page, '#quiz-title');
+  const quiz = lessons[0].quiz;
+  await page.getByRole('radio', { name: quiz.options[quiz.correctIndex] }).check();
+  await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+  await page.getByRole('button', { name: /Завершити місію/ }).click();
+  await expectPhaseFocus(page, '#completion-title');
+  await page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button').nth(1).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+  await page.getByRole('button', { name: 'Наступний крок' }).click();
+  await expectPhaseFocus(page, '#practical-step-title');
+  await page.getByRole('button', { name: 'До підсумку місії' }).click();
+  await expectPhaseFocus(page, '#completion-title');
+});
+
+for (const lesson of lessons.slice(0, 4).filter(({ order }) => order === 2 || order === 4)) {
+  test(`C01-012: ${lesson.id} active label remains within the compact strip after Continue and Back`, async ({ page }) => {
+    test.skip(page.viewportSize()!.width !== 390, 'compact mobile strip');
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    async function expectActiveVisible() {
+      await expect.poll(() => page.locator('.step-list').evaluate(list => {
+        const active = list.querySelector('[aria-current="step"]')!.getBoundingClientRect();
+        const rect = list.getBoundingClientRect();
+        return active.left >= rect.left - 1 && active.right <= rect.right + 1;
+      })).toBe(true);
+      await expectNoOverflow(page);
+    }
+    for (let i = 1; i < 6; i++) { await continueStep(page); await expectActiveVisible(); }
+    for (let i = 5; i > 0; i--) { await page.getByRole('button', { name: 'Назад', exact: true }).click(); await expectActiveVisible(); }
+  });
+}
+
+test('C01-007: six completed mobile steps retain their visible numbers in review', async ({ page }) => {
+  test.skip(page.viewportSize()!.width !== 390, 'compact mobile strip');
+  await page.goto('/#/lesson/mii-pershyi-sprait');
+  for (let i = 0; i < 6; i++) await continueStep(page);
+  await page.getByRole('navigation', { name: 'Кроки місії' }).getByRole('button').nth(3).click();
+  const buttons = page.locator('.step-list button');
+  for (let i = 0; i < 6; i++) {
+    await expect(buttons.nth(i)).toHaveAccessibleName(/Виконано/);
+    await expect(buttons.nth(i).locator('.step-list__marker')).toHaveText(String(i + 1));
+    await expect(buttons.nth(i).locator('.step-list__marker')).toBeVisible();
+  }
+});
+
+for (const [lessonIndex, stepIndex] of [[0, 1], [0, 5], [1, 2], [1, 4], [1, 5], [3, 4]]) {
+  const lesson = lessons[lessonIndex];
+  test(`C01-005: ${lesson.steps[stepIndex].id} enlargement initially reveals the exact target`, async ({ page }, testInfo) => {
+    test.skip(page.viewportSize()!.width === 1440, 'mobile/editor and mobile/tablet blocks');
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < stepIndex; i++) await continueStep(page);
+    const opener = page.getByRole('button', { name: 'Відкрити крупніше' });
+    expect((await opener.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(page.locator('.visual-callout span')).toBeVisible();
+    await opener.click();
+    const region = page.locator('.visual-lightbox__scroll');
+    await region.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+    await expect.poll(() => region.evaluate(region => {
+      const target = region.querySelector('.visual-focus')!.getBoundingClientRect();
+      const rect = region.getBoundingClientRect();
+      const width = Math.max(0, Math.min(target.right, rect.left + region.clientWidth) - Math.max(target.left, rect.left));
+      const height = Math.max(0, Math.min(target.bottom, rect.top + region.clientHeight) - Math.max(target.top, rect.top));
+      return width >= Math.min(target.width, region.clientWidth) - 3 && height >= Math.min(target.height, region.clientHeight) - 3;
+    })).toBe(true);
+    await region.screenshot({ path: testInfo.outputPath(`${lesson.steps[stepIndex].id}-focused-lightbox.png`) });
+    if (lessonIndex === 3) expect(await region.evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+    if (lessonIndex === 0 || (lessonIndex === 1 && stepIndex === 2)) expect(await region.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    await region.focus();
+    const before = await region.evaluate(el => ({ x: el.scrollLeft, y: el.scrollTop }));
+    await page.keyboard.press(before.x > 0 ? 'ArrowLeft' : 'ArrowRight');
+    await expect.poll(() => region.evaluate(el => el.scrollLeft)).not.toBe(before.x);
+    await expectNoOverflow(page);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(opener).toBeFocused();
+    await expectNoOverflow(page);
+  });
+}
+
 for (const lesson of lessons) {
   test(`${lesson.id}: every step renders its content and visual without clipping`, async ({ page }, testInfo) => {
     await page.goto(`/#/lesson/${lesson.slug}`);
