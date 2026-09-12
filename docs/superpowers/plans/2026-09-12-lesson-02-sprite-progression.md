@@ -16,7 +16,7 @@
 - Modify: `site/tools/visuals/editor-scenes.test.mjs`
 - Modify: `site/src/curriculum/campaign-01.test.ts`
 
-- [ ] **Step 1: Add a failing capture-definition test**
+- [x] **Step 1: Add a failing capture-definition test**
 
 Assert that the sprite scene is an atlas and that its deterministic pixel programs progress without replacing the silhouette:
 
@@ -43,7 +43,7 @@ test('committed lesson 02 sprite atlas contains four full viewport panels', asyn
 });
 ```
 
-- [ ] **Step 2: Add a failing curriculum test**
+- [x] **Step 2: Add a failing curriculum test**
 
 ```ts
 it('shows the real sprite progression from blank editor to running hero', () => {
@@ -59,7 +59,7 @@ it('shows the real sprite progression from blank editor to running hero', () => 
 });
 ```
 
-- [ ] **Step 3: Run the focused tests and verify RED**
+- [x] **Step 3: Run the focused tests and verify RED**
 
 Run:
 
@@ -77,7 +77,7 @@ Expected: failures because the exports, sprite atlas panels, and panel mappings 
 - Modify: `site/src/assets/lesson-visuals/editor/sprite-image-editor.webp`
 - Modify: `site/src/lesson-visuals/generated-assets.ts`
 
-- [ ] **Step 1: Define the stable 16×16 hero**
+- [x] **Step 1: Define the stable 16×16 hero**
 
 Export two 16-row arrays. `heroSilhouette` uses `8` for a blue padded robot shape; `heroDetailed` copies it and replaces only interior pixels with white `1` eyes and a yellow `5` chest emblem. Every row is exactly 16 characters and `.` remains transparent.
 
@@ -95,7 +95,7 @@ export const heroDetailed = heroSilhouette.map((row, y) => [...row].map((pixel, 
 }).join(''));
 ```
 
-- [ ] **Step 2: Add deterministic native editor painters**
+- [x] **Step 2: Add deterministic native editor painters**
 
 Implement `paintImage(page, rows)` using `canvas.paint-surface.main` bounds, the official `Color N (...)` buttons, and center clicks in the 16×16 grid. Validate the dimensions and each row before painting. Add `silhouetteEditor` and `detailedEditor` preparations that call `assetEditor(page, 'Image')` and paint the matching rows.
 
@@ -123,7 +123,7 @@ async function silhouetteEditor(page) { await assetEditor(page, 'Image'); await 
 async function detailedEditor(page) { await assetEditor(page, 'Image'); await paintImage(page, heroDetailed); }
 ```
 
-- [ ] **Step 3: Add a completed simulator preparation**
+- [x] **Step 3: Add a completed simulator preparation**
 
 Create a clean project, switch to the official JavaScript editor only as capture plumbing, insert a block-convertible `sprites.create(img\`...\`, SpriteKind.Player)` program generated from `heroDetailed`, convert back to Blocks, restart, and wait for the simulator and workspace loading overlays to settle. The learner-facing curriculum remains blocks/Python.
 
@@ -143,15 +143,15 @@ async function completedHeroWorkspace(page) {
 }
 ```
 
-- [ ] **Step 4: Turn the sprite capture into an atlas**
+- [x] **Step 4: Turn the sprite capture into an atlas**
 
 Keep the existing blank panel with `preserveFirstPanel: true`, then capture `[silhouetteEditor, detailedEditor, completedHeroWorkspace]` and declare panel names `['blank', 'silhouette', 'detailed', 'simulator']` through the same scene-option mechanism used by the tilemap atlas.
 
-- [ ] **Step 5: Run focused source tests before capture**
+- [x] **Step 5: Run focused source tests before capture**
 
 Run the two Task 1 commands. Expected: the capture-definition and pixel-progression assertions pass; the committed bitmap test remains RED with height 900 until Step 6 publishes the atlas.
 
-- [ ] **Step 6: Capture only the sprite scene atomically**
+- [x] **Step 6: Capture only the sprite scene atomically**
 
 Run:
 
@@ -172,11 +172,11 @@ NODE
 
 Expected output: `sprite-image-editor.webp` is 1440×3600 and the registry records `panelCount: 4`; the other five WebPs remain byte-identical.
 
-- [ ] **Step 7: Inspect all four panels visually**
+- [x] **Step 7: Inspect all four panels visually**
 
 Extract temporary panel PNGs with Sharp or use the image viewer. Confirm official UI chrome, blank panel, identical blue silhouette base, visible white/yellow details, and the completed hero near the simulator center.
 
-- [ ] **Step 8: Re-run the Task 1 tests and verify GREEN**
+- [x] **Step 8: Re-run the Task 1 tests and verify GREEN**
 
 Run both focused commands again. Expected: every test passes, including the committed 1440×3600 bitmap assertion.
 
@@ -186,11 +186,11 @@ Run both focused commands again. Expected: every test passes, including the comm
 - Modify: `site/src/curriculum/campaign-01.ts`
 - Modify: `site/e2e/lesson-visuals.spec.ts`
 
-- [ ] **Step 1: Update the four descriptors**
+- [x] **Step 1: Update the four descriptors**
 
 Set steps 03–06 to `sourcePanel` 0–3. Keep step 03's blank wording. Describe the visible blue silhouette in step 04, the white eyes/yellow emblem in step 05, and the completed hero in the simulator in step 06. Point each normalized focus rectangle at the relevant canvas or simulator region.
 
-- [ ] **Step 2: Add an E2E progression regression**
+- [x] **Step 2: Add an E2E progression regression**
 
 Open lesson 02, advance through steps 03–06, decode each editor image, and assert its inline `top` value is `0%`, `-100%`, `-200%`, and `-300%`. For every panel, open the lightbox and assert the same crop, truthful alt text, visible focus, focus restoration, and no page overflow.
 
@@ -219,7 +219,7 @@ test('lesson 02 sprite progression shows four truthful MakeCode states', async (
 });
 ```
 
-- [ ] **Step 3: Run focused verification**
+- [x] **Step 3: Run focused verification**
 
 Run:
 
@@ -232,7 +232,7 @@ npm run visuals:check
 
 Expected: all pass; visual audit reports 93 SVGs plus six editor WebPs.
 
-- [ ] **Step 4: Run full verification**
+- [x] **Step 4: Run full verification**
 
 Run:
 
@@ -245,7 +245,7 @@ git diff --check
 
 Expected: typecheck, 255+ application tests, 243+ local authoring tests, production build, all applicable E2E tests, dependency audit, and whitespace validation pass.
 
-- [ ] **Step 5: Commit the implementation**
+- [x] **Step 5: Commit the implementation**
 
 Stage only the capture source/tests, curriculum/tests, E2E regression, generated registry, and the changed sprite WebP. Commit as:
 

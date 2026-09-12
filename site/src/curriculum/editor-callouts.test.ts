@@ -8,12 +8,12 @@ it.each([
   ['lesson-01-step-03', 'Sprites category', 352, 104, 201, 41],
   ['lesson-01-step-05', 'Stop button', 40, 480, 38, 39],
   ['lesson-02-step-03', 'Image Width field', 31, 842, 40, 30],
-  ['lesson-02-step-05', 'white color swatch', 69, 328, 29, 30],
-  ['lesson-02-step-06', 'Restart button', 77, 479, 40, 41],
+  ['lesson-02-step-05', 'finished hero detail area', 604, 269, 318, 344],
+  ['lesson-02-step-06', 'running hero in the simulator', 150, 175, 60, 66],
   ['lesson-13-step-03', 'Duplicate Current Frame', 1309, 491, 48, 33],
   ['lesson-14-step-02', 'tilemap width field', 31, 842, 40, 30],
   ['lesson-24-step-06', 'Python Save control in logical panel 2', 551, 841, 44, 44],
-] as const)('%s highlights only the %s control', (id, _control, x, y, width, height) => {
+] as const)('%s matches the captured %s target', (id, _target, x, y, width, height) => {
   const visual = lessons.flatMap((lesson) => lesson.steps).find((step) => step.id === id)!.visual;
   expect(visual.kind).toBe('editor');
   if (visual.kind !== 'editor') throw new Error('Expected an editor visual');

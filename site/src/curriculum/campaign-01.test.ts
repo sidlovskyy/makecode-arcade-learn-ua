@@ -18,4 +18,15 @@ describe('campaign 01 accepted learning corrections', () => {
   it('C01-011: teaches the round plus before the visible velocity fields', () => {
     expect(campaign01.lessons[2]!.steps[1]!.instruction).toMatch(/кругл.*\+.*праворуч.*vx.*vy.*100/);
   });
+  it('shows the real sprite progression from blank editor to running hero', () => {
+    const steps = campaign01.lessons[1]!.steps;
+    expect(steps.slice(2, 6).map((step) => step.visual)).toMatchObject([
+      { kind: 'editor', assetId: 'editor:sprite-image-editor', sourcePanel: 0, alt: expect.stringMatching(/порожн/) },
+      { kind: 'editor', assetId: 'editor:sprite-image-editor', sourcePanel: 1, alt: expect.stringMatching(/силует/) },
+      { kind: 'editor', assetId: 'editor:sprite-image-editor', sourcePanel: 2, alt: expect.stringMatching(/геро.*детал/) },
+      { kind: 'editor', assetId: 'editor:sprite-image-editor', sourcePanel: 3, alt: expect.stringMatching(/симулятор/) },
+    ]);
+    expect(JSON.stringify(steps[4]!.visual)).not.toMatch(/зразок показує палітру|не готового героя/);
+    expect(JSON.stringify(steps[5]!.visual)).not.toMatch(/проєкт порожній/);
+  });
 });

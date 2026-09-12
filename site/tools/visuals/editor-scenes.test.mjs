@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { editorScenes, waitForExtensionCards } from './editor-scenes.mjs';
+import * as editorSceneModule from './editor-scenes.mjs';
 import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
 import { captureEditorScenes } from '../capture-editor-scenes.mjs';
+
+const { editorScenes, waitForExtensionCards } = editorSceneModule;
 
 test('capture inventory covers exactly the six reusable editor surfaces', () => {
   assert.deepEqual(editorScenes.map(({ id }) => id).sort(), [
@@ -28,6 +31,41 @@ test('C06-007/C06-010: the tilemap atlas captures wide creation and a Python Sav
   assert.equal(atlas.preserveFirstPanel, true);
   assert.equal(atlas.panels.length, 2);
   assert.deepEqual(atlas.panelNames, ['starter-map', 'wide-map', 'python-save']);
+});
+
+test('lesson 02 captures blank, silhouette, detailed hero, and simulator panels', () => {
+  const { heroDetailed, heroSilhouette } = editorSceneModule;
+  assert.ok(Array.isArray(heroSilhouette), 'heroSilhouette must be exported');
+  assert.ok(Array.isArray(heroDetailed), 'heroDetailed must be exported');
+  const atlas = editorScenes.find(scene => scene.id === 'editor:sprite-image-editor');
+  assert.equal(atlas.preserveFirstPanel, true);
+  assert.equal(atlas.panels.length, 3);
+  assert.deepEqual(atlas.panelNames, ['blank', 'silhouette', 'detailed', 'simulator']);
+  assert.equal(heroSilhouette.length, 16);
+  assert.equal(heroDetailed.length, 16);
+  assert.ok(heroSilhouette.every((row, y) => [...row].every((pixel, x) =>
+    pixel === '.' ? heroDetailed[y][x] === '.' : heroDetailed[y][x] !== '.')));
+  assert.deepEqual(new Set(heroSilhouette.join('')), new Set(['.', '8']));
+  assert.deepEqual(new Set(heroDetailed.join('')), new Set(['.', '1', '5', '8']));
+});
+
+test('committed lesson 02 sprite atlas contains four full viewport panels', async () => {
+  const asset = fileURLToPath(new URL('../../src/assets/lesson-visuals/editor/sprite-image-editor.webp', import.meta.url));
+  const metadata = await sharp(asset).metadata();
+  assert.equal(metadata.width, 1440);
+  assert.equal(metadata.height, 3600);
+  const simulator = await sharp(asset)
+    .extract({ left: 15, top: 2785, width: 315, height: 230 })
+    .raw().toBuffer();
+  const count = (red, green, blue) => {
+    let pixels = 0;
+    for (let index = 0; index < simulator.length; index += 3) {
+      if (simulator[index] === red && simulator[index + 1] === green && simulator[index + 2] === blue) pixels++;
+    }
+    return pixels;
+  };
+  assert.ok(count(0, 63, 173) > 100, 'running simulator must show the blue hero');
+  assert.ok(count(255, 246, 9) > 25, 'running simulator must show the yellow emblem');
 });
 
 const fixture = (name, prepare = async (page) => {

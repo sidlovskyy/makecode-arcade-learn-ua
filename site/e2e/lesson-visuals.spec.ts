@@ -128,6 +128,33 @@ for (const stepIndex of [1, 5]) {
   });
 }
 
+test('lesson 02 sprite progression shows four truthful MakeCode states', async ({ page }) => {
+  const lesson = lessons.find(({ id }) => id === 'lesson-02')!;
+  await page.goto(`/#/lesson/${lesson.slug}`);
+  for (let index = 0; index < lesson.steps.length; index++) {
+    if (index > 0) await continueStep(page);
+    if (index < 2) continue;
+    const visual = lesson.steps[index].visual;
+    if (visual.kind !== 'editor') throw new Error('Expected editor progression');
+    const figure = page.locator('.visual-figure');
+    const image = figure.getByRole('img', { name: visual.alt });
+    await image.evaluate((element: HTMLImageElement) => element.decode());
+    await expect.poll(() => image.evaluate(element => element.style.top))
+      .toBe(`${-100 * (visual.sourcePanel ?? 0)}%`);
+    const opener = figure.getByRole('button', { name: 'Відкрити крупніше' });
+    await opener.click();
+    const dialog = page.getByRole('dialog');
+    const enlarged = dialog.getByRole('img', { name: visual.alt });
+    await enlarged.evaluate((element: HTMLImageElement) => element.decode());
+    expect(await enlarged.evaluate(element => element.style.top))
+      .toBe(`${-100 * (visual.sourcePanel ?? 0)}%`);
+    await expect(dialog.locator('.visual-focus')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(opener).toBeFocused();
+    await expectNoOverflow(page);
+  }
+});
+
 for (const id of ['lesson-21', 'lesson-22', 'lesson-23', 'lesson-24']) {
   test(`C06-001/C06-005/C06-009: ${id} keyboard progression and reloaded review retain focus and visible identity`, async ({ page }) => {
     const lesson = lessons.find(lesson => lesson.id === id)!;

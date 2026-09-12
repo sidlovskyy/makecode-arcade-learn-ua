@@ -3,6 +3,35 @@ import { starterMap } from './catalog/campaign-04.mjs';
 const url = 'https://arcade.makecode.com/?lang=en';
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 
+export const heroSilhouette = [
+  '................',
+  '.....888888.....',
+  '....88888888....',
+  '...8888888888...',
+  '...8888888888...',
+  '..888888888888..',
+  '..888888888888..',
+  '..888888888888..',
+  '...8888888888...',
+  '...8888888888...',
+  '...8888888888...',
+  '....88888888....',
+  '...888....888...',
+  '...888....888...',
+  '...888....888...',
+  '................',
+];
+
+const heroDetails = new Map([
+  ['5,4', '1'], ['6,4', '1'], ['9,4', '1'], ['10,4', '1'],
+  ['7,8', '5'], ['8,8', '5'],
+  ['6,9', '5'], ['7,9', '5'], ['8,9', '5'], ['9,9', '5'],
+  ['7,10', '5'], ['8,10', '5'],
+]);
+
+export const heroDetailed = heroSilhouette.map((row, y) => [...row]
+  .map((pixel, x) => heroDetails.get(`${x},${y}`) ?? pixel).join(''));
+
 export async function waitForExtensionCards(page) {
   // Third-party cards resolve after the official tiles. Their placeholders
   // have no accessible role; wait only for spinners inside the viewport.
@@ -45,6 +74,66 @@ async function assetEditor(page, type) {
   await page.getByRole('textbox', { name: 'Image Height', exact: true }).waitFor();
   // The editing canvas has no accessible role/name in the current MakeCode UI.
   await page.locator('canvas.paint-surface.main').waitFor();
+}
+
+async function paintImage(page, rows) {
+  if (rows.length !== 16 || rows.some(row => row.length !== 16 || /[^.0-9]/.test(row))) {
+    throw new Error('sprite rows must be a 16×16 palette-index image');
+  }
+  const canvas = page.locator('canvas.paint-surface.main');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('missing sprite canvas');
+  let selected;
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const color = rows[y][x];
+      if (color === '.') continue;
+      if (selected !== color) {
+        await page.getByRole('button', { name: new RegExp(`^Color ${color} \\(`) }).click();
+        selected = color;
+      }
+      await page.mouse.click(
+        box.x + box.width * (x + 0.5) / 16,
+        box.y + box.height * (y + 0.5) / 16,
+      );
+    }
+  }
+}
+
+async function silhouetteEditor(page) {
+  await assetEditor(page, 'Image');
+  await paintImage(page, heroSilhouette);
+}
+
+async function detailedEditor(page) {
+  await assetEditor(page, 'Image');
+  await paintImage(page, heroDetailed);
+}
+
+const arcadeImage = rows => rows.map(row => [...row].join(' ')).join('\n');
+
+async function completedHeroWorkspace(page) {
+  await project(page);
+  await button(page, 'Convert code to JavaScript').click();
+  const editor = page.locator('.monaco-editor textarea');
+  await editor.focus();
+  await page.keyboard.press('ControlOrMeta+KeyA');
+  await page.keyboard.insertText(`let mySprite = sprites.create(img\`\n${arcadeImage(heroDetailed)}\n\`, SpriteKind.Player)`);
+  const convert = button(page, 'Convert code to Blocks');
+  const workspace = page.getByRole('region', { name: 'Blocks workspace.', exact: true });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await convert.click();
+    try {
+      await workspace.waitFor({ timeout: 5_000 });
+      break;
+    } catch (error) {
+      if (attempt === 2) throw error;
+    }
+  }
+  const start = button(page, 'Start the simulator');
+  if (await start.isVisible()) await start.click();
+  else await button(page, 'Restart the simulator').click();
+  await button(page, 'Stop the simulator').waitFor();
 }
 
 export async function pythonProject(page) {
@@ -153,7 +242,11 @@ export const editorScenes = definitions.map(([name, prepare]) => ({
   viewport: { width: 1440, height: 900 },
   outputName: `${name}.webp`,
   prepare,
-  ...(name === 'tilemap-editor' ? {
+  ...(name === 'sprite-image-editor' ? {
+    preserveFirstPanel: true,
+    panelNames: ['blank', 'silhouette', 'detailed', 'simulator'],
+    panels: [silhouetteEditor, detailedEditor, completedHeroWorkspace],
+  } : name === 'tilemap-editor' ? {
     preserveFirstPanel: true,
     panelNames: ['starter-map', 'wide-map', 'python-save'],
     panels: [wideMap, pythonSave],

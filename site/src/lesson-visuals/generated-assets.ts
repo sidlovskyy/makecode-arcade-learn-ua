@@ -197,7 +197,7 @@ export const lessonVisualAssets = {
   'editor:animation-frames': { kind: 'editor', src: asset94 },
   'editor:arcade-home': { kind: 'editor', src: asset95 },
   'editor:blocks-workspace': { kind: 'editor', src: asset96 },
-  'editor:sprite-image-editor': { kind: 'editor', src: asset97 },
+  'editor:sprite-image-editor': { kind: 'editor', src: asset97, panelCount: 4 },
   'editor:tilemap-editor': { kind: 'editor', src: asset98, panelCount: 3 },
 } as const;
 
