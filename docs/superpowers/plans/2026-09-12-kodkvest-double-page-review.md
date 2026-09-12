@@ -32,30 +32,30 @@
 | Page key | Route | Primary source | Learning report | Visual report |
 |---|---|---|---|---|
 | `home` | `#/` | `site/src/app/App.tsx`, `site/src/components/CourseMap.tsx` | `reports/home-learning.md` | `reports/home-visual.md` |
-| `lesson-01` | `#/urok/znaiomstvo-z-arcade` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-01-learning.md` | `reports/lesson-01-visual.md` |
-| `lesson-02` | `#/urok/mii-pershyi-sprait` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-02-learning.md` | `reports/lesson-02-visual.md` |
-| `lesson-03` | `#/urok/heroi-pid-kontrolem` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-03-learning.md` | `reports/lesson-03-visual.md` |
-| `lesson-04` | `#/urok/pikselni-perehony` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-04-learning.md` | `reports/lesson-04-visual.md` |
-| `lesson-05` | `#/urok/knopky-i-podii` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-05-learning.md` | `reports/lesson-05-visual.md` |
-| `lesson-06` | `#/urok/koly-spraity-zustrichaiutsia` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-06-learning.md` | `reports/lesson-06-visual.md` |
-| `lesson-07` | `#/urok/rakhunok-zhyttia-chas` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-07-learning.md` | `reports/lesson-07-visual.md` |
-| `lesson-08` | `#/urok/lovy-zirky` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-08-learning.md` | `reports/lesson-08-visual.md` |
-| `lesson-09` | `#/urok/snariady-i-nebezpeky` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-09-learning.md` | `reports/lesson-09-visual.md` |
-| `lesson-10` | `#/urok/rishennia-hry` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-10-learning.md` | `reports/lesson-10-visual.md` |
-| `lesson-11` | `#/urok/hra-ne-zupyniaietsia` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-11-learning.md` | `reports/lesson-11-visual.md` |
-| `lesson-12` | `#/urok/kosmichnyi-zakhysnyk` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-12-learning.md` | `reports/lesson-12-visual.md` |
-| `lesson-13` | `#/urok/zhyvi-personazhi` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-13-learning.md` | `reports/lesson-13-visual.md` |
-| `lesson-14` | `#/urok/buduiemo-kartu` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-14-learning.md` | `reports/lesson-14-visual.md` |
-| `lesson-15` | `#/urok/meshkantsi-svitu` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-15-learning.md` | `reports/lesson-15-visual.md` |
-| `lesson-16` | `#/urok/zahublenyi-krystal` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-16-learning.md` | `reports/lesson-16-visual.md` |
-| `lesson-17` | `#/urok/rivni-ta-skladnist` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-17-learning.md` | `reports/lesson-17-visual.md` |
-| `lesson-18` | `#/urok/rozumni-suprotyvnyky` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-18-learning.md` | `reports/lesson-18-visual.md` |
-| `lesson-19` | `#/urok/vid-prototypu-do-hry` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-19-learning.md` | `reports/lesson-19-visual.md` |
-| `lesson-20` | `#/urok/arena-bosiv` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-20-learning.md` | `reports/lesson-20-visual.md` |
-| `lesson-21` | `#/urok/vid-blokiv-do-python` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-21-learning.md` | `reports/lesson-21-visual.md` |
-| `lesson-22` | `#/urok/python-u-hri` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-22-learning.md` | `reports/lesson-22-visual.md` |
-| `lesson-23` | `#/urok/hrafika-maistra` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-23-learning.md` | `reports/lesson-23-visual.md` |
-| `lesson-24` | `#/urok/moia-vlasna-hra` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-24-learning.md` | `reports/lesson-24-visual.md` |
+| `lesson-01` | `#/lesson/znaiomstvo-z-arcade` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-01-learning.md` | `reports/lesson-01-visual.md` |
+| `lesson-02` | `#/lesson/mii-pershyi-sprait` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-02-learning.md` | `reports/lesson-02-visual.md` |
+| `lesson-03` | `#/lesson/heroi-pid-kontrolem` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-03-learning.md` | `reports/lesson-03-visual.md` |
+| `lesson-04` | `#/lesson/pikselni-perehony` | `site/src/curriculum/campaign-01.ts` | `reports/lesson-04-learning.md` | `reports/lesson-04-visual.md` |
+| `lesson-05` | `#/lesson/knopky-i-podii` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-05-learning.md` | `reports/lesson-05-visual.md` |
+| `lesson-06` | `#/lesson/koly-spraity-zustrichaiutsia` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-06-learning.md` | `reports/lesson-06-visual.md` |
+| `lesson-07` | `#/lesson/rakhunok-zhyttia-chas` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-07-learning.md` | `reports/lesson-07-visual.md` |
+| `lesson-08` | `#/lesson/lovy-zirky` | `site/src/curriculum/campaign-02.ts` | `reports/lesson-08-learning.md` | `reports/lesson-08-visual.md` |
+| `lesson-09` | `#/lesson/snariady-i-nebezpeky` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-09-learning.md` | `reports/lesson-09-visual.md` |
+| `lesson-10` | `#/lesson/rishennia-hry` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-10-learning.md` | `reports/lesson-10-visual.md` |
+| `lesson-11` | `#/lesson/hra-ne-zupyniaietsia` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-11-learning.md` | `reports/lesson-11-visual.md` |
+| `lesson-12` | `#/lesson/kosmichnyi-zakhysnyk` | `site/src/curriculum/campaign-03.ts` | `reports/lesson-12-learning.md` | `reports/lesson-12-visual.md` |
+| `lesson-13` | `#/lesson/zhyvi-personazhi` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-13-learning.md` | `reports/lesson-13-visual.md` |
+| `lesson-14` | `#/lesson/buduiemo-kartu` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-14-learning.md` | `reports/lesson-14-visual.md` |
+| `lesson-15` | `#/lesson/meshkantsi-svitu` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-15-learning.md` | `reports/lesson-15-visual.md` |
+| `lesson-16` | `#/lesson/zahublenyi-krystal` | `site/src/curriculum/campaign-04.ts` | `reports/lesson-16-learning.md` | `reports/lesson-16-visual.md` |
+| `lesson-17` | `#/lesson/rivni-ta-skladnist` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-17-learning.md` | `reports/lesson-17-visual.md` |
+| `lesson-18` | `#/lesson/rozumni-suprotyvnyky` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-18-learning.md` | `reports/lesson-18-visual.md` |
+| `lesson-19` | `#/lesson/vid-prototypu-do-hry` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-19-learning.md` | `reports/lesson-19-visual.md` |
+| `lesson-20` | `#/lesson/arena-bosiv` | `site/src/curriculum/campaign-05.ts` | `reports/lesson-20-learning.md` | `reports/lesson-20-visual.md` |
+| `lesson-21` | `#/lesson/vid-blokiv-do-python` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-21-learning.md` | `reports/lesson-21-visual.md` |
+| `lesson-22` | `#/lesson/python-u-hri` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-22-learning.md` | `reports/lesson-22-visual.md` |
+| `lesson-23` | `#/lesson/hrafika-maistra` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-23-learning.md` | `reports/lesson-23-visual.md` |
+| `lesson-24` | `#/lesson/moia-vlasna-hra` | `site/src/curriculum/campaign-06.ts` | `reports/lesson-24-learning.md` | `reports/lesson-24-visual.md` |
 
 The controller must verify the routes against `site/src/curriculum/campaign-*.ts` before dispatch; if the table contains a transcription error, the source slug is authoritative and the plan is corrected before reviews begin.
 
