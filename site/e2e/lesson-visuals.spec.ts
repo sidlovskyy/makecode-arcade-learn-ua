@@ -171,6 +171,10 @@ for (const index of [1, 2, 4, 5]) {
     await page.goto('/#/lesson/vid-blokiv-do-python');
     for (let i = 0; i < index; i++) await continueStep(page);
     const preview = page.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' });
+    const visual = lessons.find(lesson => lesson.id === 'lesson-21')!.steps[index]!.visual;
+    if (visual.kind !== 'comparison') throw new Error('Expected a focused comparison');
+    await expect(preview.getByRole('img')).toHaveAccessibleName(`Виділені блоки: ${visual.blocks.focus.label}`);
+    await expect(page.getByRole('img', { name: visual.blocks.alt, exact: true })).toHaveCount(1);
     await preview.locator('img').evaluate((img: HTMLImageElement) => img.decode());
     await expect.poll(() => preview.locator('img').evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.naturalWidth)).toBe(1);
     if (page.viewportSize()!.width === 390) {
@@ -182,7 +186,7 @@ for (const index of [1, 2, 4, 5]) {
       await expect.poll(() => preview.evaluate(e => e.scrollLeft)).toBeGreaterThan(initialScrollLeft);
     }
     await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
-    await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
+    await expect(page.getByRole('dialog').getByRole('img', { name: visual.blocks.alt, exact: true })).toBeVisible();
     await page.keyboard.press('Escape'); await expectNoOverflow(page);
     await page.screenshot({ path: `../.superpowers/sdd/2026-09-12-kodkvest-double-page-review/task-10-comparison-${index + 1}-${page.viewportSize()!.width}.png`, fullPage: true });
   });
@@ -896,10 +900,11 @@ test('lesson 21 advances from blocks to the visible responsive Python comparison
     const { x, y, width, height } = section.getBoundingClientRect();
     return { x, y, width, height };
   }));
-  if (page.viewportSize()!.width <= 760) {
-    expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
-  } else {
-    expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].width);
+  const comparisonBox = (await comparison.boundingBox())!;
+  expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
+  for (const box of boxes) {
+    expect(box.x).toBeCloseTo(comparisonBox.x, 0);
+    expect(box.width).toBeCloseTo(comparisonBox.width, 0);
   }
   await expectNoOverflow(page);
 });

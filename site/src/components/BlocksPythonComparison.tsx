@@ -14,7 +14,7 @@ function FocusedBlocks({ blocks }: { blocks: ComparisonStepVisual['blocks'] }) {
     <p>Виділені блоки: прокручуй область, щоб прочитати всі підписи.</p>
     <div className="visual-focused-blocks" role="region" aria-label="Виділені блоки у читабельному розмірі" tabIndex={0}>
       <div style={{ position: 'relative', overflow: 'hidden', width: size.width * f.width, height: size.height * f.height }}>
-        <img src={asset.src} alt={blocks.alt} onLoad={event => setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
+        <img src={asset.src} alt={`Виділені блоки: ${f.label}`} onLoad={event => setSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
           style={{ position: 'absolute', width: size.width || 'auto', maxWidth: 'none', left: -size.width * f.x, top: -size.height * f.y }} />
       </div>
     </div>

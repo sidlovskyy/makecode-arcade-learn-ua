@@ -40,6 +40,18 @@ describe('StepVisual', () => {
     expect(screen.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' })).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('button', { name: 'Відкрити крупніше' })).toBeVisible();
   });
+  it.each([1, 2, 4, 5])('C06 focused preview: step index %i distinguishes its crop from the full program', async (index) => {
+    const user = userEvent.setup();
+    const visual = campaign06.lessons[0]!.steps[index]!.visual;
+    if (visual.kind !== 'comparison') throw new Error('Expected a focused comparison');
+    render(<StepVisual visual={visual} />);
+    const preview = screen.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' });
+    expect(within(preview).getByRole('img')).toHaveAccessibleName(`Виділені блоки: ${visual.blocks.focus.label}`);
+    expect(screen.getByRole('img', { name: visual.blocks.alt })).toBeVisible();
+    expect(screen.getAllByRole('img')).toHaveLength(2);
+    await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
+    expect(within(screen.getByRole('dialog')).getByRole('img', { name: visual.blocks.alt })).toBeVisible();
+  });
   it.each([0, 1, 2])('C06 atlas: selects only logical editor panel %i inline and enlarged', async (sourcePanel) => {
     const user = userEvent.setup();
     // Passing the fixture through a variable keeps this RED executable before the descriptor gains the option.
