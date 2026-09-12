@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { campaign02 } from '../curriculum/campaign-02';
+import { campaign06 } from '../curriculum/campaign-06';
 import { lessonVisualAssets } from '../lesson-visuals/generated-assets';
 import type { BlocksStepVisual, EditorStepVisual } from '../lesson-visuals/types';
 import { StepVisual } from './StepVisual';
@@ -20,6 +21,28 @@ const source = 'if score > 0:\n    game.splash("<b>Привіт</b>")\n';
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe('StepVisual', () => {
+  it('C06-002: comparisons offer a keyboard-scrollable focused native preview and the full image', () => {
+    const visual = campaign06.lessons[0]!.steps[1]!.visual;
+    render(<StepVisual visual={visual} />);
+    expect(screen.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' })).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('button', { name: 'Відкрити крупніше' })).toBeVisible();
+  });
+  it.each([0, 1, 2])('C06 atlas: selects only logical editor panel %i inline and enlarged', async (sourcePanel) => {
+    const user = userEvent.setup();
+    // Passing the fixture through a variable keeps this RED executable before the descriptor gains the option.
+    const visual = { ...editor, assetId: 'editor:tilemap-editor', sourcePanel };
+    const { container } = render(<StepVisual visual={visual} />);
+    expect(container.querySelector('.visual-editor-panel')).not.toBeNull();
+    expect(screen.getByRole('img')).toHaveStyle({ top: `${-100 * sourcePanel}%` });
+    await user.click(screen.getByRole('button', { name: 'Відкрити крупніше' }));
+    expect(within(screen.getByRole('dialog')).getByRole('img')).toHaveStyle({ top: `${-100 * sourcePanel}%` });
+    expect(screen.getByRole('dialog').querySelectorAll('.visual-focus')).toHaveLength(1);
+  });
+  it.each([-1, 0.5, 3])('C06 atlas: rejects unavailable source panel %s instead of showing adjacent content', sourcePanel => {
+    render(<StepVisual visual={{ ...editor, assetId: 'editor:tilemap-editor', sourcePanel }} />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByText(editor.alt)).toBeVisible();
+  });
   it.each([false, true])('C04-004: isolates background and restores its previous inert state (%s)', async (previous) => {
     const user = userEvent.setup();
     const { container } = render(<StepVisual visual={blocks} />);

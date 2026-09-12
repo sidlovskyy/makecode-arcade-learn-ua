@@ -70,6 +70,13 @@ export function validateLessonVisual(
   if (!isRecord(visual)) return [`${stepId} visual must be an object`];
 
   const image = visual.kind === 'comparison' ? visual.blocks : visual;
+  if (visual.kind === 'editor' && visual.sourcePanel !== undefined) {
+    const asset = typeof visual.assetId === 'string' && Object.hasOwn(assets, visual.assetId) ? assets[visual.assetId] : undefined;
+    if (typeof visual.sourcePanel !== 'number' || !Number.isInteger(visual.sourcePanel)
+      || visual.sourcePanel < 0 || visual.sourcePanel >= (asset?.panelCount ?? 1)) {
+      errors.push(`${stepId} sourcePanel must select an available editor panel`);
+    }
+  }
   if (isRecord(image) && image.additionalFocus !== undefined) {
     if (!Array.isArray(image.additionalFocus)) errors.push(`${stepId} additionalFocus must be an array`);
     else image.additionalFocus.forEach((focus, index) => validateFocus(stepId, `additionalFocus[${index}]`, focus, errors));

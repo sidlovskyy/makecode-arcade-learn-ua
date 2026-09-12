@@ -13,6 +13,9 @@
 .visual-figure { margin: 0; min-width: 0; }
 .visual-image { position: relative; width: fit-content; max-width: 100%; margin-inline: auto; }
 .visual-image img { width: auto; height: auto; max-width: 100%; }
+.visual-editor-panel { width: 1440px; aspect-ratio: 1440 / 900; overflow: hidden; }
+.visual-editor-panel img { position: absolute; left: 0; width: 100%; max-width: none; }
+.visual-focused-blocks { max-width: 100%; max-height: 320px; overflow: auto; overscroll-behavior: contain; border: 1px solid #d9d3eb; border-radius: 4px; }
 .visual-figure--blocks .visual-image { margin-block: 1rem; }
 .visual-focus { position: absolute; outline: 3px solid #dd246f; outline-offset: -2px; border-radius: 3px; pointer-events: none; }
 .visual-callout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin: 1rem 0; }
@@ -25,6 +28,7 @@
 .visual-button:hover { background: #eee8ff; }
 .visual-fallback { padding: 1rem; border: 1px dashed var(--text-muted); }
 .visual-comparison { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; }
+.visual-comparison--focused { grid-template-columns: minmax(0, 1fr); }
 .visual-comparison > section, .python-example { min-width: 0; }
 .python-example pre { max-width: 100%; overflow: auto; padding: 1rem; border-radius: var(--radius-sm); background: #17132e; color: #fffdf7; tab-size: 4; line-height: 1.6; }
 .python-example code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.9rem; }

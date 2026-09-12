@@ -24,6 +24,8 @@ export interface EditorStepVisual extends ExplainedVisual {
   assetId: string;
   alt: string;
   focus: NormalizedRect;
+  /** Zero-based 1440×900 panel in the local editor capture. Omitted means the original panel. */
+  sourcePanel?: number;
 }
 
 export interface PythonStepVisual extends ExplainedVisual {
@@ -36,6 +38,7 @@ export interface ComparisonStepVisual extends ExplainedVisual {
   kind: 'comparison';
   blocks: Omit<BlocksStepVisual, 'kind' | 'explanation'>;
   python: Pick<PythonStepVisual, 'label' | 'code'>;
+  focusedPreview?: boolean;
 }
 
 export interface GuideStepVisual {
@@ -55,6 +58,7 @@ export type LessonStepVisual =
 export interface LessonVisualAsset {
   kind: 'blocks' | 'editor';
   src: string;
+  panelCount?: number;
 }
 
 export type LessonVisualAssetRegistry = Readonly<Record<string, LessonVisualAsset>>;

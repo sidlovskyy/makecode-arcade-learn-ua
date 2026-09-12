@@ -318,12 +318,12 @@ describe('validateCurriculum', () => {
         references.push({ id: visual.blocks.assetId, kind: 'blocks' });
       }
     }
-    expect(counts).toEqual({ blocks: 88, comparison: 5, python: 13, editor: 18, guide: 21 });
-    expect(references).toHaveLength(111);
+    expect(counts).toEqual({ blocks: 88, comparison: 5, python: 12, editor: 19, guide: 21 });
+    expect(references).toHaveLength(112);
     const blockReferences = references.filter(({ kind }) => kind === 'blocks');
     expect(blockReferences).toHaveLength(93);
     expect(new Set(blockReferences.map(({ id }) => id)).size).toBe(93);
-    expect(references.filter(({ kind }) => kind === 'editor')).toHaveLength(18);
+    expect(references.filter(({ kind }) => kind === 'editor')).toHaveLength(19);
 
     const assets: LessonVisualAssetRegistry = lessonVisualAssets;
     for (const { id, kind } of references) expect(assets[id]?.kind, id).toBe(kind);
@@ -417,11 +417,11 @@ describe('validateCurriculum', () => {
       expect(lesson.steps.map(({ id }) => id)).toEqual(Array.from({ length: lesson.id === 'lesson-24' ? 7 : 6 }, (_, i) => `${lesson.id}-step-0${i + 1}`));
       for (const step of lesson.steps) if (step.visual) counts[step.visual.kind] += 1;
     }
-    expect(counts).toEqual({ blocks: 1, editor: 1, guide: 5, python: 13, comparison: 5 });
+    expect(counts).toEqual({ blocks: 1, editor: 2, guide: 5, python: 12, comparison: 5 });
     expect(campaign06.lessons.map(lesson => lesson.steps.map(step => step.visual?.kind))).toEqual([
       ['blocks', 'comparison', 'comparison', 'python', 'comparison', 'comparison'],
       ['python', 'python', 'python', 'python', 'python', 'python'],
-      ['python', 'python', 'python', 'python', 'comparison', 'python'],
+      ['python', 'python', 'editor', 'python', 'comparison', 'python'],
       ['guide', 'guide', 'python', 'guide', 'guide', 'editor', 'guide'],
     ]);
     expect(lessons.flatMap(lesson => lesson.steps).filter(step => step.visual)).toHaveLength(145);

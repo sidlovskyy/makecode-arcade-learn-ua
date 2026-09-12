@@ -198,7 +198,7 @@ export const lessonVisualAssets = {
   'editor:arcade-home': { kind: 'editor', src: asset95 },
   'editor:blocks-workspace': { kind: 'editor', src: asset96 },
   'editor:sprite-image-editor': { kind: 'editor', src: asset97 },
-  'editor:tilemap-editor': { kind: 'editor', src: asset98 },
+  'editor:tilemap-editor': { kind: 'editor', src: asset98, panelCount: 3 },
 } as const;
 
 export type LessonVisualAssetId = keyof typeof lessonVisualAssets;

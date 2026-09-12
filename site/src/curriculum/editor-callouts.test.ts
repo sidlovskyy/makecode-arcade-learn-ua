@@ -12,6 +12,7 @@ it.each([
   ['lesson-02-step-06', 'Restart button', 77, 479, 40, 41],
   ['lesson-13-step-03', 'Duplicate Current Frame', 1309, 491, 48, 33],
   ['lesson-14-step-02', 'tilemap width field', 31, 842, 40, 30],
+  ['lesson-24-step-06', 'Python Save control in logical panel 2', 551, 841, 44, 44],
 ] as const)('%s highlights only the %s control', (id, _control, x, y, width, height) => {
   const visual = lessons.flatMap((lesson) => lesson.steps).find((step) => step.id === id)!.visual;
   expect(visual.kind).toBe('editor');

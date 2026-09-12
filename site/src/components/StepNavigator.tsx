@@ -21,8 +21,8 @@ export function StepNavigator({
     if (!list || !active) return;
     const bounds = list.getBoundingClientRect();
     const target = active.getBoundingClientRect();
-    if (target.left < bounds.left) list.scrollLeft += target.left - bounds.left;
-    else if (target.right > bounds.left + list.clientWidth) list.scrollLeft += target.right - bounds.left - list.clientWidth;
+    if (target.left < bounds.left) list.scrollLeft += Math.floor(target.left - bounds.left) - 2;
+    else if (target.right > bounds.left + list.clientWidth) list.scrollLeft += Math.ceil(target.right - bounds.left - list.clientWidth) + 2;
   }, [currentIndex]);
 
   return (

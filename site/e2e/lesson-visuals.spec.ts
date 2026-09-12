@@ -54,6 +54,92 @@ async function expectPhaseFocus(page: Page, selector: string) {
   expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
 }
 
+for (const id of ['lesson-21', 'lesson-22', 'lesson-23', 'lesson-24']) {
+  test(`C06-001/C06-005/C06-009: ${id} keyboard progression and reloaded review retain focus and visible identity`, async ({ page }) => {
+    const lesson = lessons.find(lesson => lesson.id === id)!;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const activeVisible = async () => {
+      if (page.viewportSize()!.width !== 390) return;
+      await expect.poll(() => page.locator('.step-list').evaluate(list => {
+        const chip = list.querySelector('[aria-current="step"]')!.getBoundingClientRect();
+        const bounds = list.getBoundingClientRect();
+        return chip.left >= bounds.left - 1 && chip.right <= bounds.right + 1;
+      })).toBe(true);
+    };
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < lesson.steps.length; i++) {
+      const next = page.locator('.lesson-step-actions .button--primary');
+      await next.focus(); await next.press('Enter');
+      await expectPhaseFocus(page, i === lesson.steps.length - 1 ? '#challenge-title' : '#practical-step-title');
+      if (i < lesson.steps.length - 1) await activeVisible();
+    }
+    await page.getByRole('button', { name: /Випробування виконано/ }).press('Enter');
+    await expectPhaseFocus(page, '#quiz-title');
+    await page.getByRole('radio', { name: lesson.quiz.options[lesson.quiz.correctIndex] }).check();
+    await page.getByRole('button', { name: 'Перевірити відповідь' }).click();
+    await page.getByRole('button', { name: /Завершити місію/ }).press('Enter');
+    await expectPhaseFocus(page, '#completion-title');
+    await page.reload();
+    for (let i = 0; i < lesson.steps.length; i++) {
+      const chip = page.locator('.step-list button').nth(i);
+      await expect(chip).toHaveAccessibleName(/Виконано/);
+      await expect(chip.locator('.step-list__marker')).toHaveText(String(i + 1));
+      const box = await chip.boundingBox(); expect(box!.height).toBeGreaterThanOrEqual(44); expect(box!.width).toBeGreaterThanOrEqual(44);
+      await chip.click(); await expectPhaseFocus(page, '#practical-step-title'); await activeVisible();
+    }
+    await page.getByRole('button', { name: 'До підсумку місії' }).press('Enter');
+    await expectPhaseFocus(page, '#completion-title'); await expectNoOverflow(page);
+  });
+}
+
+for (const index of [1, 2, 4, 5]) {
+  test(`C06-002: comparison ${index + 1} keeps native label scale in a contained focused preview`, async ({ page }) => {
+    await page.goto('/#/lesson/vid-blokiv-do-python');
+    for (let i = 0; i < index; i++) await continueStep(page);
+    const preview = page.getByRole('region', { name: 'Виділені блоки у читабельному розмірі' });
+    await preview.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+    await expect.poll(() => preview.locator('img').evaluate((img: HTMLImageElement) => img.getBoundingClientRect().width / img.naturalWidth)).toBe(1);
+    await preview.focus(); await page.keyboard.press('ArrowRight');
+    expect(await preview.evaluate(e => e.scrollWidth >= e.clientWidth)).toBe(true);
+    await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
+    await expect(page.getByRole('dialog').getByRole('img')).toBeVisible();
+    await page.keyboard.press('Escape'); await expectNoOverflow(page);
+    await page.screenshot({ path: `../.superpowers/sdd/2026-09-12-kodkvest-double-page-review/task-10-comparison-${index + 1}-${page.viewportSize()!.width}.png`, fullPage: true });
+  });
+}
+
+for (const [id, index, panel] of [['lesson-14', 0, 0], ['lesson-14', 1, 0], ['lesson-14', 2, 0], ['lesson-16', 0, 0], ['lesson-23', 2, 1], ['lesson-24', 5, 2]] as const) {
+  test(`C06 atlas: ${id} step ${index + 1} shows only its editor panel ${panel}`, async ({ page }) => {
+    const lesson = lessons.find(lesson => lesson.id === id)!;
+    await page.goto(`/#/lesson/${lesson.slug}`);
+    for (let i = 0; i < index; i++) await continueStep(page);
+    const image = page.locator('.visual-editor-panel');
+    await image.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+    expect(await image.evaluate(e => e.clientWidth / e.clientHeight)).toBeCloseTo(1.6, 1);
+    expect(await image.locator('img').evaluate((img: HTMLImageElement) => img.style.top)).toBe(`${-100 * panel}%`);
+    await page.getByRole('button', { name: 'Відкрити крупніше' }).click();
+    const enlarged = page.getByRole('dialog').locator('.visual-editor-panel');
+    expect(await enlarged.evaluate(e => [e.clientWidth, e.clientHeight])).toEqual([1440, 900]);
+    expect(await enlarged.locator('img').evaluate((img: HTMLImageElement) => img.style.top)).toBe(`${-100 * panel}%`);
+    await expect(enlarged.locator('.visual-focus')).toHaveCount(1);
+    await page.keyboard.press('Escape'); await expectNoOverflow(page);
+    await page.screenshot({ path: `../.superpowers/sdd/2026-09-12-kodkvest-double-page-review/task-10-editor-${id}-${index + 1}-${page.viewportSize()!.width}.png`, fullPage: true });
+  });
+}
+
+test('C06-004/C06-011: the editor action and ordered sharing checklist expose the complete workflow', async ({ page }) => {
+  for (const slug of ['vid-blokiv-do-python', 'python-u-hri']) {
+    await page.goto(`/#/lesson/${slug}`);
+    await expect(page.getByRole('link', { name: /Відкрити MakeCode/ })).toHaveAttribute('href', 'https://arcade.makecode.com/');
+    await expect(page.locator('.makecode-address')).toContainText('https://arcade.makecode.com/');
+  }
+  await page.goto('/#/lesson/moia-vlasna-hra');
+  for (let i = 0; i < 6; i++) await continueStep(page);
+  const items = await page.locator('.visual-guide li').allTextContents();
+  expect(items[2]).toContain('погодження'); expect(items[3]).toContain('діалозі');
+  expect(items[4]).toContain('Share Project'); expect(items[5]).toContain('Скопіюй');
+});
+
 for (const id of ['lesson-17', 'lesson-18', 'lesson-19', 'lesson-20']) {
   test(`C05-003/C05-006/C05-007: ${id} first-time and completed review preserve destination and step identity`, async ({ page }) => {
     const lesson = lessons.find(lesson => lesson.id === id)!;

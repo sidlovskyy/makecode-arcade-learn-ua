@@ -12,22 +12,24 @@ interface VisualFigureProps {
   explanation?: string;
   eager?: boolean;
   action?: 'verify';
+  sourcePanel?: number;
 }
 
-export function VisualFigure({ assetId, kind, alt, focus, additionalFocus = [], explanation, eager = false, action }: VisualFigureProps) {
+export function VisualFigure({ assetId, kind, alt, focus, additionalFocus = [], explanation, eager = false, action, sourcePanel = 0 }: VisualFigureProps) {
   const [failedAsset, setFailedAsset] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const captionId = useId();
   const registry: LessonVisualAssetRegistry = lessonVisualAssets;
   const asset = Object.hasOwn(registry, assetId) ? registry[assetId] : undefined;
-  const available = asset?.kind === kind && failedAsset !== assetId;
+  const available = asset?.kind === kind && failedAsset !== assetId
+    && Number.isInteger(sourcePanel) && sourcePanel >= 0 && sourcePanel < (asset.panelCount ?? 1);
   const regions = [focus, ...additionalFocus];
 
   function content(enlarged = false) {
     return <>
       {available ? (
-        <div className={`visual-image visual-image--${kind}${enlarged ? ' visual-image--enlarged' : ''}`}>
-          <img src={asset!.src} alt={alt} decoding="async" loading={enlarged || (eager && kind === 'blocks') ? 'eager' : 'lazy'} onError={() => setFailedAsset(assetId)} />
+        <div className={`visual-image visual-image--${kind}${kind === 'editor' ? ' visual-editor-panel' : ''}${enlarged ? ' visual-image--enlarged' : ''}`}>
+          <img src={asset!.src} alt={alt} style={kind === 'editor' ? { top: `${-100 * sourcePanel}%` } : undefined} decoding="async" loading={enlarged || (eager && kind === 'blocks') ? 'eager' : 'lazy'} onError={() => setFailedAsset(assetId)} />
           {regions.map((region, index) => <span key={index} className="visual-focus" aria-hidden="true" style={{ left: `${region.x * 100}%`, top: `${region.y * 100}%`, width: `${region.width * 100}%`, height: `${region.height * 100}%` }} />)}
         </div>
       ) : <p className="visual-fallback">{alt}</p>}

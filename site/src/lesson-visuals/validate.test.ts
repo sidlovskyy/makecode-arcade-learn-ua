@@ -7,6 +7,12 @@ const assets = {
   'editor:blocks-workspace': { kind: 'editor', src: '/editor.webp' },
 } as const;
 
+it.each([-1, 0.5, 1, '0'])('C06 atlas: rejects an unavailable source panel %j', sourcePanel => {
+  expect(validateLessonVisual('save', { kind: 'editor', assetId: 'editor:blocks-workspace', sourcePanel,
+    alt: 'Редактор', explanation: 'Збережи', focus: { x: 0, y: 0, width: 1, height: 1, label: 'Save' } }, assets))
+    .toContain('save sourcePanel must select an available editor panel');
+});
+
 const blockVisual: LessonStepVisual = {
   kind: 'blocks',
   assetId: 'blocks:lesson-01-step-04',

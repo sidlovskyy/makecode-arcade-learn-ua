@@ -47,6 +47,63 @@ async function assetEditor(page, type) {
   await page.locator('canvas.paint-surface.main').waitFor();
 }
 
+export async function pythonProject(page) {
+  await project(page);
+  await button(page, 'Stop the simulator').click();
+  await page.getByTitle('Select code editor language', { exact: true }).click();
+  await page.getByText('Python', { exact: true }).click();
+  await button(page, 'Convert code to Python').waitFor();
+  await page.locator('.monaco-editor textarea').waitFor();
+}
+
+export async function wideMap(page) {
+  await pythonProject(page);
+  await button(page, 'View project assets').click();
+  await button(page, 'Create a new asset').click();
+  await button(page, 'Create a new Tilemap asset').click();
+  for (const [name, value] of [['Image Width', '20'], ['Image Height', '8']]) {
+    const field = page.getByRole('textbox', { name, exact: true });
+    await field.fill(value); await field.press('Tab');
+    if (await field.inputValue() !== value) throw Error(`${name} must be ${value}`);
+  }
+  await page.getByPlaceholder('Asset Name', { exact: true }).fill('wide');
+  await page.getByPlaceholder('Asset Name', { exact: true }).press('Tab');
+  await page.getByTitle('Tile tileGrass2', { exact: true }).click();
+  await page.getByTitle('Paint Tool', { exact: true }).click();
+  // The native canvas has no accessible cells. Paint each bottom-row cell
+  // through its measured 20×8 geometry, including both boundaries.
+  const box = await page.locator('canvas.paint-surface.main').boundingBox();
+  if (!box) throw Error('Missing tilemap canvas');
+  for (let column = 0; column < 20; column++) {
+    const x = box.x + box.width * (column + 0.5) / 20;
+    const y = box.y + box.height * 15 / 16;
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(40);
+    await page.mouse.click(x, y);
+  }
+  await button(page, 'Done').click();
+  await button(page, 'Edit the selected asset').waitFor();
+  const valid = await page.evaluate(() => {
+    const map = window.pxt.react.getTilemapProject().getAssets('tilemap').find(asset => asset.meta.displayName === 'wide');
+    return map?.data.tilemap.width === 20 && map.data.tilemap.height === 8
+      && [...map.data.tilemap.buf].every((cell, index) => cell === (index < 140 ? 0 : 1));
+  });
+  if (!valid) throw Error('wide must have 140 transparent cells and 20 ground cells');
+  await button(page, 'Edit the selected asset').click();
+  await page.locator('canvas.paint-surface.main').waitFor();
+}
+
+async function pythonSave(page) {
+  await pythonProject(page);
+  // Reopen the locally saved Python project so the empty-program simulator
+  // has settled before capturing the Save action.
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await button(page, 'Convert code to Python').waitFor();
+  await button(page, 'Save the project').waitFor();
+  if (!(await button(page, 'Convert code to Python').isVisible())) throw Error('Python must be visible before Save capture');
+  if (await button(page, 'Convert code to JavaScript').isVisible()) throw Error('Retired language label must not be visible');
+}
+
 const definitions = [
   ['arcade-home', home],
   // MakeCode 4.1.25 calls the normal-mode control Stop, not Pause.
@@ -96,4 +153,9 @@ export const editorScenes = definitions.map(([name, prepare]) => ({
   viewport: { width: 1440, height: 900 },
   outputName: `${name}.webp`,
   prepare,
+  ...(name === 'tilemap-editor' ? {
+    preserveFirstPanel: true,
+    panelNames: ['starter-map', 'wide-map', 'python-save'],
+    panels: [wideMap, pythonSave],
+  } : {}),
 }));

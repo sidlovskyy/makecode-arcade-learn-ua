@@ -23,11 +23,31 @@ test('capture inventory covers exactly the six reusable editor surfaces', () => 
   }
 });
 
+test('C06-007/C06-010: the tilemap atlas captures wide creation and a Python Save scene', () => {
+  const atlas = editorScenes.find(scene => scene.id === 'editor:tilemap-editor');
+  assert.equal(atlas.preserveFirstPanel, true);
+  assert.equal(atlas.panels.length, 2);
+  assert.deepEqual(atlas.panelNames, ['starter-map', 'wide-map', 'python-save']);
+});
+
 const fixture = (name, prepare = async (page) => {
   await page.setContent('<html><body style="background:#123456">Editor fixture</body></html>');
 }) => ({
   id: `editor:${name}`, outputName: `${name}.webp`, url: 'about:blank',
   viewport: { width: 1440, height: 900 }, prepare,
+});
+
+test('C06 atlas: preserves original pixels and adds independently captured panels in one WebP', async (t) => {
+  const { siteRoot, live, browser } = await captureFixture(t);
+  const original = await sharp({ create: { width: 1440, height: 900, channels: 3, background: '#ff0000' } }).webp({ lossless: true }).toBuffer();
+  await writeFile(path.join(live, 'atlas.webp'), original);
+  const scene = { ...fixture('atlas'), preserveFirstPanel: true, panels: [fixture('blue').prepare, fixture('green', async page => page.setContent('<body style="margin:0;background:#00ff00"></body>')).prepare] };
+  await captureEditorScenes({ siteRoot, browser, scenes: [scene], preserveUncaptured: true, afterReplace: async () => {} });
+  const target = await readFile(path.join(live, 'atlas.webp'));
+  assert.equal((await sharp(target).metadata()).height, 2700);
+  assert.deepEqual(await sharp(target).extract({ left: 0, top: 0, width: 1440, height: 900 }).raw().toBuffer(), await sharp(original).raw().toBuffer());
+  assert.deepEqual([...await sharp(target).extract({ left: 0, top: 1800, width: 1, height: 1 }).raw().toBuffer()], [0, 255, 0]);
+  assert.equal(await readFile(path.join(live, 'old.webp'), 'utf8'), 'original asset');
 });
 
 async function captureFixture(t) {
@@ -132,5 +152,17 @@ test('capture waits for lazy image sources to be assigned and decoded', async (t
     afterReplace: async () => {},
   });
   const pixel = await sharp(path.join(live, 'lazy.webp')).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer();
+  assert.deepEqual([...pixel], [255, 0, 0]);
+});
+
+test('C06-010: capture waits for the editor loading overlay to clear', async (t) => {
+  const { siteRoot, live, browser } = await captureFixture(t);
+  await captureEditorScenes({ siteRoot, browser,
+    scenes: [fixture('loading', async page => {
+      await page.setContent('<body style="margin:0;background:#ff0000"><div class="ui active loader" style="position:fixed;inset:0;background:#777"></div></body>');
+      await page.evaluate(() => setTimeout(() => document.querySelector('.loader').remove(), 500));
+    })], afterReplace: async () => {},
+  });
+  const pixel = await sharp(path.join(live, 'loading.webp')).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer();
   assert.deepEqual([...pixel], [255, 0, 0]);
 });
